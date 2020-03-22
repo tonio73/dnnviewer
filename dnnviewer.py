@@ -20,6 +20,7 @@ grapher = dnnviewerlib.Grapher()
 parser = argparse.ArgumentParser()
 parser.add_argument("-k", "--model-keras", help="Load a Keras model from file")
 parser.add_argument("--test-dataset", help="Load a predefined test dataset")
+parser.add_argument("--debug", help="Set Dash in debug mode")
 parser.parse_args()
 
 topn_init = 3
@@ -45,6 +46,8 @@ if args.model_keras:
     # Create all other layers from the Keras Sequential model
     activation_mapper = tf_bridge.keras_load_sequential_network(grapher, args.model_keras, input_classes,
                                                                 output_classes)
+
+debug_mode = args.debug
 
 # Create App, set stylesheets
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -174,4 +177,4 @@ def update_activation_map(index, click_data):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=debug_mode)

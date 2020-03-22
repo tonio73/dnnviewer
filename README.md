@@ -4,6 +4,8 @@ A dashboard to inspect deep neural network models, providing interactive view on
 
 This project is for learning and teaching purpose, do not try to display a network with hundreds of layers.
 
+![Screenshot](assets/screen1.png)
+
 # Install
 
 1. Clone the repository `git clone https://github.com/tonio73/dnnviewer.git` on your local machine
@@ -65,3 +67,8 @@ Code is separated in two branches:
 
 - The Graphical representation
 - Adapters to read existing models, currently only supporting Keras
+
+### Code quality
+
+- Code is PEP8 compliant, thanks to Intellij for watching
+- There are a few pytest unit tests in `unittests/`
