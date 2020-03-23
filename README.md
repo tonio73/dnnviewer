@@ -1,6 +1,8 @@
 # Deep Neural Network viewer
 
-A dashboard to inspect deep neural network models, providing interactive view on the layer and unit weights and gradients, as well as activation maps.
+A **dashboard to inspect deep neural network models**, providing interactive view on the layer and unit weights and gradients, as well as activation maps.
+
+Current version is targeted at the **image classification**. However, coming version will target more diverse tasks.
 
 This project is for learning and teaching purpose, do not try to display a network with hundreds of layers.
 
@@ -42,6 +44,7 @@ $ ./dnnviewer.py --model-keras stimuli/models/MNIST_dense128.h5 --test-dataset m
 # Current capabilities
 
 - Load **Tensorflow Keras Sequential** models and create a display of the network
+- Targeted at image classification task (assume image as input, class as output)
 - Interactive display and unit weights through connections within the network and histograms
 - Supported layers
   - Dense
