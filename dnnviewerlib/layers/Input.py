@@ -3,6 +3,8 @@ from .AbstractLayer import AbstractLayer
 import plotly.graph_objects as go
 import dash_html_components as html
 
+import numpy as np
+
 
 class Input(AbstractLayer):
     """ Simple placeholder layer to act as input to the network """

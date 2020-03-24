@@ -53,7 +53,8 @@ class AbstractLayer:
 
     def get_unit_description(self, unit_idx: int):
         """ Get layer Unit description to be included in a Dash Column """
-        return [html.H5(('Unit #%s' % unit_idx) + (' (%s)' % self.unit_names[unit_idx] if self.unit_names is not None else ""))]
+        return [html.H5(('Unit #%s' % unit_idx) +
+                        (' (%s)' % self.unit_names[unit_idx] if self.unit_names is not None else ""))]
 
     def _get_y_offset(self):
         return -self.num_unit * self.spacing_y / 2

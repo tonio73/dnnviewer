@@ -7,14 +7,14 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 
-import dnnviewerlib
+from dnnviewerlib.Grapher import Grapher
+from dnnviewerlib.widgets import activation_map
 import dnnviewerlib.imageutils as imageutils
-import dnnviewerlib.layers
 import dnnviewerlib.bridge.tensorflow as tf_bridge
 
 import argparse
 
-grapher = dnnviewerlib.Grapher()
+grapher = Grapher()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-k", "--model-keras", help="Load a Keras model from file")
@@ -128,7 +128,7 @@ def update_figure(topn, click_data):
 def update_test_sample(index):
     if index is not None and x_test is not None:
         img = x_test[index]
-        return dnnviewerlib.imageutils.array_to_img_src(img)
+        return imageutils.array_to_img_src(img)
     return ''
 
 
@@ -161,17 +161,7 @@ def update_activation_map(index, click_data):
         point = click_data['points'][0]
         layer = grapher.layers[int(point['curveNumber'])]
         unit_idx = point['pointNumber']
-        if isinstance(layer, dnnviewerlib.layers.Convo2D):
-            maps = activation_mapper.get_activation(x_test[index], layer, unit_idx)
-            if unit_idx is None:
-                return [html.Div(html.Img(id='activation-map', alt='Activation map',
-                                          src=imageutils.array_to_img_src(imageutils.to_8bit_img(img))),
-                                 className='thumbnail') for img in maps]
-            else:
-                return [html.H5('Unit #%s activation' % unit_idx),
-                        html.Div(html.Img(id='activation-map', alt='Activation map',
-                                          src=dnnviewerlib.imageutils.array_to_img_src(imageutils.to_8bit_img(maps))),
-                                 className='thumbnail')]
+        return activation_map.widget(activation_mapper, layer, unit_idx, x_test[index])
     return []
 
 

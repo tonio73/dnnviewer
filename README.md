@@ -75,3 +75,22 @@ Code is separated in two branches:
 
 - Code is PEP8 compliant, thanks to Intellij for watching
 - There are a few pytest unit tests in `unittests/`
+
+#### Run unit test
+
+From project root directory:
+
+```shell
+$ python -m pytest
+```
+
+#### Code linting
+
+```shell
+$ flake8  --max-line-length=120
+```
+
+
+$$
+
+$$
