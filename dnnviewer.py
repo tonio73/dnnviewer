@@ -13,7 +13,6 @@ import dnnviewerlib.layers
 import dnnviewerlib.bridge.tensorflow as tf_bridge
 
 import argparse
-import numpy as np
 
 grapher = dnnviewerlib.Grapher()
 

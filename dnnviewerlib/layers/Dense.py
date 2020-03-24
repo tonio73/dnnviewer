@@ -28,7 +28,7 @@ class Dense(AbstractLayer):
     # @override
     def plot_topn_connections(self, backward_layer, topn, active_units, backward):
         if self.weights is None:
-            return np.array(), []
+            return np.empty(0), []
 
         # KO if flatten output on backward_layer
         # assert backward_layer.num_unit == self.weights.shape[0]

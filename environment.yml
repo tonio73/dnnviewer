@@ -1,11 +1,10 @@
-name: intellij
+name: dnnviewer
 channels:
   - plotly
   - defaults
 dependencies:
   - python>=3.7
   - numpy
-  - pandas
   - tensorflow
   - tensorflow-datasets
   - plotly

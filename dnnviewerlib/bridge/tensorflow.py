@@ -72,7 +72,7 @@ def keras_extract_sequential_network(grapher, model, input_classes=None, output_
                                       keras.layers.SpatialDropout3D,
                                       keras.layers.Activation,
                                       keras.layers.MaxPooling1D, keras.layers.MaxPooling2D, keras.layers.MaxPooling3D,
-                                      keras.layers.AveragePooling1D, keras.layers.AveragePooling2D, 
+                                      keras.layers.AveragePooling1D, keras.layers.AveragePooling2D,
                                       keras.layers.AveragePooling3D,
                                       keras.layers.GlobalAveragePooling1D, keras.layers.GlobalAveragePooling2D,
                                       keras.layers.GlobalAveragePooling3D,

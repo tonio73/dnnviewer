@@ -1,5 +1,3 @@
-import pytest
-
 import numpy as np
 from dnnviewerlib.Statistics import Statistics
 
