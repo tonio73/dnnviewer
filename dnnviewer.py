@@ -86,7 +86,7 @@ app.layout = dbc.Container([
     ]),
 
     # Main View
-    dcc.Graph(id='network-view', figure=main_view),
+    dcc.Graph(id='network-view', figure=main_view, config=dict(scrollZoom=True), animate=True),
 
     # Bottom detail panel
     dbc.Row([
@@ -104,7 +104,7 @@ app.layout = dbc.Container([
         dbc.Col([
             html.Label('Selected layer'),
             html.Div(id='layer-info', className='detail-section'),
-            html.Div([dcc.Graph(id='layer-figure', figure=go.Figure())])
+            html.Div([dcc.Graph(id='layer-figure')])
         ], md=3, align='start'),
         dbc.Col([
             html.Label('Selected unit'),
