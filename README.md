@@ -6,7 +6,7 @@ Current version is targeted at the **image classification**. However, coming ver
 
 This project is for learning and teaching purpose, do not try to display a network with hundreds of layers.
 
-![Screenshot](assets/screen1.png)
+<img src="assets/screenshots/CIFAR-10_LeNetLarge.png" alt="Screenshot" style="zoom:67%;" />
 
 # Install
 
