@@ -78,7 +78,7 @@ app.layout = dbc.Container([
 
     # Top toolbar
     dbc.Row([
-        dbc.Col(html.Label('Show top n input connections:'), md=3),
+        dbc.Col(html.Label('Show top n connections:'), md=3),
         dbc.Col(dcc.Slider(id='topn-criteria',
                            min=1.0, max=4.0, step=1.0, value=topn_init,
                            marks={str(d): str(d) for d in range(0, 5)}),

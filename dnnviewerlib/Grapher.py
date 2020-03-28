@@ -57,6 +57,9 @@ class Grapher:
             prev_layer = self.layers[i - 1]
             sel_units, new_shapes = cur_layer.plot_topn_connections(prev_layer, topn, sel_units, True)
             shapes[0:0] = new_shapes
+            # Clip topn to 1 if number of active units is large
+            if len(sel_units) > 32:
+                topn = 1
 
         # Forward from ref_layer
         sel_units = [ref_unit]
@@ -65,6 +68,9 @@ class Grapher:
             prev_layer = self.layers[i - 1]
             sel_units, new_shapes = cur_layer.plot_topn_connections(prev_layer, topn, sel_units, False)
             shapes[0:0] = new_shapes
+            # Clip topn to 1 if number of active units is large
+            if len(sel_units) > 32:
+                topn = 1
 
             # Eventually apply the shape list
         fig.update_layout(shapes=shapes)
