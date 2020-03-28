@@ -47,9 +47,19 @@ class AbstractLayer:
         # return the list of strongest and the list of shapes of connectors
         return [], []
 
+    # @abstract
     def get_layer_description(self):
         """ Get layer description to be included in the Dash Column """
         return []
+
+    # @abstract
+    def get_layer_figure(self, mode):
+        """ Figure illustrating the layer """
+        fig = go.Figure()
+        fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
+                          showlegend=False,
+                          template=self.plotly_theme)
+        return fig
 
     def get_unit_description(self, unit_idx: int):
         """ Get layer Unit description to be included in a Dash Column """

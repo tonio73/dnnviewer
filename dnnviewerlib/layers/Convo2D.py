@@ -2,6 +2,7 @@ from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
 from ..SimpleColorScale import SimpleColorScale
+from ..widgets import layer_minimax_graph
 
 import numpy as np
 import plotly.graph_objects as go
@@ -103,27 +104,17 @@ class Convo2D(AbstractLayer):
 
     # @override
     def get_layer_description(self):
-        weights1 = self.weights.reshape(-1, self.weights.shape[3])
-        w_min = weights1.min(axis=0)
-        w_max = weights1.max(axis=0)
-        hover_text = ['%d' % idx for idx in np.arange(self.num_unit)] if self.unit_names is None else self.unit_names
-        bar_min = go.Bar(x=w_min, hovertext=hover_text, hoverinfo='text',
-                         marker_color=self.link_color_scale.get_color(w_min))
-        bar_max = go.Bar(x=w_max, hovertext=hover_text, hoverinfo='text',
-                         marker_color=self.link_color_scale.get_color(w_max))
-        fig = go.Figure(data=[bar_min, bar_max])
-        fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
-                          title_text='Unit min-max weights',
-                          yaxis_title_text='Layer unit',
-                          # yaxis_title_text='Count',
-                          bargap=0,  # gap between bars of adjacent location coordinates)
-                          showlegend=False,
-                          template=self.plotly_theme)
         return [html.H5("Convo 2D '%s'" % self.name),
-                html.Ul([html.Li("%d units" % self.num_unit)]),
-                dcc.Graph(id='layer-weights', figure=fig)]
+                html.Ul([html.Li("%d units" % self.num_unit)])]
 
     # @override
+    def get_layer_figure(self, mode):
+        if mode == 'weights':
+            weights1 = self.weights.reshape(-1, self.weights.shape[3])
+            return layer_minimax_graph.graph(weights1, self.num_unit, self.unit_names, self.plotly_theme)
+        return
+
+        # @override
     def get_unit_description(self, unit_idx):
         w = self.weights[:, :, :, unit_idx]
         num_maps = min(w.shape[2], 12)

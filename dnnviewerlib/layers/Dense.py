@@ -2,6 +2,7 @@ from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
 from ..SimpleColorScale import SimpleColorScale
+from ..widgets import layer_minimax_graph
 
 import numpy as np
 import plotly.graph_objects as go
@@ -63,21 +64,14 @@ class Dense(AbstractLayer):
 
     # @override
     def get_layer_description(self):
-        w_min = np.amin(self.weights, axis=0)
-        w_max = np.amax(self.weights, axis=0)
-        hover_text = ['%d' % idx for idx in np.arange(self.num_unit)] if self.unit_names is None else self.unit_names
-        fig = go.Figure(data=[go.Bar(x=w_min, hovertext=hover_text, hoverinfo='text'),
-                              go.Bar(x=w_max, hovertext=hover_text, hoverinfo='text')])
-        fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
-                          title_text='Unit min-max weights',
-                          yaxis_title_text='Layer unit',
-                          # yaxis_title_text='Count',
-                          bargap=0,  # gap between bars of adjacent location coordinates)
-                          showlegend=False,
-                          template=self.plotly_theme)
         return [html.H5("Dense '%s'" % self.name),
-                html.Ul([html.Li("%d units" % self.num_unit)]),
-                dcc.Graph(id='layer-weights', figure=fig)]
+                html.Ul([html.Li("%d units" % self.num_unit)])]
+
+    # @override
+    def get_layer_figure(self, mode):
+        if mode == 'weights':
+            return layer_minimax_graph.graph(self.weights, self.num_unit, self.unit_names, self.plotly_theme)
+        return AbstractLayer.get_layer_figure(self, mode)
 
     # @override
     def get_unit_description(self, unit_idx):

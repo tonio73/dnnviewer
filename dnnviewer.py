@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+import json
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
 
 from dnnviewerlib.Grapher import Grapher
@@ -13,8 +15,6 @@ import dnnviewerlib.imageutils as imageutils
 import dnnviewerlib.bridge.tensorflow as tf_bridge
 
 import argparse
-
-grapher = Grapher()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-k", "--model-keras", help="Load a Keras model from file")
@@ -28,6 +28,10 @@ has_test_sample = False
 x_test, y_test = [], []
 input_classes, output_classes = None, None
 
+# Graphical representation of DNN
+grapher = Grapher()
+
+# Handle command line arguments
 args = parser.parse_args()
 
 if args.test_dataset:
@@ -47,6 +51,9 @@ if args.model_keras:
                                                                 output_classes)
 
 debug_mode = args.debug
+
+# Display mode, only 'weights' currently supported (later 'gradients')
+mode = 'weights'
 
 # Create App, set stylesheets
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -79,10 +86,7 @@ app.layout = dbc.Container([
     ]),
 
     # Main View
-    dcc.Graph(
-        id='network-view',
-        figure=main_view
-    ),
+    dcc.Graph(id='network-view', figure=main_view),
 
     # Bottom detail panel
     dbc.Row([
@@ -99,7 +103,8 @@ app.layout = dbc.Container([
         ], md=2, align='start'),
         dbc.Col([
             html.Label('Selected layer'),
-            html.Div(id='layer-info', className='detail-section')
+            html.Div(id='layer-info', className='detail-section'),
+            html.Div([dcc.Graph(id='layer-figure', figure=go.Figure())])
         ], md=3, align='start'),
         dbc.Col([
             html.Label('Selected unit'),
@@ -107,7 +112,9 @@ app.layout = dbc.Container([
         ], md=4, align='start'),
         dbc.Col([html.Label('Activation maps'), html.Div(id='activation-maps')],
                 md=3, align='start')
-    ], style={'marginTop': '10px', 'marginBottom': '20px'})
+    ], style={'marginTop': '10px', 'marginBottom': '20px'}),
+
+    dbc.Row(id='dbg-row')
 
 ], fluid=True)
 
@@ -116,9 +123,7 @@ app.layout = dbc.Container([
               [Input('topn-criteria', 'value'), Input('network-view', 'clickData')])
 def update_figure(topn, click_data):
     if click_data:
-        point = click_data['points'][0]
-        layer = grapher.layers[int(point['curveNumber'])]
-        unit_idx = point['pointNumber']
+        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         grapher.plot_topn_connections(main_view, topn, layer, unit_idx)
     return main_view
 
@@ -136,18 +141,26 @@ def update_test_sample(index):
               [Input('network-view', 'clickData')])
 def update_layer_info(click_data):
     if click_data:
-        layer = grapher.layers[int(click_data['points'][0]['curveNumber'])]
+        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return layer.get_layer_description()
     return []
+
+
+@app.callback(Output('layer-figure', 'figure'),
+              [Input('network-view', 'clickData')])
+def update_layer_figure(click_data):
+    if click_data:
+        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
+        return layer.get_layer_figure(mode)
+    return go.Figure()
 
 
 @app.callback(Output('unit-info', 'children'),
               [Input('network-view', 'clickData')])
 def update_unit_info(click_data):
+    """ Click on the layer figure => update layer unit description """
     if click_data:
-        point = click_data['points'][0]
-        layer = grapher.layers[int(point['curveNumber'])]
-        unit_idx = point['pointNumber']
+        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return layer.get_unit_description(unit_idx)
     return []
 
@@ -158,11 +171,19 @@ def update_activation_map(index, click_data):
     if index is not None and x_test is not None \
             and activation_mapper \
             and click_data:
-        point = click_data['points'][0]
-        layer = grapher.layers[int(point['curveNumber'])]
-        unit_idx = point['pointNumber']
+        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return activation_map.widget(activation_mapper, layer, unit_idx, x_test[index])
     return []
+
+
+@app.callback(Output('network-view', 'clickData'),
+              [Input('layer-figure', 'clickData')],
+              [State('network-view', 'clickData')])
+def debug_row(click_data, network_click_data):
+    """ Click on the layer figure => update the main selection's unit """
+    if click_data and network_click_data:
+        network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
+    return network_click_data
 
 
 if __name__ == '__main__':

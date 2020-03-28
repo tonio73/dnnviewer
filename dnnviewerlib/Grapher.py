@@ -20,6 +20,12 @@ class Grapher:
         self.xoffset += self.x_spacing
         return len(self.layers) - 1
 
+    def get_layer_unit_from_click_data(self, click_data):
+        point = click_data['points'][0]
+        layer = self.layers[int(point['curveNumber'])]
+        unit_idx = point['pointNumber']
+        return layer, unit_idx
+
     def plot_layers(self, fig: go.Figure):
         """ Plot layers """
 
