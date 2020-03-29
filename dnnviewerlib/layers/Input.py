@@ -1,6 +1,7 @@
 from .AbstractLayer import AbstractLayer
 
 import plotly.graph_objects as go
+import dash_core_components as dcc
 import dash_html_components as html
 
 import numpy as np
@@ -18,7 +19,17 @@ class Input(AbstractLayer):
         fig.add_trace(go.Scatter(x=x, y=y, hovertext=hover_text, mode='markers', hoverinfo='text', name=self.name))
 
     # @override
-    def get_layer_description(self):
-        return [html.H5("Input '%s'" % self.name),
-                html.Ul([html.Li("%d units" % self.num_unit)])
-                ]
+    def get_layer_title(self):
+        return html.H5("Input '%s'" % self.name)
+
+    # @override
+    def get_layer_tabs(self):
+        """ Get the layer tab bar and layout function """
+        return AbstractLayer.make_layer_tabs({'info': 'Info'})
+
+    # @override
+    def get_layer_tab_content(self, active_tab):
+        """ Get the content of the selected tab """
+        if active_tab == 'info':
+            return html.Ul([html.Li("%d units" % self.num_unit)])
+        return html.Div()

@@ -2,7 +2,9 @@ from ..SimpleColorScale import SimpleColorScale
 
 import numpy as np
 import plotly.graph_objects as go
+import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 
 
 class AbstractLayer:
@@ -48,18 +50,21 @@ class AbstractLayer:
         return [], []
 
     # @abstract
-    def get_layer_description(self):
+    def get_layer_title(self):
         """ Get layer description to be included in the Dash Column """
         return []
 
     # @abstract
-    def get_layer_figure(self, mode):
-        """ Figure illustrating the layer """
-        fig = go.Figure()
-        fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
-                          showlegend=False,
-                          template=self.plotly_theme)
-        return fig
+    def get_layer_tabs(self):
+        """ Get the layer tab bar and layout function """
+        return [*self.make_layer_tabs({}),
+                # The graph needs always to be defined at init to check associated callback
+                html.Div(dcc.Graph(id='layer-figure'), hidden=True)]
+
+    # @abstract
+    def get_layer_tab_content(self, active_tab):
+        """ Get the content of the selected tab """
+        return html.Div()
 
     def get_unit_description(self, unit_idx: int):
         """ Get layer Unit description to be included in a Dash Column """
@@ -67,8 +72,13 @@ class AbstractLayer:
                         (' (%s)' % self.unit_names[unit_idx] if self.unit_names is not None else ""))]
 
     def _get_y_offset(self):
+        """ index of the first unit (lowest y) """
         return -self.num_unit * self.spacing_y / 2
 
-    def _plot_title(self, fig, y_offset=-10):
-        fig.add_trace(go.Scatter(x=[self.xoffset], y=[self._get_y_offset() + y_offset], text=[self.name],
-                                 textposition="bottom center", mode="text"))
+    @staticmethod
+    def make_layer_tabs(tab_def):
+        """ Create tab bar and container for the layer information sub-panel """
+        active_tab = list(tab_def)[0] if len(tab_def) > 0 else ''
+        return [dbc.Tabs(id="layer-tab-bar", active_tab=active_tab,
+                         children=[dbc.Tab(label=tab_def[t], tab_id=t) for t in tab_def]),
+                html.Div(id="layer-tab-content", className="p-2 detail-tab border-left")]

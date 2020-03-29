@@ -2,7 +2,7 @@ import numpy as np
 import plotly.graph_objects as go
 
 
-def graph(weights, num_unit, unit_names, plotly_theme):
+def figure(weights, num_unit, unit_names, plotly_theme):
     """ Create a bar chart with min and max over layer """
 
     w_min = np.amin(weights, axis=0)

@@ -103,16 +103,23 @@ class Convo2D(AbstractLayer):
         return np.unique(strongest_idx), connectors.get_shapes()
 
     # @override
-    def get_layer_description(self):
-        return [html.H5("Convo 2D '%s'" % self.name),
-                html.Ul([html.Li("%d units" % self.num_unit)])]
+    def get_layer_title(self):
+        return html.H5("Convo 2D '%s'" % self.name)
 
     # @override
-    def get_layer_figure(self, mode):
-        if mode == 'weights':
+    def get_layer_tabs(self):
+        """ Get the layer tab bar and layout function """
+        return AbstractLayer.make_layer_tabs({'info': 'Info', 'weights': 'Weights'})
+
+    # @override
+    def get_layer_tab_content(self, active_tab):
+        """ Get the content of the selected tab """
+        if active_tab == 'info':
+            return html.Ul([html.Li("%d units" % self.num_unit)])
+        elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
-            return layer_minimax_graph.graph(weights1, self.num_unit, self.unit_names, self.plotly_theme)
-        return
+            return layer_minimax_graph.figure(weights1, self.num_unit, self.unit_names, self.plotly_theme)
+        return html.Div()
 
         # @override
     def get_unit_description(self, unit_idx):

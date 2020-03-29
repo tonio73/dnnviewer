@@ -63,15 +63,23 @@ class Dense(AbstractLayer):
         return np.unique(strongest_idx), connectors.get_shapes()
 
     # @override
-    def get_layer_description(self):
-        return [html.H5("Dense '%s'" % self.name),
-                html.Ul([html.Li("%d units" % self.num_unit)])]
+    def get_layer_title(self):
+        return html.H5("Dense '%s'" % self.name)
 
     # @override
-    def get_layer_figure(self, mode):
-        if mode == 'weights':
-            return layer_minimax_graph.graph(self.weights, self.num_unit, self.unit_names, self.plotly_theme)
-        return AbstractLayer.get_layer_figure(self, mode)
+    def get_layer_tabs(self):
+        """ Get the layer tab bar and layout function """
+        return AbstractLayer.make_layer_tabs({'info': 'Info', 'weights': 'Weights'})
+
+    # @override
+    def get_layer_tab_content(self, active_tab):
+        """ Get the content of the selected tab """
+        if active_tab == 'info':
+            return html.Ul([html.Li("%d units" % self.num_unit)])
+        elif active_tab == 'weights':
+            return dcc.Graph(id='layer-figure', figure=layer_minimax_graph.figure(self.weights, self.num_unit,
+                                                                                  self.unit_names, self.plotly_theme))
+        return html.Div()
 
     # @override
     def get_unit_description(self, unit_idx):

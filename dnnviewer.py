@@ -10,6 +10,7 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
 
 from dnnviewerlib.Grapher import Grapher
+from dnnviewerlib.layers.AbstractLayer import  AbstractLayer
 from dnnviewerlib.widgets import activation_map, font_awesome
 import dnnviewerlib.imageutils as imageutils
 import dnnviewerlib.bridge.tensorflow as tf_bridge
@@ -90,6 +91,7 @@ app.layout = dbc.Container([
 
     # Bottom detail panel
     dbc.Row([
+        # Input sample selection
         dbc.Col([
             html.Div([html.Label('Select test sample'),
                       dcc.Dropdown(
@@ -101,16 +103,28 @@ app.layout = dbc.Container([
             html.P([html.Img(id='test-sample-img', alt='Sample input')],
                    className='thumbnail', hidden=not has_test_sample)
         ], md=2, align='start'),
+
+        # Layer information
         dbc.Col([
             html.Label('Selected layer'),
-            html.Div(id='layer-info', className='detail-section'),
-            html.Div([dcc.Graph(id='layer-figure')])
+            html.Div(className='detail-section',
+                     children=[
+                        html.Div(id='layer-title'),
+                        html.Div(id='layer-tabs',
+                                 className='detail-section',
+                                 children=[*AbstractLayer.make_layer_tabs({}), dcc.Graph(id='layer-figure')])
+                      ])
         ], md=3, align='start'),
+
+        # Unit information
         dbc.Col([
             html.Label('Selected unit'),
             html.Div(id='unit-info', className='detail-section')
         ], md=4, align='start'),
-        dbc.Col([html.Label('Activation maps'), html.Div(id='activation-maps')],
+
+        # Activation maps
+        dbc.Col([html.Label('Activation maps'),
+                 html.Div(id='activation-maps')],
                 md=3, align='start')
     ], style={'marginTop': '10px', 'marginBottom': '20px'}),
 
@@ -122,6 +136,7 @@ app.layout = dbc.Container([
 @app.callback(Output('network-view', 'figure'),
               [Input('topn-criteria', 'value'), Input('network-view', 'clickData')])
 def update_figure(topn, click_data):
+    """ Update the main view when some unit is selected or the number of connections to show is changed """
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         grapher.plot_topn_connections(main_view, topn, layer, unit_idx)
@@ -131,28 +146,45 @@ def update_figure(topn, click_data):
 @app.callback(Output('test-sample-img', 'src'),
               [Input('select-test-sample', 'value')])
 def update_test_sample(index):
+    """ Update the display of the selected test sample upon selection
+        @return the image to be displayed as base64 encoded png
+    """
     if index is not None and x_test is not None:
         img = x_test[index]
         return imageutils.array_to_img_src(img)
     return ''
 
 
-@app.callback(Output('layer-info', 'children'),
+@app.callback(Output('layer-title', 'children'),
               [Input('network-view', 'clickData')])
 def update_layer_info(click_data):
+    """ Display selected layer title """
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-        return layer.get_layer_description()
+        return layer.get_layer_title()
     return []
 
 
-@app.callback(Output('layer-figure', 'figure'),
+@app.callback(Output('layer-tabs', 'children'),
               [Input('network-view', 'clickData')])
-def update_layer_figure(click_data):
+def update_layer_tabs(click_data):
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-        return layer.get_layer_figure(mode)
-    return go.Figure()
+        return layer.get_layer_tabs()
+    return AbstractLayer.make_layer_tabs({})
+
+
+@app.callback(
+    Output("layer-tab-content", "children"),
+    [Input("layer-tab-bar", "active_tab")],
+    [State('network-view', 'clickData')])
+def render_tab_content(active_tab, network_click_data):
+    """ layer info tab selected => update content """
+    if active_tab and network_click_data is not None:
+        layer, unit_idx = grapher.get_layer_unit_from_click_data(network_click_data)
+        if layer is not None:
+            return layer.get_layer_tab_content(active_tab)
+    return html.Div()
 
 
 @app.callback(Output('unit-info', 'children'),
@@ -165,6 +197,16 @@ def update_unit_info(click_data):
     return []
 
 
+@app.callback(Output('network-view', 'clickData'),
+              [Input('layer-figure', 'clickData')],
+              [State('network-view', 'clickData')])
+def update_unit_selection(click_data, network_click_data):
+    """ Click on the layer figure => update the main selection's unit """
+    if click_data and network_click_data:
+        network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
+    return network_click_data
+
+
 @app.callback(Output('activation-maps', 'children'),
               [Input('select-test-sample', 'value'), Input('network-view', 'clickData')])
 def update_activation_map(index, click_data):
@@ -174,16 +216,6 @@ def update_activation_map(index, click_data):
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return activation_map.widget(activation_mapper, layer, unit_idx, x_test[index])
     return []
-
-
-@app.callback(Output('network-view', 'clickData'),
-              [Input('layer-figure', 'clickData')],
-              [State('network-view', 'clickData')])
-def debug_row(click_data, network_click_data):
-    """ Click on the layer figure => update the main selection's unit """
-    if click_data and network_click_data:
-        network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
-    return network_click_data
 
 
 if __name__ == '__main__':
