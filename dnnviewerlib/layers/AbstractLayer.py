@@ -57,12 +57,30 @@ class AbstractLayer:
     # @abstract
     def get_layer_tabs(self):
         """ Get the layer tab bar and layout function """
-        return [*self.make_layer_tabs({}),
+        return [*self.make_tabs('layer', {}),
                 # The graph needs always to be defined at init to check associated callback
                 html.Div(dcc.Graph(id='layer-figure'), hidden=True)]
 
     # @abstract
     def get_layer_tab_content(self, active_tab):
+        """ Get the content of the selected tab """
+        return html.Div()
+
+    # @abstract
+    def get_unit_title(self, unit_idx):
+        """ Get unit description to be included in the Dash Column """
+        return [html.H5(('Unit #%s' % unit_idx) +
+                        (' (%s)' % self.unit_names[unit_idx] if self.unit_names is not None else ""))]
+
+    # @abstract
+    def get_unit_tabs(self, unit_idx):
+        """ Get the unit tab bar and layout function """
+        return [*self.make_tabs('layer', {}),
+                # The graph needs always to be defined at init to check associated callback
+                html.Div(dcc.Graph(id='layer-figure'), hidden=True)]
+
+    # @abstract
+    def get_unit_tab_content(self, unit_idx, active_tab):
         """ Get the content of the selected tab """
         return html.Div()
 
@@ -76,9 +94,9 @@ class AbstractLayer:
         return -self.num_unit * self.spacing_y / 2
 
     @staticmethod
-    def make_layer_tabs(tab_def):
+    def make_tabs(prefix, tab_def):
         """ Create tab bar and container for the layer information sub-panel """
         active_tab = list(tab_def)[0] if len(tab_def) > 0 else ''
-        return [dbc.Tabs(id="layer-tab-bar", active_tab=active_tab,
+        return [dbc.Tabs(id=prefix + "-tab-bar", active_tab=active_tab,
                          children=[dbc.Tab(label=tab_def[t], tab_id=t) for t in tab_def]),
-                html.Div(id="layer-tab-content", className="p-2 detail-tab border-left")]
+                html.Div(id=prefix + "-tab-content", className="p-2 detail-tab border-left")]

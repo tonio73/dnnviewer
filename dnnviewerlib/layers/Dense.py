@@ -69,7 +69,7 @@ class Dense(AbstractLayer):
     # @override
     def get_layer_tabs(self):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_layer_tabs({'info': 'Info', 'weights': 'Weights'})
+        return AbstractLayer.make_tabs('layer', {'info': 'Info', 'weights': 'Weights'})
 
     # @override
     def get_layer_tab_content(self, active_tab):
@@ -77,21 +77,29 @@ class Dense(AbstractLayer):
         if active_tab == 'info':
             return html.Ul([html.Li("%d units" % self.num_unit)])
         elif active_tab == 'weights':
-            return dcc.Graph(id='layer-figure', figure=layer_minimax_graph.figure(self.weights, self.num_unit,
-                                                                                  self.unit_names, self.plotly_theme))
+            return dcc.Graph(id='layer-figure',
+                             figure=layer_minimax_graph.figure(self.weights, self.num_unit,
+                                                               self.unit_names, self.plotly_theme))
         return html.Div()
 
     # @override
-    def get_unit_description(self, unit_idx):
-        w = self.weights[:, unit_idx]
-        fig = go.Figure(data=[go.Histogram(x=w)])
-        fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
-                          title_text='Weight histogram',
-                          xaxis_title_text='Amplitude',
-                          # yaxis_title_text='Count',
-                          bargap=0.2,  # gap between bars of adjacent location coordinates)
-                          template=self.plotly_theme)
+    def get_unit_tabs(self, unit_idx):
+        """ Get the layer tab bar and layout function """
+        return AbstractLayer.make_tabs('unit', {'info': 'Info', 'weights': 'Weights'})
 
-        return AbstractLayer.get_unit_description(self, unit_idx) + \
-               [html.Ul([html.Li("%d coefficients" % len(w))]),
-                dcc.Graph(id='unit-%s-%d-histogram' % (self.name, unit_idx), figure=fig)]
+    # @override
+    def get_unit_tab_content(self, unit_idx, active_tab):
+        """ Get the content of the selected tab """
+        w = self.weights[:, unit_idx]
+        if active_tab == 'info':
+            return html.Ul([html.Li("%d coefficients" % len(w))])
+        elif active_tab == 'weights':
+            fig = go.Figure(data=[go.Histogram(x=w)])
+            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
+                              title_text='Weight histogram',
+                              xaxis_title_text='Amplitude',
+                              # yaxis_title_text='Count',
+                              bargap=0.2,  # gap between bars of adjacent location coordinates)
+                              template=self.plotly_theme)
+            return dcc.Graph(id='unit-figure', figure=fig)
+        return html.Div()

@@ -109,7 +109,7 @@ class Convo2D(AbstractLayer):
     # @override
     def get_layer_tabs(self):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_layer_tabs({'info': 'Info', 'weights': 'Weights'})
+        return AbstractLayer.make_tabs('layer', {'info': 'Info', 'weights': 'Weights'})
 
     # @override
     def get_layer_tab_content(self, active_tab):
@@ -118,35 +118,44 @@ class Convo2D(AbstractLayer):
             return html.Ul([html.Li("%d units" % self.num_unit)])
         elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
-            return layer_minimax_graph.figure(weights1, self.num_unit, self.unit_names, self.plotly_theme)
+            return dcc.Graph(id='layer-figure',
+                             figure=layer_minimax_graph.figure(weights1, self.num_unit,
+                                                               self.unit_names, self.plotly_theme))
         return html.Div()
 
-        # @override
-    def get_unit_description(self, unit_idx):
-        w = self.weights[:, :, :, unit_idx]
-        num_maps = min(w.shape[2], 12)
-        if w.shape[1] < 4:
-            num_cols = 3
-        elif w.shape[1] < 6:
-            num_cols = 2
-        else:
-            num_cols = 1
-        num_rows = int(np.ceil(num_maps / num_cols))
-        titles = [str(i) for i in range(num_maps)]
-        fig = make_subplots(rows=num_rows, cols=num_cols, subplot_titles=titles,
-                            shared_xaxes=True, shared_yaxes=True,
-                            horizontal_spacing=0.02, vertical_spacing=0.06)
-        for i in range(num_maps):
-            fig.add_trace(go.Heatmap(z=w[:, :, i], coloraxis="coloraxis"),
-                          row=(i // num_cols) + 1, col=(i % num_cols) + 1)
-        fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
-                          title_text='Filter weights' +
-                                     (' (%d out of %d)' % (num_maps, w.shape[2]) if w.shape[2] > num_maps else ''),
-                          # Attempt to force same scale on X and Y (failed)
-                          yaxis=dict(scaleanchor="x", scaleratio=1),
-                          coloraxis=self.link_color_scale.as_dict(),
-                          template=self.plotly_theme)
+    # @override
+    def get_unit_tabs(self, unit_idx):
+        """ Get the layer tab bar and layout function """
+        return AbstractLayer.make_tabs('unit', {'info': 'Info', 'weights': 'Weights'})
 
-        return AbstractLayer.get_unit_description(self, unit_idx) + \
-               [html.Ul([html.Li("%d (%dx%d) filters" % (w.shape[2], w.shape[0], w.shape[1]))]),
-                dcc.Graph(id='unit-%s-%d-histogram' % (self.name, unit_idx), figure=fig)]
+    # @override
+    def get_unit_tab_content(self, unit_idx, active_tab):
+        """ Get the content of the selected tab """
+        w = self.weights[:, :, :, unit_idx]
+        if active_tab == 'info':
+            return html.Ul([html.Li("%d coefficients" % len(w))])
+        elif active_tab == 'weights':
+            num_maps = min(w.shape[2], 12)
+            if w.shape[1] < 4:
+                num_cols = 3
+            elif w.shape[1] < 6:
+                num_cols = 2
+            else:
+                num_cols = 1
+            num_rows = int(np.ceil(num_maps / num_cols))
+            titles = [str(i) for i in range(num_maps)]
+            fig = make_subplots(rows=num_rows, cols=num_cols, subplot_titles=titles,
+                                shared_xaxes=True, shared_yaxes=True,
+                                horizontal_spacing=0.02, vertical_spacing=0.06)
+            for i in range(num_maps):
+                fig.add_trace(go.Heatmap(z=w[:, :, i], coloraxis="coloraxis"),
+                              row=(i // num_cols) + 1, col=(i % num_cols) + 1)
+            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
+                              title_text='Filter weights' +
+                                         (' (%d out of %d)' % (num_maps, w.shape[2]) if w.shape[2] > num_maps else ''),
+                              # Attempt to force same scale on X and Y (failed)
+                              yaxis=dict(scaleanchor="x", scaleratio=1),
+                              coloraxis=self.link_color_scale.as_dict(),
+                              template=self.plotly_theme)
+            return dcc.Graph(id='unit-figure', figure=fig)
+        return html.Div()

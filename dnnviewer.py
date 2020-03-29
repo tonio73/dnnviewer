@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import json
-
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -52,9 +50,6 @@ if args.model_keras:
                                                                 output_classes)
 
 debug_mode = args.debug
-
-# Display mode, only 'weights' currently supported (later 'gradients')
-mode = 'weights'
 
 # Create App, set stylesheets
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, font_awesome.CDN_CSS_URL])
@@ -111,15 +106,19 @@ app.layout = dbc.Container([
                      children=[
                         html.Div(id='layer-title'),
                         html.Div(id='layer-tabs',
-                                 className='detail-section',
-                                 children=[*AbstractLayer.make_layer_tabs({}), dcc.Graph(id='layer-figure')])
+                                 children=[*AbstractLayer.make_tabs('layer', {}), dcc.Graph(id='layer-figure')])
                       ])
         ], md=3, align='start'),
 
         # Unit information
         dbc.Col([
             html.Label('Selected unit'),
-            html.Div(id='unit-info', className='detail-section')
+            html.Div(className='detail-section',
+                     children=[
+                         html.Div(id='unit-title'),
+                         html.Div(id='unit-tabs',
+                                  children=[*AbstractLayer.make_tabs('unit', {}), dcc.Graph(id='unit-figure')])
+                     ])
         ], md=4, align='start'),
 
         # Activation maps
@@ -171,7 +170,7 @@ def update_layer_tabs(click_data):
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return layer.get_layer_tabs()
-    return AbstractLayer.make_layer_tabs({})
+    return AbstractLayer.make_tabs('layer', {})
 
 
 @app.callback(
@@ -187,14 +186,36 @@ def render_tab_content(active_tab, network_click_data):
     return html.Div()
 
 
-@app.callback(Output('unit-info', 'children'),
+@app.callback(Output('unit-title', 'children'),
               [Input('network-view', 'clickData')])
-def update_unit_info(click_data):
-    """ Click on the layer figure => update layer unit description """
+def update_layer_info(click_data):
+    """ Display selected unit title """
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-        return layer.get_unit_description(unit_idx)
+        return layer.get_unit_title(unit_idx)
     return []
+
+
+@app.callback(Output('unit-tabs', 'children'),
+              [Input('network-view', 'clickData')])
+def update_layer_tabs(click_data):
+    if click_data:
+        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
+        return layer.get_unit_tabs(unit_idx)
+    return AbstractLayer.make_tabs('layer', {})
+
+
+@app.callback(
+    Output("unit-tab-content", "children"),
+    [Input("unit-tab-bar", "active_tab")],
+    [State('network-view', 'clickData')])
+def render_tab_content(active_tab, network_click_data):
+    """ layer info tab selected => update content """
+    if active_tab and network_click_data is not None:
+        layer, unit_idx = grapher.get_layer_unit_from_click_data(network_click_data)
+        if layer is not None:
+            return layer.get_unit_tab_content(unit_idx, active_tab)
+    return html.Div()
 
 
 @app.callback(Output('network-view', 'clickData'),
