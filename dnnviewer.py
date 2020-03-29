@@ -10,7 +10,7 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
 
 from dnnviewerlib.Grapher import Grapher
-from dnnviewerlib.widgets import activation_map
+from dnnviewerlib.widgets import activation_map, font_awesome
 import dnnviewerlib.imageutils as imageutils
 import dnnviewerlib.bridge.tensorflow as tf_bridge
 
@@ -56,7 +56,7 @@ debug_mode = args.debug
 mode = 'weights'
 
 # Create App, set stylesheets
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, font_awesome.CDN_CSS_URL])
 app.title = 'DNN Viewer'
 
 # Main network view
@@ -73,7 +73,7 @@ app.layout = dbc.Container([
 
     # Title
     dbc.Row([
-        dbc.Col([html.H1('Deep Neural Network Viewer')])
+        dbc.Col([html.H1([font_awesome.icon('binoculars'), html.Span('Deep Neural Network Viewer')])])
     ]),
 
     # Top toolbar

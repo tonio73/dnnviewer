@@ -24,5 +24,5 @@ class Connector:
                                                       x0 + self.control_delta, y0,
                                                       x1 - self.control_delta, y1,
                                                       x1, y1) for x0, y0, x1, y1 in zip(x_from, y_from, x_to, y_to)]
-        return [dict(type='path', path=p, line=dict(color=c, width=1.5), opacity=0.6)
+        return [dict(type='path', path=p, line=dict(color=c, width=1.5), opacity=1.0, layer='below')
                 for p, c in zip(paths, colors)]
