@@ -1,3 +1,5 @@
+import string
+
 from .AbstractLayer import AbstractLayer
 
 import plotly.graph_objects as go
@@ -22,9 +24,9 @@ class Input(AbstractLayer):
         return html.H5("Input '%s'" % self.name)
 
     # @override
-    def get_layer_tabs(self):
+    def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('layer', {'info': 'Info'})
+        return AbstractLayer.make_tabs('layer', {'info': 'Info'}, previous_active)
 
     # @override
     def get_layer_tab_content(self, active_tab):

@@ -1,3 +1,5 @@
+import string
+
 from ..SimpleColorScale import SimpleColorScale
 
 import numpy as np
@@ -23,7 +25,7 @@ class AbstractLayer:
         self.xoffset = 0
         return
 
-    def set_xoffset(self, xoffset):
+    def set_xoffset(self, xoffset: float):
         self.xoffset = xoffset
 
     def get_unit_position(self, unit_idx, at_output=False):
@@ -55,9 +57,9 @@ class AbstractLayer:
         return []
 
     # @abstract
-    def get_layer_tabs(self):
+    def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return [*self.make_tabs('layer', {}),
+        return [*self.make_tabs('layer', {}, previous_active),
                 # The graph needs always to be defined at init to check associated callback
                 html.Div(dcc.Graph(id='layer-figure'), hidden=True)]
 
@@ -67,20 +69,20 @@ class AbstractLayer:
         return html.Div()
 
     # @abstract
-    def get_unit_title(self, unit_idx):
+    def get_unit_title(self, unit_idx: int):
         """ Get unit description to be included in the Dash Column """
         return [html.H5(('Unit #%s' % unit_idx) +
                         (' (%s)' % self.unit_names[unit_idx] if self.unit_names is not None else ""))]
 
     # @abstract
-    def get_unit_tabs(self, unit_idx):
+    def get_unit_tabs(self, unit_idx: int, previous_active: string):
         """ Get the unit tab bar and layout function """
-        return [*self.make_tabs('layer', {}),
+        return [*self.make_tabs('layer', {}, previous_active),
                 # The graph needs always to be defined at init to check associated callback
                 html.Div(dcc.Graph(id='layer-figure'), hidden=True)]
 
     # @abstract
-    def get_unit_tab_content(self, unit_idx, active_tab):
+    def get_unit_tab_content(self, unit_idx: int, active_tab: string):
         """ Get the content of the selected tab """
         return html.Div()
 
@@ -94,9 +96,15 @@ class AbstractLayer:
         return -self.num_unit * self.spacing_y / 2
 
     @staticmethod
-    def make_tabs(prefix, tab_def):
+    def make_tabs(prefix: string, tab_def, previous_active: string = None):
         """ Create tab bar and container for the layer information sub-panel """
-        active_tab = list(tab_def)[0] if len(tab_def) > 0 else ''
+        if previous_active is not None and previous_active in list(tab_def.keys()):
+            active_tab = previous_active
+        elif len(tab_def) > 0:
+            active_tab = list(tab_def)[0]
+        else:
+            active_tab = ''
+
         return [dbc.Tabs(id=prefix + "-tab-bar", active_tab=active_tab,
                          children=[dbc.Tab(label=tab_def[t], tab_id=t) for t in tab_def]),
                 html.Div(id=prefix + "-tab-content", className="p-2 detail-tab border-left")]
