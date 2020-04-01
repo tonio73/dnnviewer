@@ -4,13 +4,14 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
-from dnnviewerlib.app import grapher, app, main_view, test_data
-from dnnviewerlib.panes import top, center, bottom
-from dnnviewerlib.layers.AbstractLayer import AbstractLayer
-from dnnviewerlib.widgets import font_awesome
-import dnnviewerlib.bridge.tensorflow as tf_bridge
+from dnnviewerapp import grapher, app, test_data
+from dnnviewerapp.panes import top, center, bottom
+from dnnviewerapp.layers.AbstractLayer import AbstractLayer
+import dnnviewerapp.bridge.tensorflow as tf_bridge
 
 import argparse
+
+panes = [top, center, bottom]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-k", "--model-keras", help="Load a Keras model from file")
@@ -36,32 +37,14 @@ if args.model_keras:
                                                                         test_data.input_classes,
                                                                         test_data.output_classes)
 
-debug_mode = args.debug
+# Prepare rendering of panes
+[pane.render() for pane in panes]
 
-grapher.plot_layers(main_view)
 
-# Init initially shown connections based on the first test sample
-if test_data.has_test_sample:
-    grapher.plot_topn_connections(main_view, 3, grapher.layers[-1],
-                                  test_data.y_test[test_data.test_sample_init])
-
+# Top app layout
 app.layout = dbc.Container([
 
-    # Title
-    dbc.Row([
-        dbc.Col([html.H1([font_awesome.icon('binoculars'), html.Span('Deep Neural Network Viewer',
-                                                                     style={'marginLeft': '15px'})])
-                 ])
-    ]),
-
-    # Top toolbar
-    top.get_layout(),
-
-    # Main View
-    center.get_layout(),
-
-    # Bottom detail panel
-    bottom.get_layout(),
+    *[pane.get_layout() for pane in panes]
 
 ], fluid=True)
 
@@ -147,10 +130,8 @@ def update_unit_selection(click_data, network_click_data):
 # Local callbacks
 
 
-top.callbacks()
-center.callbacks()
-bottom.callbacks()
+[pane.callbacks() for pane in panes]
 
 
 if __name__ == '__main__':
-    app.run_server(debug=debug_mode)
+    app.run_server(debug=args.debug)

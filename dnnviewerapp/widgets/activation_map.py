@@ -1,6 +1,6 @@
-from dnnviewerlib.layers import AbstractLayer, Convo2D
-from dnnviewerlib.bridge import AbstractActivationMapper
-import dnnviewerlib.imageutils as imageutils
+from dnnviewerapp.layers import AbstractLayer, Convo2D
+from dnnviewerapp.bridge import AbstractActivationMapper
+import dnnviewerapp.imageutils as imageutils
 
 import dash_html_components as html
 

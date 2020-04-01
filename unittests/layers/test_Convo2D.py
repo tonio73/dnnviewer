@@ -1,7 +1,7 @@
 import numpy as np
 
-from dnnviewerlib.layers.Dense import Dense
-from dnnviewerlib.layers.Convo2D import Convo2D
+from dnnviewerapp.layers.Dense import Dense
+from dnnviewerapp.layers.Convo2D import Convo2D
 
 
 class TestConvo2D:

@@ -1,18 +1,24 @@
+#
 # Bottom pane of the application: 4 quadrants with input sample, layer, unit and activation/saliency maps
+#
 
-from dnnviewerlib.app import app, grapher, test_data
-from dnnviewerlib.layers.AbstractLayer import AbstractLayer
+from dnnviewerapp import app, grapher, test_data
+from dnnviewerapp.layers.AbstractLayer import AbstractLayer
 
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
-import dnnviewerlib.imageutils as imageutils
-from dnnviewerlib.widgets import activation_map
+import dnnviewerapp.imageutils as imageutils
+from dnnviewerapp.widgets import activation_map
 
 # maximum number of test sample to display in selectors
 max_test_samples = 40
+
+
+def render():
+    return
 
 
 def get_layout():

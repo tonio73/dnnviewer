@@ -1,7 +1,10 @@
+#
 # Center pane of the application: network main view and properties
+#
 
-from dnnviewerlib.app import app, grapher, main_view
+from dnnviewerapp import app, grapher, test_data
 
+import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -9,6 +12,22 @@ from dash.dependencies import Input, Output
 
 # Number of connections to show at init
 topn_init = 3
+
+# Main network view
+main_view = go.Figure()
+
+
+def render():
+    """ Prepare graphical structures before Dash rendering """
+
+    main_view.update_layout(margin=dict(l=10, r=10, b=30, t=30))
+
+    grapher.plot_layers(main_view)
+
+    # Init initially shown connections based on the first test sample
+    if test_data.has_test_sample:
+        grapher.plot_topn_connections(main_view, 3, grapher.layers[-1],
+                                      test_data.y_test[test_data.test_sample_init])
 
 
 def get_layout():
@@ -25,6 +44,7 @@ def get_layout():
 
 def callbacks():
     """ Local callbacks """
+
     @app.callback(Output('network-view', 'figure'),
                   [Input('topn-criteria', 'value'), Input('network-view', 'clickData')])
     def update_figure(topn, click_data):

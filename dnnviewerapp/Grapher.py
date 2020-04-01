@@ -1,5 +1,5 @@
-from dnnviewerlib.layers.AbstractLayer import AbstractLayer
-from dnnviewerlib.bridge.AbstractActivationMapper import AbstractActivationMapper
+from dnnviewerapp.layers.AbstractLayer import AbstractLayer
+from dnnviewerapp.bridge.AbstractActivationMapper import AbstractActivationMapper
 
 import plotly.graph_objects as go
 import numpy as np

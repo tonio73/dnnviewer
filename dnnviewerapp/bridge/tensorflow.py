@@ -1,4 +1,6 @@
-""" Method to create graph view of a TensorFlow model """
+#
+# Method to create graph view of a TensorFlow model
+#
 
 from tensorflow import keras
 

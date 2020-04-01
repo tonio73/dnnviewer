@@ -1,5 +1,5 @@
 import numpy as np
-from dnnviewerlib.Statistics import Statistics
+from dnnviewerapp.Statistics import Statistics
 
 
 class TestStatistics:
