@@ -26,8 +26,7 @@ def render():
 
     # Init initially shown connections based on the first test sample
     if test_data.has_test_sample:
-        grapher.plot_topn_connections(main_view, 3, grapher.layers[-1],
-                                      test_data.y_test[test_data.test_sample_init])
+        grapher.plot_topn_connections(main_view, 3, grapher.layers[-1], 0)
 
 
 def get_layout():

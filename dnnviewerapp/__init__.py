@@ -19,4 +19,4 @@ app = dash.Dash(__name__,
 app.title = 'DNN Viewer'
 
 
-test_data = TestData()
+test_data: TestData = TestData()
