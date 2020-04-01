@@ -1,4 +1,5 @@
 from dnnviewerlib.layers.AbstractLayer import AbstractLayer
+from dnnviewerlib.bridge.AbstractActivationMapper import AbstractActivationMapper
 
 import plotly.graph_objects as go
 import numpy as np
@@ -7,17 +8,20 @@ import numpy as np
 class Grapher:
     """ Graph a (sequential) neural network"""
 
+    activation_mapper: AbstractActivationMapper()
+
     def __init__(self, plotly_theme='plotly_dark'):
         self.layers = []
         self.x_spacing = 1.
-        self.xoffset = 0
+        self.x_offset = 0
         self.plotly_theme = plotly_theme
+        self.activation_mapper = None
 
     def add_layer(self, layer: AbstractLayer):
         """ Add layer to graph """
-        layer.set_xoffset(self.xoffset)
+        layer.set_xoffset(self.x_offset)
         self.layers.append(layer)
-        self.xoffset += self.x_spacing
+        self.x_offset += self.x_spacing
         return len(self.layers) - 1
 
     def get_layer_unit_from_click_data(self, click_data):
@@ -35,13 +39,13 @@ class Grapher:
             layer_names.append(layer.name)
 
         # Set layer names as x axis ticks
-        xaxis = dict(
+        x_axis = dict(
             tickmode='array',
             tickvals=np.arange(len(layer_names)),
             ticktext=layer_names
         )
 
-        fig.update_layout(showlegend=False, xaxis=xaxis, clickmode='event+select', template=self.plotly_theme)
+        fig.update_layout(showlegend=False, xaxis=x_axis, clickmode='event+select', template=self.plotly_theme)
 
     def plot_topn_connections(self, fig: go.Figure, topn: int, ref_layer: AbstractLayer, ref_unit: int):
         """ Add the top N connections of each neuron on the graph """

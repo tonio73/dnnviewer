@@ -88,29 +88,22 @@ def keras_extract_sequential_network(grapher, model, input_classes=None, output_
         grapher.layers[-1].unit_names = output_classes
 
 
-def keras_load_cifar_test_data(sample_length=30, offset=0):
+def keras_load_cifar_test_data(test_data):
     """ Load CIFAR using Keras, return a sample of the test """
 
     (x_train, yTrain), (x_test, y_test) = keras.datasets.cifar10.load_data()
 
-    input_classes = ['red', 'green', 'blue']
-    cifar10_classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-
-    # Subset
-    return x_test[offset:offset + sample_length], y_test[
-                                                  offset:offset + sample_length].ravel(), input_classes, cifar10_classes
+    test_data.set(x_test, y_test.ravel(),
+        ['red', 'green', 'blue'],
+        ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'])
 
 
-def keras_load_mnist_test_data(sample_length=30, offset=0):
+def keras_load_mnist_test_data(test_data):
     """ Load MNIST using Keras, return a sample of the test """
 
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
-    input_classes = ['bw']
-    mnist_classes = [str(d) for d in range(10)]
-
-    # Subset
-    return x_test[offset:offset + sample_length], y_test[offset:offset + sample_length], input_classes, mnist_classes
+    test_data.set(x_test, y_test, ['bw'], [str(d) for d in range(10)])
 
 
 class KerasActivationMapper(AbstractActivationMapper):

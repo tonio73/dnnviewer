@@ -73,7 +73,7 @@ Code is separated in two branches:
 
 ### Code quality
 
-- Code is PEP8 compliant, thanks to Intellij for watching
+- Code is PEP8 compliant, thanks to *flake8* and *Intellij* for watching
 - There are a few pytest unit tests in `unittests/`
 
 #### Run unit test
@@ -90,7 +90,3 @@ $ python -m pytest
 $ flake8  --max-line-length=120
 ```
 
-
-$$
-
-$$
