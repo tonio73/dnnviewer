@@ -59,9 +59,9 @@ class AbstractLayer:
     # @abstract
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return [*self.make_tabs('layer', {}, previous_active),
+        return [*self.make_tabs('bottom-layer', {}, previous_active),
                 # The graph needs always to be defined at init to check associated callback
-                html.Div(dcc.Graph(id='layer-figure'), hidden=True)]
+                html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)]
 
     # @abstract
     def get_layer_tab_content(self, active_tab):
@@ -77,9 +77,9 @@ class AbstractLayer:
     # @abstract
     def get_unit_tabs(self, unit_idx: int, previous_active: string):
         """ Get the unit tab bar and layout function """
-        return [*self.make_tabs('layer', {}, previous_active),
+        return [*self.make_tabs('bottom-unit', {}, previous_active),
                 # The graph needs always to be defined at init to check associated callback
-                html.Div(dcc.Graph(id='layer-figure'), hidden=True)]
+                html.Div(dcc.Graph(id='bottom-unit-figure'), hidden=True)]
 
     # @abstract
     def get_unit_tab_content(self, unit_idx: int, active_tab: string):

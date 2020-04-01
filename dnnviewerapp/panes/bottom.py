@@ -26,17 +26,20 @@ def render():
 
 def get_layout():
     """ Get pane layout """
+
+    dummy_layer = AbstractLayer('dummy')
+
     return dbc.Row([
         # Input sample selection
         dbc.Col([
             html.Div([html.Label('Select test sample'),
                       dcc.Dropdown(
-                          id='select-test-sample',
+                          id='bottom-select-test-sample',
                           value=test_sample_init,
                           options=[{'label': "%d (%s)" % (i, test_data.output_classes[c]), 'value': i} for i, c in
                                    enumerate(test_data.y[:max_test_samples])]
                       )]),
-            html.P([html.Img(id='test-sample-img', alt='Sample input')],
+            html.P([html.Img(id='bottom-test-sample-img', alt='Sample input')],
                    className='thumbnail', hidden=not test_data.has_test_sample)
         ], md=2, align='start'),
 
@@ -45,9 +48,9 @@ def get_layout():
             html.Label('Selected layer'),
             html.Div(className='detail-section',
                      children=[
-                         html.Div(id='layer-title'),
-                         html.Div(id='layer-tabs',
-                                  children=[*AbstractLayer.make_tabs('layer', {}, None), dcc.Graph(id='layer-figure')])
+                         html.Div(id='bottom-layer-title'),
+                         html.Div(id='bottom-layer-tabs',
+                                  children=dummy_layer.get_layer_tabs(None))
                      ])
         ], md=3, align='start'),
 
@@ -56,15 +59,15 @@ def get_layout():
             html.Label('Selected unit'),
             html.Div(className='detail-section',
                      children=[
-                         html.Div(id='unit-title'),
-                         html.Div(id='unit-tabs',
-                                  children=[*AbstractLayer.make_tabs('unit', {}, None), dcc.Graph(id='unit-figure')])
+                         html.Div(id='bottom-unit-title'),
+                         html.Div(id='bottom-unit-tabs',
+                                  children=dummy_layer.get_unit_tabs(0, None))
                      ])
         ], md=4, align='start'),
 
         # Activation maps
         dbc.Col([html.Label('Activation maps'),
-                 html.Div(id='activation-maps')],
+                 html.Div(id='bottom-activation-maps')],
                 md=3, align='start')
     ], style={'marginTop': '10px', 'marginBottom': '20px'})
 
@@ -72,8 +75,8 @@ def get_layout():
 def callbacks():
     """ Local callbacks """
 
-    @app.callback(Output('test-sample-img', 'src'),
-                  [Input('select-test-sample', 'value')])
+    @app.callback(Output('bottom-test-sample-img', 'src'),
+                  [Input('bottom-select-test-sample', 'value')])
     def update_test_sample(index):
         """ Update the display of the selected test sample upon selection
             @return the image to be displayed as base64 encoded png
@@ -83,8 +86,8 @@ def callbacks():
             return imageutils.array_to_img_src(img)
         return ''
 
-    @app.callback(Output('activation-maps', 'children'),
-                  [Input('select-test-sample', 'value'), Input('network-view', 'clickData')])
+    @app.callback(Output('bottom-activation-maps', 'children'),
+                  [Input('bottom-select-test-sample', 'value'), Input('center-main-view', 'clickData')])
     def update_activation_map(index, click_data):
         if index is not None and test_data.x is not None \
                 and grapher.activation_mapper \

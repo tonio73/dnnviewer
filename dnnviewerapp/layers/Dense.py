@@ -71,7 +71,7 @@ class Dense(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return AbstractLayer.make_tabs('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
     # @override
     def get_layer_tab_content(self, active_tab):
@@ -79,7 +79,7 @@ class Dense(AbstractLayer):
         if active_tab == 'info':
             return html.Ul([html.Li("%d units" % self.num_unit)])
         elif active_tab == 'weights':
-            return dcc.Graph(id='layer-figure',
+            return dcc.Graph(id='bottom-layer-figure',
                              figure=layer_minimax_graph.figure(self.weights, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
         return html.Div()
@@ -87,7 +87,7 @@ class Dense(AbstractLayer):
     # @override
     def get_unit_tabs(self, unit_idx: int, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return AbstractLayer.make_tabs('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
     # @override
     def get_unit_tab_content(self, unit_idx, active_tab):
@@ -103,5 +103,5 @@ class Dense(AbstractLayer):
                               # yaxis_title_text='Count',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.plotly_theme)
-            return dcc.Graph(id='unit-figure', figure=fig)
+            return dcc.Graph(id='bottom-unit-figure', figure=fig)
         return html.Div()

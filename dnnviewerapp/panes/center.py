@@ -32,7 +32,7 @@ def render():
 def get_layout():
     """ Get pane layout """
     return dbc.Row([
-        dbc.Col(dcc.Graph(id='network-view', figure=main_view, config=dict(scrollZoom=True), animate=True), md=9),
+        dbc.Col(dcc.Graph(id='center-main-view', figure=main_view, config=dict(scrollZoom=True), animate=True), md=9),
         dbc.Col([html.Label('Show top n connections:'),
                  dcc.Slider(id='topn-criteria',
                             min=1.0, max=4.0, step=1.0, value=topn_init,
@@ -44,8 +44,8 @@ def get_layout():
 def callbacks():
     """ Local callbacks """
 
-    @app.callback(Output('network-view', 'figure'),
-                  [Input('topn-criteria', 'value'), Input('network-view', 'clickData')])
+    @app.callback(Output('center-main-view', 'figure'),
+                  [Input('topn-criteria', 'value'), Input('center-main-view', 'clickData')])
     def update_figure(topn, click_data):
         """ Update the main view when some unit is selected or the number of connections to show is changed """
         if click_data:

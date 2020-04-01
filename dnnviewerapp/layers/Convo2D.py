@@ -111,7 +111,7 @@ class Convo2D(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return AbstractLayer.make_tabs('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
     # @override
     def get_layer_tab_content(self, active_tab):
@@ -120,7 +120,7 @@ class Convo2D(AbstractLayer):
             return html.Ul([html.Li("%d units" % self.num_unit)])
         elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
-            return dcc.Graph(id='layer-figure',
+            return dcc.Graph(id='bottom-layer-figure',
                              figure=layer_minimax_graph.figure(weights1, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
         return html.Div()
@@ -128,7 +128,7 @@ class Convo2D(AbstractLayer):
     # @override
     def get_unit_tabs(self, unit_idx: int, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return AbstractLayer.make_tabs('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
     # @override
     def get_unit_tab_content(self, unit_idx, active_tab):
@@ -159,5 +159,5 @@ class Convo2D(AbstractLayer):
                               yaxis=dict(scaleanchor="x", scaleratio=1),
                               coloraxis=self.link_color_scale.as_dict(),
                               template=self.plotly_theme)
-            return dcc.Graph(id='unit-figure', figure=fig)
+            return dcc.Graph(id='bottom-unit-figure', figure=fig)
         return html.Div()

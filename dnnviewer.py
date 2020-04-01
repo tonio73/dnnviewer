@@ -52,8 +52,8 @@ app.layout = dbc.Container([
 # Global callbacks
 
 
-@app.callback(Output('layer-title', 'children'),
-              [Input('network-view', 'clickData')])
+@app.callback(Output('bottom-layer-title', 'children'),
+              [Input('center-main-view', 'clickData')])
 def update_layer_info(click_data):
     """ Display selected layer title """
     if click_data:
@@ -62,20 +62,20 @@ def update_layer_info(click_data):
     return []
 
 
-@app.callback(Output('layer-tabs', 'children'),
-              [Input('network-view', 'clickData')],
-              [State('layer-tab-bar', 'active_tab')])
+@app.callback(Output('bottom-layer-tabs', 'children'),
+              [Input('center-main-view', 'clickData')],
+              [State('bottom-layer-tab-bar', 'active_tab')])
 def update_layer_tabs(click_data, active_tab):
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return layer.get_layer_tabs(active_tab)
-    return AbstractLayer.make_tabs('layer', {}, active_tab)
+    return AbstractLayer.make_tabs('bottom-layer', {}, active_tab)
 
 
 @app.callback(
-    Output("layer-tab-content", "children"),
-    [Input("layer-tab-bar", "active_tab")],
-    [State('network-view', 'clickData')])
+    Output("bottom-layer-tab-content", "children"),
+    [Input("bottom-layer-tab-bar", "active_tab")],
+    [State('center-main-view', 'clickData')])
 def render_layer_tab_content(active_tab, network_click_data):
     """ layer info tab selected => update content """
     if active_tab and network_click_data is not None:
@@ -85,8 +85,8 @@ def render_layer_tab_content(active_tab, network_click_data):
     return html.Div()
 
 
-@app.callback(Output('unit-title', 'children'),
-              [Input('network-view', 'clickData')])
+@app.callback(Output('bottom-unit-title', 'children'),
+              [Input('center-main-view', 'clickData')])
 def update_layer_info(click_data):
     """ Display selected unit title """
     if click_data:
@@ -95,20 +95,20 @@ def update_layer_info(click_data):
     return []
 
 
-@app.callback(Output('unit-tabs', 'children'),
-              [Input('network-view', 'clickData')],
-              [State('unit-tab-bar', 'active_tab')])
+@app.callback(Output('bottom-unit-tabs', 'children'),
+              [Input('center-main-view', 'clickData')],
+              [State('bottom-unit-tab-bar', 'active_tab')])
 def update_unit_tabs(click_data, active_tab):
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return layer.get_unit_tabs(unit_idx, active_tab)
-    return AbstractLayer.make_tabs('unit', {}, active_tab)
+    return AbstractLayer.make_tabs('bottom-unit', {}, active_tab)
 
 
 @app.callback(
-    Output("unit-tab-content", "children"),
-    [Input("unit-tab-bar", "active_tab")],
-    [State('network-view', 'clickData')])
+    Output("bottom-unit-tab-content", "children"),
+    [Input("bottom-unit-tab-bar", "active_tab")],
+    [State('center-main-view', 'clickData')])
 def render_unit_tab_content(active_tab, network_click_data):
     """ layer info tab selected => update content """
     if active_tab and network_click_data is not None:
@@ -118,9 +118,9 @@ def render_unit_tab_content(active_tab, network_click_data):
     return html.Div()
 
 
-@app.callback(Output('network-view', 'clickData'),
-              [Input('layer-figure', 'clickData')],
-              [State('network-view', 'clickData')])
+@app.callback(Output('center-main-view', 'clickData'),
+              [Input('bottom-layer-figure', 'clickData')],
+              [State('center-main-view', 'clickData')])
 def update_unit_selection(click_data, network_click_data):
     """ Click on the layer figure => update the main selection's unit """
     if click_data and network_click_data:
