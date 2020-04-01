@@ -4,7 +4,7 @@ from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
 from ..SimpleColorScale import SimpleColorScale
-from ..widgets import layer_minimax_graph
+from ..widgets import layer_minimax_graph, tabs
 
 import numpy as np
 import plotly.graph_objects as go
@@ -53,7 +53,7 @@ class Convo2D(AbstractLayer):
         """
 
         if self.weights is None:
-            return np.array(), []
+            return np.zeros(0), []
 
         # Issues with flatten_output
         # assert backward_layer.num_unit == self.weights.shape[2]
@@ -83,8 +83,8 @@ class Convo2D(AbstractLayer):
 
         else:
             # Max on the 2D convolution filters
-            weights1 = np.swapaxes(self.weights, 2, 3).reshape(-1, self.num_unit,
-                                                               backward_layer.num_unit)  # <-- Transpose here
+            # Transpose here
+            weights1 = np.swapaxes(self.weights, 2, 3).reshape(-1, self.num_unit, backward_layer.num_unit)
             convo_max_weights1 = weights1.take(np.argmax(np.abs(weights1[:, :, active_units]), axis=0))  # <--
 
             # No need to handle the flatten as active_units is already wrapped
@@ -111,7 +111,7 @@ class Convo2D(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
     # @override
     def get_layer_tab_content(self, active_tab):
@@ -128,7 +128,7 @@ class Convo2D(AbstractLayer):
     # @override
     def get_unit_tabs(self, unit_idx: int, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return tabs.make('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
     # @override
     def get_unit_tab_content(self, unit_idx, active_tab):

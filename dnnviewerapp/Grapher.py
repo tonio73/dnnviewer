@@ -1,13 +1,27 @@
-from dnnviewerapp.layers.AbstractLayer import AbstractLayer
-from dnnviewerapp.bridge.AbstractActivationMapper import AbstractActivationMapper
+from .layers.AbstractLayer import AbstractLayer
+from .bridge.AbstractActivationMapper import AbstractActivationMapper
+from .widgets import tabs
 
 import plotly.graph_objects as go
+import dash_core_components as dcc
+import dash_html_components as html
+
 import numpy as np
+import string
 
 
 class Grapher:
     """ Graph a (sequential) neural network"""
 
+    # Number of connections to show at init
+    topn_init = 3
+
+    name = ''
+
+    # Training properties
+    training_props = {'loss': '', 'optimizer': ''}
+
+    # Generator of activation maps, implementation is DNN backend dependent
     activation_mapper: AbstractActivationMapper()
 
     def __init__(self, plotly_theme='plotly_dark'):
@@ -67,7 +81,7 @@ class Grapher:
 
         # Forward from ref_layer
         sel_units = [ref_unit]
-        for i in range(layer_index + 1, len(self.layers),  +1):
+        for i in range(layer_index + 1, len(self.layers), +1):
             cur_layer = self.layers[i]
             prev_layer = self.layers[i - 1]
             sel_units, new_shapes = cur_layer.plot_topn_connections(prev_layer, topn, sel_units, False)
@@ -76,5 +90,24 @@ class Grapher:
             if len(sel_units) > 32:
                 topn = 1
 
-            # Eventually apply the shape list
+        # Eventually apply the shape list
         fig.update_layout(shapes=shapes)
+
+    def get_model_tabs(self, previous_active: string):
+        """ Get the layer tab bar and layout function """
+        return tabs.make('center-model', {'info': 'Info', 'config': 'Config'}, previous_active,
+                         self.get_model_tab_content(None))
+
+    def get_model_tab_content(self, active_tab):
+        """ Get the content of the selected tab """
+        if active_tab == 'info':
+            return [html.Ul([html.Li("%s: %s" % (label, self.training_props[prop]))
+                            for label, prop in zip(['Loss type', 'Optimizer type'],
+                                                   list(self.training_props))])]
+        elif active_tab == 'config':
+            return [html.Label('Show top n connections:'),
+                    dcc.Slider(id='center-topn-criteria-slider',
+                               min=1.0, max=4.0, step=1.0, value=self.topn_init,
+                               marks={str(d): str(d) for d in range(0, 5)})
+                    ]
+        return html.Div([dcc.Slider(id='center-topn-criteria-slider')], hidden=True)

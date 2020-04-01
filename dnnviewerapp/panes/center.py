@@ -10,9 +10,6 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
-# Number of connections to show at init
-topn_init = 3
-
 # Main network view
 main_view = go.Figure()
 
@@ -33,24 +30,42 @@ def get_layout():
     """ Get pane layout """
     return dbc.Row([
         dbc.Col(dcc.Graph(id='center-main-view', figure=main_view, config=dict(scrollZoom=True), animate=True), md=9),
-        dbc.Col([html.Label('Show top n connections:'),
-                 dcc.Slider(id='topn-criteria',
-                            min=1.0, max=4.0, step=1.0, value=topn_init,
-                            marks={str(d): str(d) for d in range(0, 5)})
-                 ], md=3)
+        dbc.Col(html.Div(className='detail-section',
+                         children=[
+                             dcc.Store(id='center-topn-criteria', data=grapher.topn_init),
+                             html.Div(id='central-model-title',
+                                      children=html.H5(grapher.name if grapher.name else "Model")),
+                             html.Div(id='center-model-tabs',
+                                      children=grapher.get_model_tabs(None))
+                         ]), md=3)
     ])
 
 
 def callbacks():
     """ Local callbacks """
 
+    @app.callback(
+        Output("center-model-tab-content", "children"),
+        [Input("center-model-tab-bar", "active_tab")])
+    def render_unit_tab_content(active_tab):
+        """ model info tab selected => update content """
+        return grapher.get_model_tab_content(active_tab)
+
     @app.callback(Output('center-main-view', 'figure'),
-                  [Input('topn-criteria', 'value'), Input('center-main-view', 'clickData')])
-    def update_figure(topn, click_data):
+                  [Input('center-topn-criteria', 'data'), Input('center-main-view', 'clickData')])
+    def update_figure(topn: int, click_data):
         """ Update the main view when some unit is selected or the number of connections to show is changed """
+        if topn is None:  # The slide might be hidden => store is not initialized
+            topn = grapher.topn_init
+
         if click_data:
             layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-            grapher.plot_topn_connections(main_view, topn, layer, unit_idx)
+            grapher.plot_topn_connections(main_view, int(topn), layer, unit_idx)
         return main_view
+
+    @app.callback(Output('center-topn-criteria', 'data'),
+                  [Input('center-topn-criteria-slider', 'value')])
+    def update_topn_criteria(value):
+        return value
 
     return

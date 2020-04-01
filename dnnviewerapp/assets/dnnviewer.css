@@ -1,3 +1,7 @@
+body {
+    overflow-y: scroll;
+}
+
 .thumbnail {
     margin-top: 1rem;
     text-align: center;

@@ -4,7 +4,7 @@ from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
 from ..SimpleColorScale import SimpleColorScale
-from ..widgets import layer_minimax_graph
+from ..widgets import layer_minimax_graph, tabs
 
 import numpy as np
 import plotly.graph_objects as go
@@ -71,7 +71,7 @@ class Dense(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
     # @override
     def get_layer_tab_content(self, active_tab):
@@ -87,7 +87,7 @@ class Dense(AbstractLayer):
     # @override
     def get_unit_tabs(self, unit_idx: int, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return AbstractLayer.make_tabs('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return tabs.make('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
     # @override
     def get_unit_tab_content(self, unit_idx, active_tab):

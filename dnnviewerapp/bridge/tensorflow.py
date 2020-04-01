@@ -4,6 +4,7 @@
 
 from tensorflow import keras
 
+from ..Grapher import Grapher
 from ..layers import Dense, Convo2D, Input, AbstractLayer
 from ..SimpleColorScale import SimpleColorScale
 from .AbstractActivationMapper import AbstractActivationMapper
@@ -11,10 +12,13 @@ from .AbstractActivationMapper import AbstractActivationMapper
 import numpy as np
 
 
-def keras_load_sequential_network(grapher, model_file_name, input_classes=None, output_classes=None):
+def keras_load_sequential_network(grapher: Grapher, model_file_name, input_classes=None, output_classes=None):
     """ Load and extract graphical representation of a Keras sequential model """
 
     model0 = keras.models.load_model(model_file_name)
+
+    keras_set_model_properties(model0, grapher)
+
     # Create all other layers from the Keras Sequential model
     keras_extract_sequential_network(grapher, model0, input_classes, output_classes)
     return KerasActivationMapper(model0)
@@ -96,8 +100,8 @@ def keras_load_cifar_test_data(test_data):
     (x_train, yTrain), (x_test, y_test) = keras.datasets.cifar10.load_data()
 
     test_data.set(x_test, y_test.ravel(),
-        ['red', 'green', 'blue'],
-        ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'])
+                  ['red', 'green', 'blue'],
+                  ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'])
 
 
 def keras_load_mnist_test_data(test_data):
@@ -129,3 +133,72 @@ class KerasActivationMapper(AbstractActivationMapper):
             return maps
         else:
             return maps[:, :, unit]
+
+
+def keras_set_model_properties(model0: keras.models.Model, grapher: Grapher):
+    """ Map model level properties on grapher object """
+
+    grapher.name = model0.name
+
+    grapher.training_props['loss'] = _get_caption(model0.loss, _loss_captions)
+    grapher.training_props['optimizer'] = _get_caption(model0.optimizer, _optimizer_captions)
+
+    return
+
+
+def _get_caption(prop, dic):
+    """ Get a textual caption of a keras property that my be $
+        - a literal string label (e.g. 'mse')
+        - an instance of a class
+        - a reference to a function
+    """
+    if prop is not None:
+        if isinstance(prop, str):
+            loss_extract = prop.lower().replace('_', '')
+            if loss_extract in dic:
+                return dic[loss_extract]
+            else:
+                return prop
+        else:
+            loss_extract = type(prop).__name__.lower()
+            if loss_extract == 'function':
+                loss_extract = prop.__name__.lower().replace('_', '')
+                if loss_extract in dic:
+                    return dic[loss_extract]
+                else:
+                    return prop.__name__
+            elif loss_extract in dic:
+                return dic[loss_extract]
+            else:
+                return type(prop).__name__
+
+
+_loss_captions = {'binarycrossentropy': 'Binary cross-entropy',
+                  'categoricalcrossentropy': 'Categorical cross-entropy',
+                  'categoricalhinge': 'Categorical hinge',
+                  'cosinesimilarity': 'Cosine similarity',
+                  'hinge': 'Hinge',
+                  'huber': 'Huber',
+                  'kld': 'Kullback-Leibler divergence',
+                  'kullbackleiblerdivergence': 'Kullback-Leibler divergence',
+                  'logcosh': 'Logarithm of the hyperbolic cosine of the prediction error',
+                  'mae': 'Mean absolute error',
+                  'mape': 'Mean absolute percentage error',
+                  'meanabsoluteerror': 'Mean absolute error',
+                  'meanabsolutepercentageerror': 'Mean absolute percentage error',
+                  'meansquarederror': 'Mean squared error',
+                  'meansquaredlogarithmicerror': 'Mean squared log error',
+                  'mse': 'Mean squared error',
+                  'msle': 'Mean squared log error',
+                  'poisson': 'Poisson',
+                  'sparsecategoricalcrossentropy': 'Sparse cross-entropy',
+                  'squaredhinge': 'Squared hinge'}
+
+_optimizer_captions = {'adadelta': 'Adadelta algorithm',
+                       'adagrad': 'Adagrad algorithm',
+                       'adam': 'Adam algorithm',
+                       'adamax': 'Adamax algorithm',
+                       'ftrl': 'FTRL algorithm',
+                       'nadam': 'NAdam algorithm',
+                       'rmsprop': 'RMSprop algorithm',
+                       'sgd': 'Stochastic gradient descent and momentum'}

@@ -1,12 +1,12 @@
 import string
 
 from ..SimpleColorScale import SimpleColorScale
+from ..widgets import tabs
 
 import numpy as np
 import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_bootstrap_components as dbc
 
 
 class AbstractLayer:
@@ -59,9 +59,9 @@ class AbstractLayer:
     # @abstract
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return [*self.make_tabs('bottom-layer', {}, previous_active),
-                # The graph needs always to be defined at init to check associated callback
-                html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)]
+        return tabs.make('bottom-layer', {}, previous_active,
+                         # The graph needs always to be defined at init to check associated callback
+                         html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True))
 
     # @abstract
     def get_layer_tab_content(self, active_tab):
@@ -77,7 +77,7 @@ class AbstractLayer:
     # @abstract
     def get_unit_tabs(self, unit_idx: int, previous_active: string):
         """ Get the unit tab bar and layout function """
-        return [*self.make_tabs('bottom-unit', {}, previous_active),
+        return [*tabs.make('bottom-unit', {}, previous_active),
                 # The graph needs always to be defined at init to check associated callback
                 html.Div(dcc.Graph(id='bottom-unit-figure'), hidden=True)]
 
@@ -95,16 +95,3 @@ class AbstractLayer:
         """ index of the first unit (lowest y) """
         return -self.num_unit * self.spacing_y / 2
 
-    @staticmethod
-    def make_tabs(prefix: string, tab_def, previous_active: string = None):
-        """ Create tab bar and container for the layer information sub-panel """
-        if previous_active is not None and previous_active in list(tab_def.keys()):
-            active_tab = previous_active
-        elif len(tab_def) > 0:
-            active_tab = list(tab_def)[0]
-        else:
-            active_tab = ''
-
-        return [dbc.Tabs(id=prefix + "-tab-bar", active_tab=active_tab,
-                         children=[dbc.Tab(label=tab_def[t], tab_id=t) for t in tab_def]),
-                html.Div(id=prefix + "-tab-content", className="p-2 detail-tab border-left")]

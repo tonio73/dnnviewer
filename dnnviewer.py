@@ -69,7 +69,8 @@ def update_layer_tabs(click_data, active_tab):
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return layer.get_layer_tabs(active_tab)
-    return AbstractLayer.make_tabs('bottom-layer', {}, active_tab)
+    dummy_layer = AbstractLayer('dummy')
+    return dummy_layer.get_layer_tabs(active_tab)
 
 
 @app.callback(
@@ -102,7 +103,8 @@ def update_unit_tabs(click_data, active_tab):
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
         return layer.get_unit_tabs(unit_idx, active_tab)
-    return AbstractLayer.make_tabs('bottom-unit', {}, active_tab)
+    dummy_layer = AbstractLayer('dummy')
+    return dummy_layer.get_unit_tabs(0, active_tab)
 
 
 @app.callback(
