@@ -1,0 +1,9 @@
+python>=3.7
+numpy
+tensorflow>=2.0
+tensorflow-datasets
+plotly>=4.0
+dash
+dash_core_components
+dash_html_components
+dash-bootstrap-components
