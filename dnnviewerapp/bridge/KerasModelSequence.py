@@ -11,7 +11,6 @@ import re
 
 
 class KerasModelSequence(AbstractModelSequence):
-
     """ Handling a sequence of Keras models, saved as checkpoints or HDF5 """
 
     def __init__(self, test_data):
@@ -42,6 +41,26 @@ class KerasModelSequence(AbstractModelSequence):
         # Format input if needed
         if img.dtype == np.uint8:
             img = img.astype(np.float) / 255
+
+        # Handle convolution input
+        if len(self.current_model.layers) > 0 \
+            and type(self.current_model.layers[0]).__name__ == 'Conv2D':
+
+            # Padding if required
+            pad = False
+            padding = np.zeros((2, 2), dtype=np.int)
+            input_shape = self.current_model.layers[0].input.get_shape()
+            for d in [0, 1]:
+                delta = input_shape[d + 1] - img.shape[0]
+                if delta > 0:
+                    padding[d, 1] = delta
+                    pad = True
+            if pad:
+                img = np.pad(img, padding)
+
+            # Convolution requires 3D input
+            if len(img.shape) == 2:
+                img = np.expand_dims(img, 2)
 
         # Create partial model
         intermediate_model = keras.models.Model(inputs=self.current_model.input,

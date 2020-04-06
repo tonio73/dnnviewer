@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-k", "--model-keras", help="Load a Keras model from file")
 parser.add_argument("--sequence-keras",
                     help="Load sequence of Keras checkpoints following the pattern 'dirpath/model_prefix{epoch}")
-parser.add_argument("--test-dataset", help="Load a predefined test dataset")
+parser.add_argument("--test-dataset", help="Load a predefined test dataset (mnist, fashion-mnist, cifar-10)")
 parser.add_argument("--debug", help="Set Dash in debug mode")
 parser.parse_args()
 
@@ -32,6 +32,9 @@ if args.test_dataset:
     elif args.test_dataset == 'mnist':
         # Load test data (MNIST)
         tf_bridge.keras_load_mnist_test_data(test_data)
+    elif args.test_dataset == 'fashion-mnist':
+        # Load test data (Fashion MNIST)
+        tf_bridge.keras_load_mnistfashion_test_data(test_data)
 
 
 if args.model_keras:
