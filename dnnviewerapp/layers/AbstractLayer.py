@@ -41,6 +41,7 @@ class AbstractLayer:
         """ Get all unit positions """
         return self.get_unit_position(np.arange(self.num_unit))
 
+    # @abstract
     def plot(self, fig: go.Figure):
         # to override
         return

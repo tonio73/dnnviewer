@@ -2,8 +2,8 @@
 # Bottom pane of the application: 4 quadrants with input sample, layer, unit and activation/saliency maps
 #
 
-from dnnviewerapp import app, grapher, test_data
-from dnnviewerapp.layers.AbstractLayer import AbstractLayer
+from .. import app, grapher, test_data, model_sequence
+from ..layers.AbstractLayer import AbstractLayer
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -90,10 +90,10 @@ def callbacks():
                   [Input('bottom-select-test-sample', 'value'), Input('center-main-view', 'clickData')])
     def update_activation_map(index, click_data):
         if index is not None and test_data.x is not None \
-                and grapher.activation_mapper \
+                and model_sequence \
                 and click_data:
             layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-            return activation_map.widget(grapher.activation_mapper, layer, unit_idx, test_data.x[index])
+            return activation_map.widget(model_sequence, layer, unit_idx, test_data.x[index])
         return []
 
     return

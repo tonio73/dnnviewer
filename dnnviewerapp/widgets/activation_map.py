@@ -1,11 +1,11 @@
-from dnnviewerapp.layers import AbstractLayer, Convo2D
-from dnnviewerapp.bridge import AbstractActivationMapper
+from ..layers import AbstractLayer, Convo2D
+from ..bridge import AbstractModelSequence
 import dnnviewerapp.imageutils as imageutils
 
 import dash_html_components as html
 
 
-def widget(activation_mapper: AbstractActivationMapper, layer: AbstractLayer, unit_idx: int, input_img):
+def widget(activation_mapper: AbstractModelSequence, layer: AbstractLayer, unit_idx: int, input_img):
     """ Activation maps widget """
 
     if isinstance(layer, Convo2D):

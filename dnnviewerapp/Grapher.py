@@ -1,5 +1,4 @@
 from .layers.AbstractLayer import AbstractLayer
-from .bridge.AbstractActivationMapper import AbstractActivationMapper
 from .widgets import tabs
 
 import plotly.graph_objects as go
@@ -21,15 +20,11 @@ class Grapher:
     # Training properties
     training_props = {'loss': '', 'optimizer': ''}
 
-    # Generator of activation maps, implementation is DNN backend dependent
-    activation_mapper: AbstractActivationMapper()
-
     def __init__(self, plotly_theme='plotly_dark'):
         self.layers = []
         self.x_spacing = 1.
         self.x_offset = 0
         self.plotly_theme = plotly_theme
-        self.activation_mapper = None
 
     def add_layer(self, layer: AbstractLayer):
         """ Add layer to graph """
@@ -96,9 +91,9 @@ class Grapher:
     def get_model_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
         return tabs.make('center-model', {'info': 'Info', 'config': 'Config'}, previous_active,
-                         self.get_model_tab_content(None))
+                         self.get_model_tab_content())
 
-    def get_model_tab_content(self, active_tab):
+    def get_model_tab_content(self, active_tab=None):
         """ Get the content of the selected tab """
         if active_tab == 'info':
             return [html.Ul([html.Li("%s: %s" % (label, self.training_props[prop]))

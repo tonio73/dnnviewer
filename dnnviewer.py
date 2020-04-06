@@ -4,7 +4,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
-from dnnviewerapp import grapher, app, test_data
+from dnnviewerapp import grapher, app, test_data, model_sequence
 from dnnviewerapp.panes import top, center, bottom
 from dnnviewerapp.layers.AbstractLayer import AbstractLayer
 import dnnviewerapp.bridge.tensorflow as tf_bridge
@@ -15,6 +15,8 @@ panes = [top, center, bottom]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-k", "--model-keras", help="Load a Keras model from file")
+parser.add_argument("--sequence-keras",
+                    help="Load sequence of Keras checkpoints following the pattern 'dirpath/model_prefix{epoch}")
 parser.add_argument("--test-dataset", help="Load a predefined test dataset")
 parser.add_argument("--debug", help="Set Dash in debug mode")
 parser.parse_args()
@@ -31,11 +33,15 @@ if args.test_dataset:
         # Load test data (MNIST)
         tf_bridge.keras_load_mnist_test_data(test_data)
 
+
 if args.model_keras:
     # Create all other layers from the Keras Sequential model
-    grapher.activation_mapper = tf_bridge.keras_load_sequential_network(grapher, args.model_keras,
-                                                                        test_data.input_classes,
-                                                                        test_data.output_classes)
+    model_sequence.load_single(args.model_keras)
+elif args.sequence_keras:
+    model_sequence.load_sequence(args.sequence_keras)
+
+
+model_sequence.first_epoch(grapher)
 
 # Prepare rendering of panes
 [pane.render() for pane in panes]
