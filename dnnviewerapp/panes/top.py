@@ -2,8 +2,8 @@
 # Top pane of the application
 #
 
-from dnnviewerapp import app
-from dnnviewerapp.widgets import font_awesome
+from .. import app
+from ..widgets import font_awesome
 
 import dash_core_components as dcc
 import dash_html_components as html

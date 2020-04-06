@@ -10,8 +10,8 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
-import dnnviewerapp.imageutils as imageutils
-from dnnviewerapp.widgets import activation_map
+from ..imageutils import array_to_img_src
+from ..widgets import activation_map
 
 # maximum number of test sample to display in selectors
 max_test_samples = 40
@@ -83,7 +83,7 @@ def callbacks():
         """
         if index is not None and test_data.x is not None:
             img = test_data.x[index]
-            return imageutils.array_to_img_src(img)
+            return array_to_img_src(img)
         return ''
 
     @app.callback(Output('bottom-activation-maps', 'children'),

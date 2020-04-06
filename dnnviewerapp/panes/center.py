@@ -2,7 +2,7 @@
 # Center pane of the application: network main view and properties
 #
 
-from dnnviewerapp import app, grapher, test_data
+from .. import app, grapher, test_data
 
 import plotly.graph_objects as go
 import dash_core_components as dcc

@@ -35,19 +35,6 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
     color_scale = SimpleColorScale()
 
     previous_layer = None
-    
-    ignored_layers = ['ActivityRegularization', 'Dropout',
-                      'SpatialDropout1D', 'SpatialDropout2D',
-                      'SpatialDropout3D',
-                      'Activation',
-                      'MaxPooling1D', 'MaxPooling2D', 'MaxPooling3D',
-                      'AveragePooling1D', 'AveragePooling2D',
-                      'AveragePooling3D',
-                      'GlobalAveragePooling1D', 'GlobalAveragePooling2D',
-                      'GlobalAveragePooling3D',
-                      'GlobalMaxPooling1D', 'GlobalMaxPooling2D',
-                      'GlobalMaxPooling3D',
-                      'BatchNormalization']
 
     # Input placeholder if first layer is a layer with weights
     if len(model.layers[0].get_weights()) > 0:
@@ -83,7 +70,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
                 grapher.add_layer(input_layer)
                 previous_layer = input_layer
 
-        elif layer_class in ignored_layers:
+        elif layer_class in _keras_ignored_layers:
             print('Ignored', keras_layer.name)
 
         else:
@@ -150,6 +137,19 @@ def _get_caption(prop, dic):
             else:
                 return type(prop).__name__
 
+
+_keras_ignored_layers = ['ActivityRegularization', 'Dropout',
+                         'SpatialDropout1D', 'SpatialDropout2D',
+                         'SpatialDropout3D',
+                         'Activation',
+                         'MaxPooling1D', 'MaxPooling2D', 'MaxPooling3D',
+                         'AveragePooling1D', 'AveragePooling2D',
+                         'AveragePooling3D',
+                         'GlobalAveragePooling1D', 'GlobalAveragePooling2D',
+                         'GlobalAveragePooling3D',
+                         'GlobalMaxPooling1D', 'GlobalMaxPooling2D',
+                         'GlobalMaxPooling3D',
+                         'BatchNormalization']
 
 _loss_captions = {'binarycrossentropy': 'Binary cross-entropy',
                   'categoricalcrossentropy': 'Categorical cross-entropy',
