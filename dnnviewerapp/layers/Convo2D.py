@@ -135,7 +135,7 @@ class Convo2D(AbstractLayer):
         """ Get the content of the selected tab """
         w = self.weights[:, :, :, unit_idx]
         if active_tab == 'info':
-            return html.Ul([html.Li("%d coefficients" % len(w))])
+            return html.Ul([html.Li("%d coefficients" % (w.shape[0] * w.shape[1] * w.shape[2]))])
         elif active_tab == 'weights':
             num_maps = min(w.shape[2], 12)
             if w.shape[1] < 4:
