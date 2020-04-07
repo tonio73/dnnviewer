@@ -35,6 +35,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
     color_scale = SimpleColorScale()
 
     previous_layer = None
+    grapher.clear_layers()
 
     # Input placeholder if first layer is a layer with weights
     if len(model.layers[0].get_weights()) > 0:

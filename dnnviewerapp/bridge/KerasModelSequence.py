@@ -34,6 +34,7 @@ class KerasModelSequence(AbstractModelSequence):
         checkpoint_epochs = list(checkpoints)
         checkpoint_epochs.sort()
         self.model_paths = [checkpoints[i] for i in checkpoint_epochs]
+        self.number_epochs = len(self.model_paths)
 
     # @override
     def get_activation(self, img, layer: AbstractLayer, unit):
@@ -89,3 +90,4 @@ class KerasModelSequence(AbstractModelSequence):
         tensorflow.keras_extract_sequential_network(grapher, self.current_model, self.test_data)
 
         self.current_epoch_index = model_index
+        return self.current_epoch_index

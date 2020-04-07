@@ -11,7 +11,7 @@ import dnnviewerapp.bridge.tensorflow as tf_bridge
 
 import argparse
 
-panes = [top, center, bottom]
+panes = [top.TopPane(), center.CenterPane(), bottom.BottomPane()]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-k", "--model-keras", help="Load a Keras model from file")
@@ -36,19 +36,16 @@ if args.test_dataset:
         # Load test data (Fashion MNIST)
         tf_bridge.keras_load_mnistfashion_test_data(test_data)
 
-
 if args.model_keras:
     # Create all other layers from the Keras Sequential model
     model_sequence.load_single(args.model_keras)
 elif args.sequence_keras:
     model_sequence.load_sequence(args.sequence_keras)
 
-
 model_sequence.first_epoch(grapher)
 
 # Prepare rendering of panes
 [pane.render() for pane in panes]
-
 
 # Top app layout
 app.layout = dbc.Container([
@@ -61,72 +58,19 @@ app.layout = dbc.Container([
 # Global callbacks
 
 
-@app.callback(Output('bottom-layer-title', 'children'),
-              [Input('center-main-view', 'clickData')])
-def update_layer_info(click_data):
+@app.callback([Output('bottom-layer-title', 'children'), Output('bottom-layer-tabs', 'children'),
+               Output('bottom-unit-title', 'children'), Output('bottom-unit-tabs', 'children')],
+              [Input('center-main-view', 'clickData'), Input('top-epoch-index', 'data')],
+              [State('bottom-layer-tab-bar', 'active_tab'),
+               State('bottom-unit-tab-bar', 'active_tab')])
+def update_layer_info(click_data, epoch_index, active_layer_tab, active_unit_tab):
     """ Display selected layer title """
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-        return layer.get_layer_title()
-    return []
-
-
-@app.callback(Output('bottom-layer-tabs', 'children'),
-              [Input('center-main-view', 'clickData')],
-              [State('bottom-layer-tab-bar', 'active_tab')])
-def update_layer_tabs(click_data, active_tab):
-    if click_data:
-        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-        return layer.get_layer_tabs(active_tab)
+        return layer.get_layer_title(), layer.get_layer_tabs(active_layer_tab), \
+               layer.get_unit_title(unit_idx), layer.get_unit_tabs(unit_idx, active_unit_tab)
     dummy_layer = AbstractLayer('dummy')
-    return dummy_layer.get_layer_tabs(active_tab)
-
-
-@app.callback(
-    Output("bottom-layer-tab-content", "children"),
-    [Input("bottom-layer-tab-bar", "active_tab")],
-    [State('center-main-view', 'clickData')])
-def render_layer_tab_content(active_tab, network_click_data):
-    """ layer info tab selected => update content """
-    if active_tab and network_click_data is not None:
-        layer, unit_idx = grapher.get_layer_unit_from_click_data(network_click_data)
-        if layer is not None:
-            return layer.get_layer_tab_content(active_tab)
-    return html.Div()
-
-
-@app.callback(Output('bottom-unit-title', 'children'),
-              [Input('center-main-view', 'clickData')])
-def update_layer_info(click_data):
-    """ Display selected unit title """
-    if click_data:
-        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-        return layer.get_unit_title(unit_idx)
-    return []
-
-
-@app.callback(Output('bottom-unit-tabs', 'children'),
-              [Input('center-main-view', 'clickData')],
-              [State('bottom-unit-tab-bar', 'active_tab')])
-def update_unit_tabs(click_data, active_tab):
-    if click_data:
-        layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-        return layer.get_unit_tabs(unit_idx, active_tab)
-    dummy_layer = AbstractLayer('dummy')
-    return dummy_layer.get_unit_tabs(0, active_tab)
-
-
-@app.callback(
-    Output("bottom-unit-tab-content", "children"),
-    [Input("bottom-unit-tab-bar", "active_tab")],
-    [State('center-main-view', 'clickData')])
-def render_unit_tab_content(active_tab, network_click_data):
-    """ layer info tab selected => update content """
-    if active_tab and network_click_data is not None:
-        layer, unit_idx = grapher.get_layer_unit_from_click_data(network_click_data)
-        if layer is not None:
-            return layer.get_unit_tab_content(unit_idx, active_tab)
-    return html.Div()
+    return [], dummy_layer.get_layer_tabs(active_layer_tab), [], dummy_layer.get_unit_tabs(0, active_unit_tab)
 
 
 @app.callback(Output('center-main-view', 'clickData'),
@@ -138,11 +82,9 @@ def update_unit_selection(click_data, network_click_data):
         network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
     return network_click_data
 
+
 # Local callbacks
-
-
 [pane.callbacks() for pane in panes]
-
 
 if __name__ == '__main__':
     app.run_server(debug=args.debug)

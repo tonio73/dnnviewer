@@ -79,7 +79,7 @@ class Dense(AbstractLayer):
         if active_tab == 'info':
             return html.Ul([html.Li("%d units" % self.num_unit)])
         elif active_tab == 'weights':
-            return dcc.Graph(id='bottom-layer-figure',
+            return dcc.Graph(id='bottom-layer-figure', animate=True,
                              figure=layer_minimax_graph.figure(self.weights, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
         return html.Div()
@@ -103,5 +103,5 @@ class Dense(AbstractLayer):
                               # yaxis_title_text='Count',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.plotly_theme)
-            return dcc.Graph(id='bottom-unit-figure', figure=fig)
+            return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
         return html.Div()

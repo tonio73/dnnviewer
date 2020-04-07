@@ -120,7 +120,7 @@ class Convo2D(AbstractLayer):
             return html.Ul([html.Li("%d units" % self.num_unit)])
         elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
-            return dcc.Graph(id='bottom-layer-figure',
+            return dcc.Graph(id='bottom-layer-figure', animate=True,
                              figure=layer_minimax_graph.figure(weights1, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
         return html.Div()
@@ -156,8 +156,8 @@ class Convo2D(AbstractLayer):
                               title_text='Filter weights' +
                                          (' (%d out of %d)' % (num_maps, w.shape[2]) if w.shape[2] > num_maps else ''),
                               # Attempt to force same scale on X and Y (failed)
-                              yaxis=dict(scaleanchor="x", scaleratio=1),
+                              # yaxis=dict(scaleanchor="x", scaleratio=1),
                               coloraxis=self.link_color_scale.as_dict(),
                               template=self.plotly_theme)
-            return dcc.Graph(id='bottom-unit-figure', figure=fig)
+            return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
         return html.Div()

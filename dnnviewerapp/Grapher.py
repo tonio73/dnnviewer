@@ -26,6 +26,11 @@ class Grapher:
         self.x_offset = 0
         self.plotly_theme = plotly_theme
 
+    def clear_layers(self):
+        """ Reset layers """
+        self.layers = []
+        self.x_offset = 0
+
     def add_layer(self, layer: AbstractLayer):
         """ Add layer to graph """
         layer.set_xoffset(self.x_offset)
