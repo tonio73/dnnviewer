@@ -20,7 +20,7 @@ class CenterPane(AbstractPane):
     def render(self):
         """ Prepare graphical structures before Dash rendering """
 
-        self.main_view.update_layout(margin=dict(l=10, r=10, b=30, t=30))
+        self.main_view.update_layout(margin=dict(l=10, r=10, b=30, t=30))  # noqa: E741
 
         grapher.plot_layers(self.main_view)
 
@@ -50,7 +50,7 @@ class CenterPane(AbstractPane):
             Output("center-model-tab-content", "children"),
             [Input("center-model-tab-bar", "active_tab"),
              Input('top-epoch-index', 'data')])
-        def render_unit_tab_content(active_tab, epoch_index):
+        def render_unit_tab_content(active_tab, _):
             """ model info tab selected => update content """
             return grapher.get_model_tab_content(active_tab)
 
@@ -58,7 +58,7 @@ class CenterPane(AbstractPane):
                       [Input('center-topn-criteria', 'data'),
                        Input('center-main-view', 'clickData'),
                        Input('top-epoch-index', 'data')])
-        def update_figure(topn: int, click_data, epoch_index):
+        def update_figure(topn: int, click_data, _):
             """ Update the main view when some unit is selected or the number of connections to show is changed """
             if topn is None:  # The slide might be hidden => 'center-topn-criteria' store is not initialized
                 topn = grapher.topn_init

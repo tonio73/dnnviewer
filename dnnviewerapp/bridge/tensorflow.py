@@ -5,7 +5,9 @@
 from tensorflow import keras
 
 from ..Grapher import Grapher
-from ..layers import Dense, Convo2D, Input
+from ..layers.Input import Input
+from ..layers.Dense import Dense
+from ..layers.Convo2D import Convo2D
 from ..SimpleColorScale import SimpleColorScale
 
 

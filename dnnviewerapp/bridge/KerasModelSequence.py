@@ -45,7 +45,7 @@ class KerasModelSequence(AbstractModelSequence):
 
         # Handle convolution input
         if len(self.current_model.layers) > 0 \
-            and type(self.current_model.layers[0]).__name__ == 'Conv2D':
+                and type(self.current_model.layers[0]).__name__ == 'Conv2D':
 
             # Padding if required
             pad = False

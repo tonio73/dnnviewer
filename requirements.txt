@@ -7,3 +7,4 @@ dash
 dash_core_components
 dash_html_components
 dash-bootstrap-components
+pillow

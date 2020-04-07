@@ -90,7 +90,7 @@ class BottomPane(AbstractPane):
                       [Input('bottom-select-test-sample', 'value'),
                        Input('center-main-view', 'clickData'),
                        Input('top-epoch-index', 'data')])
-        def update_activation_map(index, click_data, epoch_index):
+        def update_activation_map(index, click_data, _):
             if index is not None and test_data.x is not None \
                     and model_sequence \
                     and click_data:

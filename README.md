@@ -11,7 +11,7 @@ This project is for learning and teaching purpose, do not try to display a netwo
 # Install
 
 1. Clone the repository `git clone https://github.com/tonio73/dnnviewer.git` on your local machine
-2. Using Conda or Pip, install the dependencies within your environment following the file [`environment.yml`](enviroment.yml)
+2. Using Conda or Pip, install the dependencies within your environment following the file [`environment.yml`](environment.yml)
 3. Run `dnnviewer.py` with one of the examples below, or with you own model (see below for capabilities and limitations)
 4. Access the web application at http://127.0.0.1:8050
 

@@ -13,7 +13,7 @@ def figure(weights, num_unit, unit_names, plotly_theme):
                                  customdata=['layer'], name='Min'),
                           go.Bar(x=w_max, hovertext=hover_text_max, hoverinfo='text',
                                  customdata=['layer'], name='Max')])
-    fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
+    fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
                       title_text='Unit min-max weights',
                       yaxis_title_text='Layer unit',
                       # yaxis_title_text='Count',

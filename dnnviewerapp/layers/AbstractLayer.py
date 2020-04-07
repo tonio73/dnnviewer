@@ -95,4 +95,3 @@ class AbstractLayer:
     def _get_y_offset(self):
         """ index of the first unit (lowest y) """
         return -self.num_unit * self.spacing_y / 2
-

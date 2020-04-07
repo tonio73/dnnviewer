@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
@@ -63,12 +62,12 @@ app.layout = dbc.Container([
               [Input('center-main-view', 'clickData'), Input('top-epoch-index', 'data')],
               [State('bottom-layer-tab-bar', 'active_tab'),
                State('bottom-unit-tab-bar', 'active_tab')])
-def update_layer_info(click_data, epoch_index, active_layer_tab, active_unit_tab):
+def update_layer_info(click_data, _, active_layer_tab, active_unit_tab):
     """ Display selected layer title """
     if click_data:
         layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-        return layer.get_layer_title(), layer.get_layer_tabs(active_layer_tab), \
-               layer.get_unit_title(unit_idx), layer.get_unit_tabs(unit_idx, active_unit_tab)
+        return layer.get_layer_title(), layer.get_layer_tabs(active_layer_tab),\
+            layer.get_unit_title(unit_idx), layer.get_unit_tabs(unit_idx, active_unit_tab)
     dummy_layer = AbstractLayer('dummy')
     return [], dummy_layer.get_layer_tabs(active_layer_tab), [], dummy_layer.get_unit_tabs(0, active_unit_tab)
 

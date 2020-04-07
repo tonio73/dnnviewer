@@ -97,7 +97,7 @@ class Dense(AbstractLayer):
             return html.Ul([html.Li("%d coefficients" % len(w))])
         elif active_tab == 'weights':
             fig = go.Figure(data=[go.Histogram(x=w)])
-            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
+            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
                               title_text='Weight histogram',
                               xaxis_title_text='Amplitude',
                               # yaxis_title_text='Count',

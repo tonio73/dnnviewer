@@ -152,11 +152,9 @@ class Convo2D(AbstractLayer):
             for i in range(num_maps):
                 fig.add_trace(go.Heatmap(z=w[:, :, i], coloraxis="coloraxis"),
                               row=(i // num_cols) + 1, col=(i % num_cols) + 1)
-            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),
+            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
                               title_text='Filter weights' +
                                          (' (%d out of %d)' % (num_maps, w.shape[2]) if w.shape[2] > num_maps else ''),
-                              # Attempt to force same scale on X and Y (failed)
-                              # yaxis=dict(scaleanchor="x", scaleratio=1),
                               coloraxis=self.link_color_scale.as_dict(),
                               template=self.plotly_theme)
             return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)

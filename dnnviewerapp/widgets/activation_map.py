@@ -1,4 +1,5 @@
-from ..layers import AbstractLayer, Convo2D
+from ..layers.AbstractLayer import AbstractLayer
+from ..layers.Convo2D import Convo2D
 from ..bridge import AbstractModelSequence
 import dnnviewerapp.imageutils as imageutils
 
