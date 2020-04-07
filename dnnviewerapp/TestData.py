@@ -12,6 +12,6 @@ class TestData:
     def set(self, x, y, input_classes, output_classes):
         self.x = x
         self.y = y
-        self.input_classes = input_classes,
+        self.input_classes = input_classes
         self.output_classes = output_classes
         self.has_test_sample = True

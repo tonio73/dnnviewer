@@ -102,7 +102,7 @@ def keras_load_mnist_test_data(test_data):
 
 
 def keras_load_mnistfashion_test_data(test_data):
-    """ Load MNIST using Keras, return a sample of the test """
+    """ Load Fashion MNIST using Keras, return a sample of the test """
 
     (_, _), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
 
