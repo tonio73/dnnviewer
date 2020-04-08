@@ -16,11 +16,11 @@ class Dense(AbstractLayer):
     """ Dense (aka fully connected) layer of n units """
     """ Assume 2D weight tensor with dimensions: previous layer unit, self unit """
 
-    def __init__(self, name, num_unit, weights, plotly_theme, link_color_scale=SimpleColorScale(), unit_names=None):
+    def __init__(self, name, num_unit, weights, grads, plotly_theme, link_color_scale=SimpleColorScale(), unit_names=None):
         assert weights.ndim == 2
         assert num_unit == weights.shape[1]
 
-        AbstractLayer.__init__(self, name, num_unit, weights, plotly_theme, link_color_scale, unit_names)
+        AbstractLayer.__init__(self, name, num_unit, weights, grads, plotly_theme, link_color_scale, unit_names)
 
     # @override
     def plot(self, fig):
@@ -71,7 +71,7 @@ class Dense(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'}, previous_active)
 
     # @override
     def get_layer_tab_content(self, active_tab):
@@ -82,17 +82,22 @@ class Dense(AbstractLayer):
             return dcc.Graph(id='bottom-layer-figure', animate=True,
                              figure=layer_minimax_graph.figure(self.weights, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
+        elif active_tab == 'grads':
+            return dcc.Graph(id='bottom-layer-figure', animate=True,
+                             figure=layer_minimax_graph.figure([self.grads], self.num_unit,
+                                                               self.unit_names, self.plotly_theme))
         return html.Div()
 
     # @override
     def get_unit_tabs(self, unit_idx: int, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return tabs.make('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return tabs.make('bottom-unit', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'}, previous_active)
 
     # @override
     def get_unit_tab_content(self, unit_idx, active_tab):
         """ Get the content of the selected tab """
         w = self.weights[:, unit_idx]
+        #g = self.grads[:, unit_idx] offset indexing for dense layer
         if active_tab == 'info':
             return html.Ul([html.Li("%d coefficients" % len(w))])
         elif active_tab == 'weights':
@@ -104,4 +109,15 @@ class Dense(AbstractLayer):
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.plotly_theme)
             return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
+
+        elif active_tab == 'grads':
+            fig = go.Figure(data=[go.Histogram(x=g)])
+            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
+                              title_text='Gradients histogram',
+                              xaxis_title_text='Amplitude',
+                              # yaxis_title_text='Count',
+                              bargap=0.2,  # gap between bars of adjacent location coordinates)
+                              template=self.plotly_theme)
+            return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
+
         return html.Div()
