@@ -55,3 +55,21 @@ $ python -m pytest
 ```shell
 $ flake8  --max-line-length=120
 ```
+
+### Create and upload package
+
+First increase the version number in `setup.py`
+
+Then:
+
+```shell script
+$ make package
+$ make package_upload
+```
+
+Pypi.org credentials required
+
+To force reinstall of the package (in case of minor version increase), do not forget the _--no-deps_:
+```shell script
+$ pip install --force-reinstall --no-deps dnnviewer 
+```
