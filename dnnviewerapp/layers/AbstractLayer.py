@@ -84,14 +84,31 @@ class AbstractLayer:
 
     # @abstract
     def get_unit_tab_content(self, unit_idx: int, active_tab: string):
-        """ Get the content of the selected tab """
+        """ Get the content of the selected tab
+            @return Dash HTML element (list)
+        """
         return html.Div()
 
+    # @abstract
     def get_unit_description(self, unit_idx: int):
-        """ Get layer Unit description to be included in a Dash Column """
+        """ Get layer Unit description to be included in a Dash Column
+            @return Dash HTML element list
+        """
         return [html.H5(('Unit #%s' % unit_idx) +
                         (' (%s)' % self.unit_names[unit_idx] if self.unit_names is not None else ""))]
+
+    # @abstract
+    def get_activation_map(self, activation_mapper, input_img, unit_idx):
+        """ Get the activation map plot
+            @return Dash HTML element list
+        """
+        return []
 
     def _get_y_offset(self):
         """ index of the first unit (lowest y) """
         return -self.num_unit * self.spacing_y / 2
+
+    def _get_unit_labels(self, prefix='Unit '):
+        """ Get series of labels corresponding to units """
+        return ['%s%d' % (prefix, idx) for idx in np.arange(self.num_unit)] if self.unit_names is None \
+            else self.unit_names

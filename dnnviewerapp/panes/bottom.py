@@ -12,7 +12,6 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
 from ..imageutils import array_to_img_src
-from ..widgets import activation_map
 
 
 class BottomPane(AbstractPane):
@@ -95,7 +94,7 @@ class BottomPane(AbstractPane):
                     and model_sequence \
                     and click_data:
                 layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-                return activation_map.widget(model_sequence, layer, unit_idx, test_data.x[index])
+                return layer.get_activation_map(model_sequence, test_data.x[index], unit_idx)
             return []
 
         @app.callback(Output("bottom-layer-tab-content", "children"),

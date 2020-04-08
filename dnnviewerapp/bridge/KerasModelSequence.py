@@ -37,7 +37,7 @@ class KerasModelSequence(AbstractModelSequence):
         self.number_epochs = len(self.model_paths)
 
     # @override
-    def get_activation(self, img, layer: AbstractLayer, unit):
+    def get_activation(self, img, layer: AbstractLayer, unit=None):
 
         # Format input if needed
         if img.dtype == np.uint8:

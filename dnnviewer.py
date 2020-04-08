@@ -13,10 +13,11 @@ import argparse
 panes = [top.TopPane(), center.CenterPane(), bottom.BottomPane()]
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-k", "--model-keras", help="Load a Keras model from file")
-parser.add_argument("--sequence-keras",
+parser_group = parser.add_mutually_exclusive_group(required=True)
+parser_group.add_argument("--model-keras", "-m", help="Load a Keras model from file")
+parser_group.add_argument("--sequence-keras", "-s",
                     help="Load sequence of Keras checkpoints following the pattern 'dirpath/model_prefix{epoch}")
-parser.add_argument("--test-dataset", help="Load a predefined test dataset (mnist, fashion-mnist, cifar-10)")
+parser.add_argument("--test-dataset", "-t", help="Load a predefined test dataset (mnist, fashion-mnist, cifar-10)")
 parser.add_argument("--debug", help="Set Dash in debug mode")
 parser.parse_args()
 

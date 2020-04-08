@@ -3,8 +3,10 @@ import string
 from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
+from ..bridge.AbstractModelSequence import AbstractModelSequence
 from ..SimpleColorScale import SimpleColorScale
 from ..widgets import layer_minimax_graph, tabs
+from ..imageutils import array_to_img_src, to_8bit_img
 
 import numpy as np
 import plotly.graph_objects as go
@@ -159,3 +161,17 @@ class Convo2D(AbstractLayer):
                               template=self.plotly_theme)
             return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
         return html.Div()
+
+    def get_activation_map(self, activation_mapper: AbstractModelSequence, input_img, unit_idx):
+        """ Get the activation map plot """
+
+        maps = activation_mapper.get_activation(input_img, self, unit_idx)
+        if unit_idx is None:
+            return [html.Div(html.Img(id='activation-map', alt='Activation map',
+                                      src=array_to_img_src(to_8bit_img(img))),
+                             className='thumbnail') for img in maps]
+        else:
+            return [html.H5('Unit #%s activation' % unit_idx),
+                    html.Div(html.Img(id='activation-map', alt='Activation map',
+                                      src=array_to_img_src(to_8bit_img(maps))),
+                             className='thumbnail')]

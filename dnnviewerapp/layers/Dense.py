@@ -100,8 +100,25 @@ class Dense(AbstractLayer):
             fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
                               title_text='Weight histogram',
                               xaxis_title_text='Amplitude',
-                              # yaxis_title_text='Count',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.plotly_theme)
             return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
         return html.Div()
+
+    def get_activation_map(self, activation_mapper, input_img, unit_idx):
+        """ Get the activation map plot """
+
+        activation = activation_mapper.get_activation(input_img, self)
+        hover_text = self._get_unit_labels('Unit ')
+        fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text')])
+        fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
+                          title_text='Activation',
+                          xaxis_title_text='Amplitude',
+                          yaxis_title_text='Unit',
+                          bargap=0.2,  # gap between bars of adjacent location coordinates)
+                          template=self.plotly_theme)
+
+        return [html.H5('Layer activation'),
+                html.Div(
+                    dcc.Graph(id='bottom-activation', animate=False, figure=fig)
+                )]
