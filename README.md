@@ -10,14 +10,15 @@ This project is for learning and teaching purpose, do not try to display a netwo
 
 # Install
 
-1. Install with PIP
+- Install with PIP
+
 ```shell script
 $ pip install dnnviewer
 ```
 
-2. Run `dnnviewer` with one of the examples below, or with you own model (see below for capabilities and limitations)
+- Run `dnnviewer` with one of the examples below, or with you own model (see below for capabilities and limitations)
 
-3. Access the web application at http://127.0.0.1:8050
+- Access the web application at http://127.0.0.1:8050
 
 
 # Running the program
