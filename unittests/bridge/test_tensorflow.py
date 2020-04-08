@@ -1,5 +1,5 @@
-from dnnviewerapp.bridge import tensorflow as btf
-from dnnviewerapp.Grapher import Grapher
+from dnnviewer.bridge import tensorflow as btf
+from dnnviewer.Grapher import Grapher
 
 from tensorflow import keras
 

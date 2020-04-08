@@ -1,6 +1,6 @@
 import numpy as np
 
-from dnnviewerapp.layers.Dense import Dense
+from dnnviewer.layers.Dense import Dense
 
 
 class TestDense:
