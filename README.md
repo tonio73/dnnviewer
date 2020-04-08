@@ -10,14 +10,25 @@ This project is for learning and teaching purpose, do not try to display a netwo
 
 # Install
 
-1. Clone the repository `git clone https://github.com/tonio73/dnnviewer.git` on your local machine
-2. Using Conda or Pip, install the dependencies within your environment following the file [`environment.yml`](environment.yml)
-3. Run `dnnviewer.py` with one of the examples below, or with you own model (see below for capabilities and limitations)
-4. Access the web application at http://127.0.0.1:8050
+1. Install with PIP
+```shell script
+$ pip install dnnviewer
+```
+
+2. Run `dnnviewer` with one of the examples below, or with you own model (see below for capabilities and limitations)
+
+3. Access the web application at http://127.0.0.1:8050
+
 
 # Running the program
 
 Currently accepted input formats are Keras Sequential models written to file in Checkpoint format or HDF5. A series of checkpoints along training epochs is also accepted as exemplified below.
+
+Some test models are provided in the GIT repository `dnnviewer-data` to clone from Github or download a zip from the [repository page](https://github.com/tonio73/dnnviewer-data)
+
+```shell script
+$ git clone https://github.com/tonio73/dnnviewer-data.git
+```
 
 Test data is provided by Keras.
 
@@ -28,25 +39,25 @@ Keras models are loaded from Checkpoint or HDF5 format with option `--model-kera
 #### CIFAR-10 Convolutional neural network
 
 ```shell
-$ ./dnnviewer.py --model-keras stimuli/models/CIFAR-10_CNN5.h5 --test-dataset cifar-10
+$ dnnviewer --model-keras dnnviewer-data/models/CIFAR-10_CNN5.h5 --test-dataset cifar-10
 ```
 
 Larger model:
 
 ```shell
-$ ./dnnviewer.py --model-keras stimuli/models/CIFAR-10_LeNetLarge.030.h5 --test-dataset cifar-10
+$ dnnviewer --model-keras dnnviewer-data/models/CIFAR-10_LeNetLarge.030.h5 --test-dataset cifar-10
 ```
 
 #### MNIST Convolutional neural network based on LeNet5
 
-```
-$ ./dnnviewer.py --model-keras stimuli/models/MNIST_LeNet60.h5 --test-dataset mnist
+```shell
+$ dnnviewer --model-keras dnnviewer-data/models/MNIST_LeNet60.h5 --test-dataset mnist
 ```
 
 #### MNIST Dense only neural network
 
-```
-$ ./dnnviewer.py --model-keras stimuli/models/MNIST_dense128.h5 --test-dataset mnist
+```shell
+$ dnnviewer --model-keras dnnviewer-data/models/MNIST_dense128.h5 --test-dataset mnist
 ```
 
 ### Loading several epochs of a model
@@ -55,8 +66,8 @@ Series of models along training epochs are loaded using the argument `--sequence
 
 #### Fashion MNIST convolutionnal network
 
-```
-$ ./dnnviewer.py --sequence-keras "stimuli/models/FashionMNIST_checkpoints/model1_{epoch}" --test-dataset fashion-mnist
+```shell
+$ dnnviewer --sequence-keras "dnnviewer-data/models/FashionMNIST_checkpoints/model1_{epoch}" --test-dataset fashion-mnist
 ```
 
 # Generating the models
@@ -78,7 +89,11 @@ model1.save('models/MNIST_LeNet60.h5')
 The Keras standard callback `tensorflow.keras.callbacks.ModelCheckpoint` is saving the model every epoch or a defined period of epochs:
 
 ```python
+from tensorflow import keras
 from tensorflow.keras.callbacks import ModelCheckpoint
+
+model1 = keras.models.Sequential()
+#...
 
 callbacks = [
     ModelCheckpoint(
@@ -114,31 +129,7 @@ hist1 = model1.fit(train_images, train_labels,
   - Embedding layers
   - Merge layers
 
-# Software architecture
 
-The application is based on Dash for the user interface management (which is generating ReactJs components), and Plotly for the data visualization.
+# Developer documentation
 
-Code is separated in two branches:
-
-- The Graphical representation
-- Adapters to read existing models, currently only supporting Keras
-
-### Code quality
-
-- Code is PEP8 compliant, thanks to *flake8* and *Intellij* for watching
-- There are a few pytest unit tests in `unittests/`
-
-#### Run unit test
-
-From project root directory:
-
-```shell
-$ python -m pytest
-```
-
-#### Code linting
-
-```shell
-$ flake8  --max-line-length=120
-```
-
+See [developer.md](docs/developer.md)

@@ -71,8 +71,6 @@ def run_app(args):
     # Callbacks
     [pane.callbacks() for pane in panes]
 
-    print(app.config.assets_folder)
-
     app.run_server(debug=args.debug)
 
 

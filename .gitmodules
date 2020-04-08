@@ -1,0 +1,3 @@
+[submodule "dnnviewer-data"]
+	path = dnnviewer-data
+	url = https://github.com/tonio73/dnnviewer-data.git
