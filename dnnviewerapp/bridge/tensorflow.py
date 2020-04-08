@@ -3,7 +3,8 @@
 #
 
 from tensorflow import keras
-
+import tensorflow as tf
+from ..TestData import TestData
 from ..Grapher import Grapher
 from ..layers.Input import Input
 from ..layers.Dense import Dense
@@ -22,8 +23,12 @@ def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
 
 
 def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model,
-                                     test_data=None):
-    """ Create a graphical representation of a Keras Sequential model's layers """
+                                     test_data: TestData = None):
+    """
+     Create a graphical representation of a Keras Sequential model's layers
+     + compute weihts and grads from test samples
+
+    """
 
     if not isinstance(model, keras.models.Sequential):
         print("Unexpected model of type '%s', expecting Sequential model" % type(model))
@@ -49,19 +54,33 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         grapher.add_layer(input_layer)
         previous_layer = input_layer
 
+    import numpy as np
+    (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
+    with tf.GradientTape() as tape:
+        y_est = model(x_train[:100].astype(np.float))
+        objective = model.loss_functions[0](y_train[:100], y_est)
+        grads = tape.gradient(objective, model.trainable_variables)
+
+    for i in grads:
+        print(type(i))
+
+    idx_layer = 0
     for keras_layer in model.layers:
         layer_class = type(keras_layer).__name__
         if layer_class == 'Dense':
             layer = Dense(keras_layer.name, keras_layer.output_shape[-1], keras_layer.weights[0].numpy(),
-                          plotly_theme, color_scale)
+                          grads[idx_layer].numpy(), plotly_theme, color_scale)
             grapher.add_layer(layer)
             previous_layer = layer
+            idx_layer += 1
+
 
         elif layer_class == 'Conv2D':
             layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1], keras_layer.weights[0].numpy(),
-                            plotly_theme, color_scale)
+                            grads[idx_layer], plotly_theme, color_scale)
             grapher.add_layer(layer)
             previous_layer = layer
+            idx_layer += 1
 
         elif layer_class == 'Flatten':
             if isinstance(previous_layer, Convo2D):
@@ -72,11 +91,14 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
                 input_layer = Input('input', input_dim, plotly_theme, test_data.input_classes)
                 grapher.add_layer(input_layer)
                 previous_layer = input_layer
+                idx_layer += 1
 
         elif layer_class in _keras_ignored_layers:
+            idx_layer += 1
             print('Ignored', keras_layer.name)
 
         else:
+            idx_layer += 1
             print('Not handled layer %s of type %s' % (keras_layer.name, type(keras_layer)))
 
     if test_data.output_classes is not None:
