@@ -4,12 +4,11 @@
 # Python application main entry point
 #
 
-import dash_bootstrap_components as dbc
-
 from . import grapher, app, test_data, model_sequence
 from .panes import top, center, bottom
 from .bridge import tensorflow as tf_bridge
 
+import dash_bootstrap_components as dbc
 import argparse
 
 
