@@ -125,7 +125,7 @@ hist1 = model1.fit(train_images, train_labels,
   - BatchNormalization
   - Activation
 - Unsupported layers
-  - Reshape, Permute, RepeatVector, Lambda, ActivityRegularization, Masking
+  - Reshape, Permute, RepeatVector, Lambda, Masking
   - Recurrent layers (LSTM, GRU...)
   - Embedding layers
   - Merge layers
