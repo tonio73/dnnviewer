@@ -5,13 +5,13 @@
 from . import AbstractPane
 from .. import app, grapher, test_data, model_sequence
 from ..layers.AbstractLayer import AbstractLayer
+from ..imageutils import array_to_img_src
 
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-
-from ..imageutils import array_to_img_src
+from dash.exceptions import PreventUpdate
 
 
 class BottomPane(AbstractPane):
@@ -45,6 +45,7 @@ class BottomPane(AbstractPane):
 
             # Layer information
             dbc.Col([
+                dcc.Store(id='bottom-layer-click-data'),
                 html.Label('Selected layer'),
                 html.Div(className='detail-section',
                          children=[
@@ -136,12 +137,19 @@ class BottomPane(AbstractPane):
             return [], dummy_layer.get_layer_tabs(active_layer_tab), [], dummy_layer.get_unit_tabs(0, active_unit_tab)
 
         @app.callback(Output('center-main-view', 'clickData'),
-                      [Input('bottom-layer-figure', 'clickData')],
+                      [Input('bottom-layer-click-data', 'data')],
                       [State('center-main-view', 'clickData')])
         def update_unit_selection(click_data, network_click_data):
             """ Click on the layer figure => update the main selection's unit """
             if click_data and network_click_data:
                 network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
             return network_click_data
+
+        @app.callback(Output('bottom-layer-click-data', 'data'),
+                      [Input('bottom-layer-figure', 'clickData')])
+        def update_layer_click_data(click_data):
+            if click_data:
+                return click_data
+            raise PreventUpdate
 
         return
