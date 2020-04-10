@@ -8,6 +8,8 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
+import logging
+
 
 class TopPane(AbstractPane):
     """ Top pane of the application """
@@ -40,6 +42,8 @@ class TopPane(AbstractPane):
     def callbacks(self):
         """ Local callbacks """
 
+        logger = logging.getLogger(__name__)
+
         @app.callback(Output('top-epoch-index', 'data'),
                       [Input('top-step-backward', 'n_clicks'),
                        Input('top-fast-forward', 'n_clicks'),
@@ -55,7 +59,7 @@ class TopPane(AbstractPane):
             else:
                 button_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
-            print('Triggering', button_id, _0, _1, _2, _3)
+            logger.debug('Triggering', button_id, _0, _1, _2, _3)
 
             if button_id == 'top-fast-backward':
                 return model_sequence.first_epoch(grapher)

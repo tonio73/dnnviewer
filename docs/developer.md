@@ -42,7 +42,33 @@ Within `dnnviewer.bridge` is the code to load a DNN model in Keras and extract t
 - Code is PEP8 compliant, thanks to *flake8* and *Intellij* for watching
 - There are a few pytest unit tests in `unittests/`
 
-#### Run unit test
+### Logging and exceptions
+
+Logging is done using the [standard Python logs](https://docs.python.org/2/library/logging.html)
+
+```python
+import logging
+
+#...
+def my_smart_function():
+    logger = logging.getLogger(__name__)
+
+    logger.error('Not smart enough')
+```
+
+Exceptions shall be used whenever the  code execution shall be interrupted
+
+##### Exceptions within the _bridge_ package
+
+Exceptions within the _bridge_ package are based on the exception class `bridge.AbstractModelSequence.ModelError`
+
+##### Exceptions within Dash callbacks
+
+ Dash callbacks are safeguarded, no need to add the `try-except` around the callback code.
+ 
+ To prevent update, the exception to raise is `dash.exceptions.PreventUpdate`
+
+### Run unit test
 
 From project root directory:
 

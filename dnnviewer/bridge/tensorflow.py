@@ -4,11 +4,14 @@
 
 from tensorflow import keras
 
+from .AbstractModelSequence import ModelError
 from ..Grapher import Grapher
 from ..layers.Input import Input
 from ..layers.Dense import Dense
 from ..layers.Convo2D import Convo2D
 from ..SimpleColorScale import SimpleColorScale
+
+import logging
 
 
 def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
@@ -21,16 +24,16 @@ def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
     return
 
 
-def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model,
-                                     test_data=None):
+def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model, test_data):
     """ Create a graphical representation of a Keras Sequential model's layers """
 
+    logger = logging.getLogger(__name__)
+
     if not isinstance(model, keras.models.Sequential):
-        print("Unexpected model of type '%s', expecting Sequential model" % type(model))
-        return
+        raise ModelError("Unexpected model of type '%s', expecting Sequential model" % type(model))
 
     if len(model.layers) == 0:
-        print("Empty model")
+        logger.error("Empty model")
         return
 
     plotly_theme = grapher.plotly_theme
@@ -42,8 +45,9 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
     # Input placeholder if first layer is a layer with weights
     if len(model.layers[0].get_weights()) > 0:
         input_dim = model.layers[0].get_weights()[0].shape[-2]
-        if test_data and test_data.input_classes is not None and len(test_data.input_classes) != input_dim:
-            print("Wrong length of input classes, got %d, expecting %d" % (len(test_data.input_classes), input_dim))
+        if test_data.input_classes is not None and len(test_data.input_classes) != input_dim:
+            logger.error("Wrong length of input classes, got %d, expecting %d" %
+                         (len(test_data.input_classes), input_dim))
 
         input_layer = Input('input', input_dim, plotly_theme, test_data.input_classes)
         grapher.add_layer(input_layer)
@@ -74,10 +78,10 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
                 previous_layer = input_layer
 
         elif layer_class in _keras_ignored_layers:
-            print('Ignored', keras_layer.name)
+            logger.info('Ignored', keras_layer.name)
 
         else:
-            print('Not handled layer %s of type %s' % (keras_layer.name, type(keras_layer)))
+            logger.error('Not handled layer %s of type %s' % (keras_layer.name, type(keras_layer)))
 
     if test_data.output_classes is not None:
         grapher.layers[-1].unit_names = test_data.output_classes

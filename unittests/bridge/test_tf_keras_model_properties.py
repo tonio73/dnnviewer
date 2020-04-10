@@ -5,6 +5,7 @@ from tensorflow import keras
 
 
 def test_keras_loss_string():
+    """ Keras loss set as string like 'categorical_crossentropy' """
 
     grapher = Grapher()
 
@@ -17,6 +18,7 @@ def test_keras_loss_string():
 
 
 def test_keras_loss_class():
+    """ Keras loss using calss instance """
 
     grapher = Grapher()
 
@@ -29,6 +31,7 @@ def test_keras_loss_class():
 
 
 def test_keras_loss_custom_class():
+    """ Keras loss built out of a custom class """
 
     class CustomLoss:
 
@@ -46,6 +49,7 @@ def test_keras_loss_custom_class():
 
 
 def test_keras_loss_func():
+    """ Keras loss set as standard function """
 
     grapher = Grapher()
 
@@ -58,7 +62,6 @@ def test_keras_loss_func():
 
 
 def test_keras_loss_custom_func():
-
     def custom_loss(y_true, y_est):
         return y_true == y_est
 

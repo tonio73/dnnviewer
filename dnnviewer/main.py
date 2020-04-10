@@ -38,7 +38,6 @@ def run_app(args):
         if args.test_dataset == 'cifar-10':
             # Load test data (CIFAR-10)
             tf_bridge.keras_load_cifar_test_data(test_data)
-            has_test_sample = True
         elif args.test_dataset == 'mnist':
             # Load test data (MNIST)
             tf_bridge.keras_load_mnist_test_data(test_data)

@@ -12,6 +12,8 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 
+import logging
+
 
 class CenterPane(AbstractPane):
     # Main network view
@@ -49,6 +51,8 @@ class CenterPane(AbstractPane):
     def callbacks(self):
         """ Dash callbacks """
 
+        logger = logging.getLogger(__name__)
+
         @app.callback(Output('center-selected-unit', 'data'),
                       [Input('center-main-view', 'clickData')])
         def select_unit(click_data):
@@ -75,11 +79,11 @@ class CenterPane(AbstractPane):
                 topn = grapher.topn_init
 
             if selected_unit is None or epoch_index is None:
-                print('update_figure prevent update since', selected_unit, epoch_index)
+                logger.warning('update_figure prevent update since', selected_unit, epoch_index)
                 raise PreventUpdate
 
             if selected_unit:
-                print("update_figure: selected_unit", selected_unit)
+                logger.debug("update_figure: selected_unit", selected_unit)
                 grapher.plot_topn_connections(self.main_view, int(topn),
                                               selected_unit['layer_idx'], selected_unit['unit_idx'])
             return self.main_view

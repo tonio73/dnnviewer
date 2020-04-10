@@ -1,7 +1,7 @@
-from ..Grapher import Grapher
-from .AbstractModelSequence import AbstractModelSequence
-from ..layers.AbstractLayer import AbstractLayer
 from . import tensorflow
+from .AbstractModelSequence import AbstractModelSequence, ModelError
+from ..Grapher import Grapher
+from ..layers.AbstractLayer import AbstractLayer
 
 import tensorflow.keras as keras
 import numpy as np
@@ -78,8 +78,7 @@ class KerasModelSequence(AbstractModelSequence):
         model_path = Path(self.model_paths[model_index])
 
         if not model_path.exists():
-            print('Model path not found', str(model_path))
-            return
+            raise ModelError('Model path not found %s' % str(model_path))
 
         self.current_model = keras.models.load_model(str(model_path))
 
