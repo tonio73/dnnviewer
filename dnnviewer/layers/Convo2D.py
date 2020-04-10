@@ -174,7 +174,6 @@ class Convo2D(AbstractLayer):
                                       src=array_to_img_src(to_8bit_img(img))),
                              className='thumbnail') for img in maps]
         else:
-            return [html.H5('Unit #%s activation' % unit_idx),
-                    html.Div(html.Img(id='activation-map', alt='Activation map',
-                                      src=array_to_img_src(to_8bit_img(maps))),
-                             className='thumbnail')]
+            return html.Div(html.Img(id='activation-map', alt='Activation map',
+                                     src=array_to_img_src(to_8bit_img(maps))),
+                            className='thumbnail')

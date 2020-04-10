@@ -5,6 +5,7 @@
 from . import AbstractPane
 from .. import app, grapher, test_data, model_sequence
 from ..layers.AbstractLayer import AbstractLayer
+from ..widgets import tabs
 from ..imageutils import array_to_img_src
 
 import dash_core_components as dcc
@@ -29,48 +30,51 @@ class BottomPane(AbstractPane):
 
         dummy_layer = AbstractLayer('dummy')
 
-        return dbc.Row([
+        return dbc.Row(style={'marginTop': '10px', 'marginBottom': '20px'}, children=[
             # Input sample selection
-            dbc.Col([
-                html.Div([html.Label('Select test sample'),
-                          dcc.Dropdown(
-                              id='bottom-select-test-sample',
-                              value=self.test_sample_init,
-                              options=[{'label': "%d (%s)" % (i, test_data.output_classes[c]), 'value': i} for i, c in
-                                       enumerate(test_data.y[:self.max_test_samples])]
-                          )]),
-                html.P([html.Img(id='bottom-test-sample-img', alt='Sample input')],
-                       className='thumbnail', hidden=not test_data.has_test_sample)
-            ], md=2, align='start'),
+            dbc.Col(md=2, align='start',
+                    children=html.Div(className='detail-section',
+                                      children=[html.H5('Test sample'),
+                                                dcc.Dropdown(
+                                                    id='bottom-select-test-sample',
+                                                    style={'marginTop': '12px'},
+                                                    value=self.test_sample_init,
+                                                    options=[{'label': "%d (%s)" % (i, test_data.output_classes[c]),
+                                                              'value': i}
+                                                             for i, c in
+                                                             enumerate(test_data.y[:self.max_test_samples])]
+                                                ),
+                                                html.P([html.Img(id='bottom-test-sample-img', alt='Sample input')],
+                                                       className='thumbnail', hidden=not test_data.has_test_sample)
+                                                ])),
 
             # Layer information
-            dbc.Col([
-                dcc.Store(id='bottom-layer-click-data'),
-                html.Label('Selected layer'),
-                html.Div(className='detail-section',
-                         children=[
-                             html.Div(id='bottom-layer-title'),
-                             html.Div(id='bottom-layer-tabs',
-                                      children=dummy_layer.get_layer_tabs(None))
-                         ])
-            ], md=3, align='start'),
+            dbc.Col(md=3, align='start',
+                    children=[
+                        dcc.Store(id='bottom-layer-click-data'),
+                        html.Div(className='detail-section',
+                                 children=[html.Div(id='bottom-layer-title'),
+                                           html.Div(id='bottom-layer-tabs',
+                                                    children=dummy_layer.get_layer_tabs(None))
+                                           ])
+                    ]),
 
             # Unit information
-            dbc.Col([
-                html.Label('Selected unit'),
-                html.Div(className='detail-section',
-                         children=[
-                             html.Div(id='bottom-unit-title'),
-                             html.Div(id='bottom-unit-tabs',
-                                      children=dummy_layer.get_unit_tabs(0, None))
-                         ])
-            ], md=4, align='start'),
+            dbc.Col(md=4, align='start',
+                    children=html.Div(className='detail-section',
+                                      children=[html.Div(id='bottom-unit-title', children=html.H5('Maps')),
+                                                html.Div(id='bottom-unit-tabs',
+                                                         children=dummy_layer.get_unit_tabs(0, None))
+                                                ])),
 
-            # Activation maps
-            dbc.Col([html.Label('Activation maps'),
-                     html.Div(id='bottom-activation-maps')],
-                    md=3, align='start')
-        ], style={'marginTop': '10px', 'marginBottom': '20px'})
+            #  Maps
+            dbc.Col(md=3, align='start',
+                    children=html.Div(className='detail-section',
+                                      children=[html.Div(id='bottom-maps-title',
+                                                         children=html.H5('Maps')),
+                                                html.Div(id='bottom-maps-tabs',
+                                                         children=self._get_maps_tabs(None))]))
+        ])
 
     def callbacks(self):
         """ Local callbacks """
@@ -86,16 +90,19 @@ class BottomPane(AbstractPane):
                 return array_to_img_src(img)
             return ''
 
-        @app.callback(Output('bottom-activation-maps', 'children'),
-                      [Input('bottom-select-test-sample', 'value'),
+        @app.callback(Output('bottom-maps-tab-content', 'children'),
+                      [Input("bottom-maps-tab-bar", "active_tab"),
+                       Input('bottom-select-test-sample', 'value'),
                        Input('center-selected-unit', 'data'),
                        Input('top-epoch-index', 'data')])
-        def update_activation_map(index, selected_unit, _):
-            if index is not None and test_data.x is not None \
+        def update_activation_map(active_tab, index, selected_unit, _):
+            if active_tab is not None \
+                    and index is not None and test_data.x is not None \
                     and model_sequence \
                     and selected_unit:
-                layer = grapher.layers[selected_unit['layer_idx']]
-                return layer.get_activation_map(model_sequence, test_data.x[index], selected_unit['unit_idx'])
+                if active_tab == 'activation':
+                    layer = grapher.layers[selected_unit['layer_idx']]
+                    return layer.get_activation_map(model_sequence, test_data.x[index], selected_unit['unit_idx'])
             return []
 
         @app.callback(Output("bottom-layer-tab-content", "children"),
@@ -130,9 +137,9 @@ class BottomPane(AbstractPane):
             if selected_unit:
                 layer = grapher.layers[selected_unit['layer_idx']]
                 return layer.get_layer_title(), \
-                    layer.get_layer_tabs(active_layer_tab), \
-                    layer.get_unit_title(selected_unit['unit_idx']), \
-                    layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
+                       layer.get_layer_tabs(active_layer_tab), \
+                       layer.get_unit_title(selected_unit['unit_idx']), \
+                       layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
             dummy_layer = AbstractLayer('dummy')
             return [], dummy_layer.get_layer_tabs(active_layer_tab), [], dummy_layer.get_unit_tabs(0, active_unit_tab)
 
@@ -153,3 +160,7 @@ class BottomPane(AbstractPane):
             raise PreventUpdate
 
         return
+
+    def _get_maps_tabs(self, active_tab):
+        """ Tabs for the maps """
+        return tabs.make('bottom-maps', {'activation': 'Activation'}, active_tab)

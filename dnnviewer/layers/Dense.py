@@ -115,13 +115,12 @@ class Dense(AbstractLayer):
         hover_text = self._get_unit_labels()
         fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text')])
         fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
-                          title_text='Activation',
+                          title_text='Layer activation',
                           xaxis_title_text='Amplitude',
                           yaxis_title_text='Unit',
                           bargap=0.2,  # gap between bars of adjacent location coordinates)
                           template=self.plotly_theme)
 
-        return [html.H5('Layer activation'),
-                html.Div(
+        return html.Div(
                     dcc.Graph(id='bottom-activation', animate=False, figure=fig)
-                )]
+               )
