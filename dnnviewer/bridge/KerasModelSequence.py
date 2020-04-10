@@ -1,5 +1,6 @@
 from . import tensorflow
 from .AbstractModelSequence import AbstractModelSequence, ModelError
+from .AbstractActivationMapper import AbstractActivationMapper
 from ..Grapher import Grapher
 from ..layers.AbstractLayer import AbstractLayer
 
@@ -10,7 +11,7 @@ import glob
 import re
 
 
-class KerasModelSequence(AbstractModelSequence):
+class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
     """ Handling a sequence of Keras models, saved as checkpoints or HDF5 """
 
     def __init__(self, test_data):

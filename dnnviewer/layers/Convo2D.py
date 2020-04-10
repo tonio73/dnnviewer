@@ -1,7 +1,7 @@
 from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
-from ..bridge.AbstractModelSequence import AbstractModelSequence
+from ..bridge.AbstractActivationMapper import AbstractActivationMapper
 from ..SimpleColorScale import SimpleColorScale
 from ..widgets import layer_minimax_graph, tabs
 from ..imageutils import array_to_img_src, to_8bit_img
@@ -165,7 +165,7 @@ class Convo2D(AbstractLayer):
             return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
         return html.Div()
 
-    def get_activation_map(self, activation_mapper: AbstractModelSequence, input_img, unit_idx):
+    def get_activation_map(self, activation_mapper: AbstractActivationMapper, input_img, unit_idx):
         """ Get the activation map plot """
 
         maps = activation_mapper.get_activation(input_img, self, unit_idx)

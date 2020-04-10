@@ -1,4 +1,5 @@
 from .layers.AbstractLayer import AbstractLayer
+from .layers import Convo2D, Dense
 from .widgets import tabs
 
 import plotly.graph_objects as go
@@ -16,17 +17,15 @@ class Grapher:
     # Number of connections to show at init
     topn_init = 3
 
-    name = ''
-
-    # Training properties
-    training_props = {'loss': '', 'optimizer': ''}
-
-    layers = List[AbstractLayer]
+    layers: List[AbstractLayer]
 
     def __init__(self, plotly_theme='plotly_dark'):
-        self.layer = []
+        self.name = ''
+        self.layers = []
         self.x_spacing = 1.
         self.x_offset = 0
+        self.structure_props = {'num_dense': 0, 'num_convo2d': 0}
+        self.training_props = {'loss': '', 'optimizer': ''}
         self.plotly_theme = plotly_theme
 
     def clear_layers(self):
@@ -39,6 +38,10 @@ class Grapher:
         layer.set_xoffset(self.x_offset)
         self.layers.append(layer)
         self.x_offset += self.x_spacing
+        if isinstance(layer, Dense.Dense):
+            self.structure_props['num_dense'] += 1
+        elif isinstance(layer, Convo2D.Convo2D):
+            self.structure_props['num_convo2d'] += 1
         return len(self.layers) - 1
 
     def get_layer_unit_from_click_data(self, click_data):
@@ -51,6 +54,7 @@ class Grapher:
         """ Plot layers """
 
         layer_names = []
+        layer: AbstractLayer
         for layer in self.layers:
             layer.plot(fig)
             layer_names.append(layer.name)
@@ -115,9 +119,14 @@ class Grapher:
     def get_model_tab_content(self, active_tab=None):
         """ Get the content of the selected tab """
         if active_tab == 'info':
-            return [html.Ul([html.Li("%s: %s" % (label, self.training_props[prop]))
-                            for label, prop in zip(['Loss type', 'Optimizer type'],
-                                                   list(self.training_props))])]
+            return [html.H6('Structure'),
+                    html.Ul([html.Li("%s: %s" % (label, prop))
+                             for label, prop in zip(Grapher._structure_properties_labels.values(),
+                                                    self.structure_props.values())]),
+                    html.H6('Training'),
+                    html.Ul([html.Li("%s: %s" % (label, prop))
+                            for label, prop in zip(Grapher._training_properties_labels.values(),
+                                                   self.training_props.values())])]
         elif active_tab == 'config':
             return [html.Label('Show top n connections:'),
                     dcc.Slider(id='center-topn-criteria-slider',
@@ -125,3 +134,6 @@ class Grapher:
                                marks={str(d): str(d) for d in range(0, 5)})
                     ]
         return html.Div([dcc.Slider(id='center-topn-criteria-slider')], hidden=True)
+
+    _structure_properties_labels = dict(num_dense="Dense layers", num_convo2d='Convolutional 2D')
+    _training_properties_labels = dict(loss="Loss", optimizer='Optimizer')

@@ -5,6 +5,7 @@ from ..Connector import Connector
 from ..Statistics import Statistics
 from ..SimpleColorScale import SimpleColorScale
 from ..widgets import layer_minimax_graph, tabs
+from ..bridge.AbstractActivationMapper import AbstractActivationMapper
 
 import numpy as np
 import plotly.graph_objects as go
@@ -107,11 +108,11 @@ class Dense(AbstractLayer):
             return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
         return html.Div()
 
-    def get_activation_map(self, activation_mapper, input_img, unit_idx):
+    def get_activation_map(self, activation_mapper: AbstractActivationMapper, input_img, unit_idx):
         """ Get the activation map plot """
 
         activation = activation_mapper.get_activation(input_img, self)
-        hover_text = self._get_unit_labels('Unit ')
+        hover_text = self._get_unit_labels()
         fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text')])
         fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
                           title_text='Activation',

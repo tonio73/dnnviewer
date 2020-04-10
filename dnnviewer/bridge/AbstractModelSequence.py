@@ -42,15 +42,6 @@ class AbstractModelSequence:
         return self._load_model(grapher, self.current_epoch_index + 1)
 
     # @abstract
-    def get_activation(self, img, layer: AbstractLayer, unit):
-        """ Return the activation of a single unit or a set or the full layer as Numpy ndarrays
-            @param img ndarray containing the input image
-            @param layer output of the sub-network to compute activation
-            @param unit selected unit within the target layer
-        """
-        return []
-
-    # @abstract
     def _load_model(self, grapher: Grapher, model_index: int):
         """" model load to implement
             @return current epoch index
