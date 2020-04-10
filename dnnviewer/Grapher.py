@@ -1,6 +1,6 @@
 from .layers.AbstractLayer import AbstractLayer
 from .layers import Convo2D, Dense
-from .widgets import tabs
+from .widgets import tabs, property_list
 
 import plotly.graph_objects as go
 import dash_core_components as dcc
@@ -119,14 +119,8 @@ class Grapher:
     def get_model_tab_content(self, active_tab=None):
         """ Get the content of the selected tab """
         if active_tab == 'info':
-            return [html.H6('Structure'),
-                    html.Ul([html.Li("%s: %s" % (label, prop))
-                             for label, prop in zip(Grapher._structure_properties_labels.values(),
-                                                    self.structure_props.values())]),
-                    html.H6('Training'),
-                    html.Ul([html.Li("%s: %s" % (label, prop))
-                            for label, prop in zip(Grapher._training_properties_labels.values(),
-                                                   self.training_props.values())])]
+            return [*property_list.widget('Structure', Grapher._structure_properties_labels, self.structure_props),
+                    *property_list.widget('Training', Grapher._training_properties_labels, self.training_props)]
         elif active_tab == 'config':
             return [html.Label('Show top n connections:'),
                     dcc.Slider(id='center-topn-criteria-slider',
