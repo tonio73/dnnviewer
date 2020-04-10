@@ -14,7 +14,7 @@ class AbstractModelSequence:
         if self.number_epochs <= 0:
             print('No model to load')
         elif self.current_epoch_index == 0:
-            return
+            return self.current_epoch_index
         return self._load_model(grapher, 0)
 
     def last_epoch(self, grapher: Grapher):
@@ -22,7 +22,7 @@ class AbstractModelSequence:
         if self.number_epochs <= 0:
             print('No model to load')
         elif self.current_epoch_index == self.number_epochs - 1:
-            return
+            return self.current_epoch_index
         return self._load_model(grapher, self.number_epochs - 1)
 
     def previous_epoch(self, grapher: Grapher):
@@ -30,7 +30,7 @@ class AbstractModelSequence:
         if self.number_epochs <= 0:
             print('No model to load')
         elif self.current_epoch_index == 0:
-            return
+            return self.current_epoch_index
         return self._load_model(grapher, self.current_epoch_index - 1)
 
     def next_epoch(self, grapher: Grapher):
@@ -38,7 +38,7 @@ class AbstractModelSequence:
         if self.number_epochs <= 0:
             print('No model to load')
         if self.current_epoch_index == self.number_epochs - 1:
-            return
+            return self.current_epoch_index
         return self._load_model(grapher, self.current_epoch_index + 1)
 
     # @abstract

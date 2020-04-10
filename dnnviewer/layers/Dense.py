@@ -71,18 +71,20 @@ class Dense(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active)
+        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active,
+                         AbstractLayer.get_layer_tab_content(self, None))
 
     # @override
     def get_layer_tab_content(self, active_tab):
         """ Get the content of the selected tab """
         if active_tab == 'info':
-            return html.Ul([html.Li("%d units" % self.num_unit)])
+            return [html.Ul([html.Li("%d units" % self.num_unit)]),
+                    html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)]
         elif active_tab == 'weights':
             return dcc.Graph(id='bottom-layer-figure', animate=True,
                              figure=layer_minimax_graph.figure(self.weights, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
-        return html.Div()
+        return AbstractLayer.get_layer_tab_content(self, active_tab)
 
     # @override
     def get_unit_tabs(self, unit_idx: int, previous_active: string):

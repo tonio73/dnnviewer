@@ -4,6 +4,7 @@ from .AbstractLayer import AbstractLayer
 from ..widgets import tabs
 
 import plotly.graph_objects as go
+import dash_core_components as dcc
 import dash_html_components as html
 
 import numpy as np
@@ -27,11 +28,13 @@ class Input(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
-        return tabs.make('bottom-layer', {'info': 'Info'}, previous_active)
+        return tabs.make('bottom-layer', {'info': 'Info'}, previous_active,
+                         AbstractLayer.get_layer_tab_content(self, None))
 
     # @override
     def get_layer_tab_content(self, active_tab):
         """ Get the content of the selected tab """
         if active_tab == 'info':
-            return html.Ul([html.Li("%d units" % self.num_unit)])
-        return html.Div()
+            return [html.Ul([html.Li("%d units" % self.num_unit)]),
+                    html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)]
+        return AbstractLayer.get_layer_tab_content(self, active_tab)

@@ -87,49 +87,51 @@ class BottomPane(AbstractPane):
 
         @app.callback(Output('bottom-activation-maps', 'children'),
                       [Input('bottom-select-test-sample', 'value'),
-                       Input('center-main-view', 'clickData'),
+                       Input('center-selected-unit', 'data'),
                        Input('top-epoch-index', 'data')])
-        def update_activation_map(index, click_data, _):
+        def update_activation_map(index, selected_unit, _):
             if index is not None and test_data.x is not None \
                     and model_sequence \
-                    and click_data:
-                layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-                return layer.get_activation_map(model_sequence, test_data.x[index], unit_idx)
+                    and selected_unit:
+                layer = grapher.layers[selected_unit['layer_idx']]
+                return layer.get_activation_map(model_sequence, test_data.x[index], selected_unit['unit_idx'])
             return []
 
         @app.callback(Output("bottom-layer-tab-content", "children"),
-                      [Input("bottom-layer-tab-bar", "active_tab")],
-                      [State('center-main-view', 'clickData')])
-        def render_layer_tab_content(active_tab, network_click_data):
+                      [Input("bottom-layer-tab-bar", "active_tab"),
+                       Input('center-selected-unit', 'data')])
+        def render_layer_tab_content(active_tab, selected_unit):
             """ layer info tab selected => update content """
-            if active_tab and network_click_data is not None:
-                layer, unit_idx = grapher.get_layer_unit_from_click_data(network_click_data)
+            if active_tab and selected_unit is not None:
+                layer = grapher.layers[selected_unit['layer_idx']]
                 if layer is not None:
                     return layer.get_layer_tab_content(active_tab)
             return html.Div()
 
         @app.callback(Output("bottom-unit-tab-content", "children"),
                       [Input("bottom-unit-tab-bar", "active_tab")],
-                      [State('center-main-view', 'clickData')])
-        def render_unit_tab_content(active_tab, network_click_data):
+                      [State('center-selected-unit', 'data')])
+        def render_unit_tab_content(active_tab, selected_unit):
             """ layer info tab selected => update content """
-            if active_tab and network_click_data is not None:
-                layer, unit_idx = grapher.get_layer_unit_from_click_data(network_click_data)
+            if active_tab and selected_unit is not None:
+                layer = grapher.layers[selected_unit['layer_idx']]
                 if layer is not None:
-                    return layer.get_unit_tab_content(unit_idx, active_tab)
+                    return layer.get_unit_tab_content(selected_unit['unit_idx'], active_tab)
             return html.Div()
 
         @app.callback([Output('bottom-layer-title', 'children'), Output('bottom-layer-tabs', 'children'),
                        Output('bottom-unit-title', 'children'), Output('bottom-unit-tabs', 'children')],
-                      [Input('center-main-view', 'clickData'), Input('top-epoch-index', 'data')],
+                      [Input('center-selected-unit', 'data'), Input('top-epoch-index', 'data')],
                       [State('bottom-layer-tab-bar', 'active_tab'),
                        State('bottom-unit-tab-bar', 'active_tab')])
-        def update_layer_info(click_data, _, active_layer_tab, active_unit_tab):
-            """ Display selected layer title """
-            if click_data:
-                layer, unit_idx = grapher.get_layer_unit_from_click_data(click_data)
-                return layer.get_layer_title(), layer.get_layer_tabs(active_layer_tab), \
-                    layer.get_unit_title(unit_idx), layer.get_unit_tabs(unit_idx, active_unit_tab)
+        def update_layer_info(selected_unit, _, active_layer_tab, active_unit_tab):
+            """ Display selected layer/unit title and tabs """
+            if selected_unit:
+                layer = grapher.layers[selected_unit['layer_idx']]
+                return layer.get_layer_title(), \
+                    layer.get_layer_tabs(active_layer_tab), \
+                    layer.get_unit_title(selected_unit['unit_idx']), \
+                    layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
             dummy_layer = AbstractLayer('dummy')
             return [], dummy_layer.get_layer_tabs(active_layer_tab), [], dummy_layer.get_unit_tabs(0, active_unit_tab)
 

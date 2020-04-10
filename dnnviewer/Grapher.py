@@ -61,16 +61,17 @@ class Grapher:
 
         fig.update_layout(showlegend=False, xaxis=x_axis, clickmode='event+select', template=self.plotly_theme)
 
-    def plot_topn_connections(self, fig: go.Figure, topn: int, ref_layer: AbstractLayer, ref_unit: int):
+    def plot_topn_connections(self, fig: go.Figure, topn: int, ref_layer_idx: int, ref_unit: int):
         """ Add the top N connections of each neuron on the graph """
 
+        assert(0 <= ref_layer_idx < len(self.layers))
+
         # Plot connections as shapes (SVG paths)
-        layer_index = self.layers.index(ref_layer)
         shapes = []
 
         # Backward from ref_layer
         sel_units = [ref_unit]
-        for i in range(layer_index, 0, -1):
+        for i in range(ref_layer_idx, 0, -1):
             cur_layer = self.layers[i]
             prev_layer = self.layers[i - 1]
             sel_units, new_shapes = cur_layer.plot_topn_connections(prev_layer, topn, sel_units, True)
@@ -81,7 +82,7 @@ class Grapher:
 
         # Forward from ref_layer
         sel_units = [ref_unit]
-        for i in range(layer_index + 1, len(self.layers), +1):
+        for i in range(ref_layer_idx + 1, len(self.layers), +1):
             cur_layer = self.layers[i]
             prev_layer = self.layers[i - 1]
             sel_units, new_shapes = cur_layer.plot_topn_connections(prev_layer, topn, sel_units, False)

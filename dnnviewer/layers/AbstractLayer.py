@@ -67,7 +67,7 @@ class AbstractLayer:
     # @abstract
     def get_layer_tab_content(self, active_tab):
         """ Get the content of the selected tab """
-        return html.Div()
+        return html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)
 
     # @abstract
     def get_unit_title(self, unit_idx: int):
@@ -87,7 +87,7 @@ class AbstractLayer:
         """ Get the content of the selected tab
             @return Dash HTML element (list)
         """
-        return html.Div()
+        return html.Div(dcc.Graph(id='bottom-unit-figure'), hidden=True)
 
     # @abstract
     def get_unit_description(self, unit_idx: int):

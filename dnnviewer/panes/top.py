@@ -55,9 +55,9 @@ class TopPane(AbstractPane):
             else:
                 button_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
-            print('Triggering', button_id)
+            print('Triggering', button_id, _0, _1, _2, _3)
 
-            if button_id == 'top-fast-backward' or button_id == 'no_clicks':
+            if button_id == 'top-fast-backward':
                 return model_sequence.first_epoch(grapher)
             elif button_id == 'top-step-backward':
                 return model_sequence.previous_epoch(grapher)

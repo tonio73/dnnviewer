@@ -53,6 +53,7 @@ def run_app(args):
     elif args.sequence_keras:
         model_sequence.load_sequence(args.sequence_keras)
 
+    # Force loading first model of sequence
     model_sequence.first_epoch(grapher)
 
     panes = [top.TopPane(), center.CenterPane(), bottom.BottomPane()]
