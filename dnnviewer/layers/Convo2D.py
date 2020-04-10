@@ -1,5 +1,3 @@
-import string
-
 from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
@@ -8,11 +6,13 @@ from ..SimpleColorScale import SimpleColorScale
 from ..widgets import layer_minimax_graph, tabs
 from ..imageutils import array_to_img_src, to_8bit_img
 
-import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import dash_core_components as dcc
 import dash_html_components as html
+
+import numpy as np
+import string
 
 
 class Convo2D(AbstractLayer):
@@ -36,6 +36,7 @@ class Convo2D(AbstractLayer):
         else:
             x = self.xoffset * np.ones(len(unit_idx))
 
+        # If output is flattened, actual output dimension is larger than number of filters => wrap with modulo
         if at_output and self.flatten_output:
             return x, self._get_y_offset() + self.spacing_y * (unit_idx % self.num_unit)
         else:
@@ -44,14 +45,14 @@ class Convo2D(AbstractLayer):
     # @override
     def plot(self, fig):
         x, y = self.get_positions()
-        hover_text = ['%d' % idx for idx in np.arange(self.num_unit)] if self.unit_names is None else self.unit_names
+        hover_text = self._get_unit_labels()
         fig.add_trace(go.Scatter(x=x, y=y, hovertext=hover_text, mode='markers', hoverinfo='text', name=self.name))
 
     # @override
     def plot_topn_connections(self, backward_layer, topn, active_units, backward):
 
         """ On convolution layers, the maximum over 2D convolution filters is first extracted,
-            then take the top n accross the (input, output) filter pairs
+            then take the top n across the (input, output) filter pairs
         """
 
         if self.weights is None:
@@ -86,7 +87,7 @@ class Convo2D(AbstractLayer):
         else:
             # Max on the 2D convolution filters
             # Transpose here
-            weights1 = np.swapaxes(self.weights, 2, 3).reshape(-1, self.num_unit, backward_layer.num_unit)
+            weights1 = np.swapaxes(self.weights, 2, 3).reshape((-1, self.num_unit, backward_layer.num_unit))
             convo_max_weights1 = weights1.take(np.argmax(np.abs(weights1[:, :, active_units]), axis=0))  # <--
 
             # No need to handle the flatten as active_units is already wrapped

@@ -7,6 +7,7 @@ import dash_html_components as html
 
 import numpy as np
 import string
+from typing import List
 
 
 class Grapher:
@@ -20,8 +21,10 @@ class Grapher:
     # Training properties
     training_props = {'loss': '', 'optimizer': ''}
 
+    layers = List[AbstractLayer]
+
     def __init__(self, plotly_theme='plotly_dark'):
-        self.layers = []
+        self.layer = []
         self.x_spacing = 1.
         self.x_offset = 0
         self.plotly_theme = plotly_theme
@@ -91,8 +94,18 @@ class Grapher:
             if len(sel_units) > 32:
                 topn = 1
 
+        # Annotation on the selected layer (trace)
+        sel_layer: AbstractLayer = self.layers[ref_layer_idx]
+        sel_pos = sel_layer.get_unit_position(ref_unit, True)
+        annotations = [dict(x=sel_pos[0], y=sel_pos[1],
+                            xref="x", yref="y",
+                            text="%s #%d" % (sel_layer.name, ref_unit),
+                            showarrow=True, arrowhead=3, arrowcolor="#aaa",
+                            bgcolor="#666", borderpad=4,
+                            ax=-(10 + 8 * len(sel_layer.name)), ay=-30)]
+
         # Eventually apply the shape list
-        fig.update_layout(shapes=shapes)
+        fig.update_layout(shapes=shapes, annotations=annotations)
 
     def get_model_tabs(self, previous_active: string):
         """ Get the layer tab bar and layout function """
