@@ -23,7 +23,7 @@ def parse_arguments():
                               help="Load sequence of Keras checkpoints following the pattern "
                                    "'dirpath/model_prefix{epoch}'")
     parser.add_argument("--test-dataset", "-t", help="Load a predefined test dataset (mnist, fashion-mnist, cifar-10)")
-    parser.add_argument("--debug", help="Set Dash in debug mode")
+    parser.add_argument("--debug", help="Set Dash in debug mode", dest="debug", default=False, action='store_true')
     parser.parse_args()
 
     # Handle command line arguments
