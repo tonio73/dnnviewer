@@ -17,11 +17,11 @@ import logging
 
 class CenterPane(AbstractPane):
     # Main network view
-    main_view = go.Figure()
+    main_view = None
 
     def render(self):
         """ Prepare graphical structures before Dash rendering """
-
+        self.main_view = go.Figure()
         self.main_view.update_layout(margin=dict(l=10, r=10, b=30, t=30))  # noqa: E741
         grapher.plot_layers(self.main_view)
 
@@ -79,7 +79,7 @@ class CenterPane(AbstractPane):
                 topn = grapher.topn_init
 
             if selected_unit is None or epoch_index is None:
-                logger.warning('update_figure prevent update since', selected_unit, epoch_index)
+                logger.warning('update_figure prevent update since %s %s', selected_unit, epoch_index)
                 raise PreventUpdate
 
             if selected_unit:

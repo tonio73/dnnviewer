@@ -78,7 +78,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
                 previous_layer = input_layer
 
         elif layer_class in _keras_ignored_layers:
-            logger.info('Ignored', keras_layer.name)
+            logger.info('Ignored %s', keras_layer.name)
 
         else:
             logger.error('Not handled layer %s of type %s' % (keras_layer.name, type(keras_layer)))

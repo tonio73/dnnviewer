@@ -4,11 +4,11 @@
 # Python application main entry point
 #
 
-from . import grapher, app, test_data, model_sequence
-from .panes import top, center, bottom
+from . import app, test_data, model_sequence
+from .main_network_view import MainNetworkView
 from .bridge import tensorflow as tf_bridge
+import flask
 
-import dash_bootstrap_components as dbc
 import argparse
 
 
@@ -52,24 +52,22 @@ def run_app(args):
     elif args.sequence_keras:
         model_sequence.load_sequence(args.sequence_keras)
 
-    # Force loading first model of sequence
-    model_sequence.first_epoch(grapher)
+    network_view = MainNetworkView()
 
-    panes = [top.TopPane(), center.CenterPane(), bottom.BottomPane()]
+    # Prepare the layout
+    def serve_layout():
+        has_request = flask.has_request_context()
 
-    # Prepare rendering of panes
-    [pane.render() for pane in panes]
+        network_view.render(has_request)
+        layout = network_view.layout(has_request)
+        return layout
 
-    # Top app layout
-    app.layout = dbc.Container([
+    app.layout = serve_layout
 
-        *[pane.get_layout() for pane in panes]
+    # Install the callbacks
+    network_view.callbacks()
 
-    ], fluid=True)
-
-    # Callbacks
-    [pane.callbacks() for pane in panes]
-
+    # Run the server, will call the layout
     app.run_server(debug=args.debug)
 
 

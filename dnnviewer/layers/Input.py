@@ -1,5 +1,3 @@
-import string
-
 from .AbstractLayer import AbstractLayer
 from ..widgets import tabs
 
@@ -26,7 +24,7 @@ class Input(AbstractLayer):
         return html.H5("Input '%s'" % self.name)
 
     # @override
-    def get_layer_tabs(self, previous_active: string):
+    def get_layer_tabs(self, previous_active: str):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {'info': 'Info'}, previous_active,
                          AbstractLayer.get_layer_tab_content(self, None))

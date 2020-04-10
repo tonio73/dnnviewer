@@ -1,5 +1,3 @@
-import string
-
 from ..SimpleColorScale import SimpleColorScale
 from ..widgets import tabs
 
@@ -58,7 +56,7 @@ class AbstractLayer:
         return []
 
     # @abstract
-    def get_layer_tabs(self, previous_active: string):
+    def get_layer_tabs(self, previous_active: str):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {}, previous_active,
                          # The graph needs always to be defined at init to check associated callback
@@ -76,14 +74,14 @@ class AbstractLayer:
                         (' (%s)' % self.unit_names[unit_idx] if self.unit_names is not None else ""))]
 
     # @abstract
-    def get_unit_tabs(self, unit_idx: int, previous_active: string):
+    def get_unit_tabs(self, unit_idx: int, previous_active: str):
         """ Get the unit tab bar and layout function """
         return [*tabs.make('bottom-unit', {}, previous_active),
                 # The graph needs always to be defined at init to check associated callback
                 html.Div(dcc.Graph(id='bottom-unit-figure'), hidden=True)]
 
     # @abstract
-    def get_unit_tab_content(self, unit_idx: int, active_tab: string):
+    def get_unit_tab_content(self, unit_idx: int, active_tab: str):
         """ Get the content of the selected tab
             @return Dash HTML element (list)
         """

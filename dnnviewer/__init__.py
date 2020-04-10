@@ -25,3 +25,18 @@ test_data: TestData = TestData()
 
 # Todo correct init without dependency on KerasModelSequence, using AbstractModelSequence
 model_sequence: KerasModelSequence = KerasModelSequence(test_data)
+
+
+class AbstractDashboard:
+    """ Pure abstract template for the page dashboards """
+
+    def render(self, has_request: bool):
+        """ Pre layout rendering """
+        return
+
+    def layout(self, has_request: bool):
+        """ @return layout """
+        return []
+
+    def callbacks(self):
+        """ Setup callbacks """

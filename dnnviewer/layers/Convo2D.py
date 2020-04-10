@@ -12,7 +12,6 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 import numpy as np
-import string
 
 
 class Convo2D(AbstractLayer):
@@ -112,7 +111,7 @@ class Convo2D(AbstractLayer):
         return html.H5("Convo 2D '%s'" % self.name)
 
     # @override
-    def get_layer_tabs(self, previous_active: string):
+    def get_layer_tabs(self, previous_active: str):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active,
                          AbstractLayer.get_layer_tab_content(self, None))
@@ -131,7 +130,7 @@ class Convo2D(AbstractLayer):
         return AbstractLayer.get_layer_tab_content(self, active_tab)
 
     # @override
-    def get_unit_tabs(self, unit_idx: int, previous_active: string):
+    def get_unit_tabs(self, unit_idx: int, previous_active: str):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 

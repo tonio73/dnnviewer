@@ -1,10 +1,8 @@
-import string
-
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
 
-def make(prefix: string, tab_def, previous_active: string = None, default_tab_content=None):
+def make(prefix: str, tab_def, previous_active: str = None, default_tab_content=None):
     """ Create tab bar and container for the layer information sub-panel """
     if previous_active is not None and previous_active in list(tab_def.keys()):
         active_tab = previous_active

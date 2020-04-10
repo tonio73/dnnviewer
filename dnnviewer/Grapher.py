@@ -7,8 +7,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 import numpy as np
-import string
 from typing import List
+import logging
 
 
 class Grapher:
@@ -53,6 +53,8 @@ class Grapher:
     def plot_layers(self, fig: go.Figure):
         """ Plot layers """
 
+        print('plot_layers')
+
         layer_names = []
         layer: AbstractLayer
         for layer in self.layers:
@@ -71,7 +73,12 @@ class Grapher:
     def plot_topn_connections(self, fig: go.Figure, topn: int, ref_layer_idx: int, ref_unit: int):
         """ Add the top N connections of each neuron on the graph """
 
-        assert(0 <= ref_layer_idx < len(self.layers))
+        logger = logging.getLogger(__name__)
+
+        logger.debug('plot_topn_connections', ref_layer_idx, ref_unit)
+
+        assert(0 <= ref_layer_idx < len(self.layers), 'Attempting to reach layer %d while number of layer is %d' %
+               (ref_layer_idx, len(self.layers)))
 
         # Plot connections as shapes (SVG paths)
         shapes = []
@@ -111,7 +118,7 @@ class Grapher:
         # Eventually apply the shape list
         fig.update_layout(shapes=shapes, annotations=annotations)
 
-    def get_model_tabs(self, previous_active: string):
+    def get_model_tabs(self, previous_active: str):
         """ Get the layer tab bar and layout function """
         return tabs.make('center-model', {'info': 'Info', 'config': 'Config'}, previous_active,
                          self.get_model_tab_content())

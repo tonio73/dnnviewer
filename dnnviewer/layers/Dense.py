@@ -1,5 +1,3 @@
-import string
-
 from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
@@ -70,7 +68,7 @@ class Dense(AbstractLayer):
         return html.H5("Dense '%s'" % self.name)
 
     # @override
-    def get_layer_tabs(self, previous_active: string):
+    def get_layer_tabs(self, previous_active: str):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active,
                          AbstractLayer.get_layer_tab_content(self, None))
@@ -88,7 +86,7 @@ class Dense(AbstractLayer):
         return AbstractLayer.get_layer_tab_content(self, active_tab)
 
     # @override
-    def get_unit_tabs(self, unit_idx: int, previous_active: string):
+    def get_unit_tabs(self, unit_idx: int, previous_active: str):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-unit', {'info': 'Info', 'weights': 'Weights'}, previous_active)
 
