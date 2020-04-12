@@ -8,3 +8,4 @@ class AbstractDashboard:
 
     def callbacks(self):
         """ Setup callbacks """
+        return

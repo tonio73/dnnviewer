@@ -53,8 +53,6 @@ class Grapher:
     def plot_layers(self, fig: go.Figure):
         """ Plot layers """
 
-        print('plot_layers')
-
         layer_names = []
         layer: AbstractLayer
         for layer in self.layers:

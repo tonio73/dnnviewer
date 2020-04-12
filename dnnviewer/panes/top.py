@@ -16,7 +16,7 @@ class TopPane(AbstractPane):
     def get_layout(self, model_sequence, grapher, test_data):
         """ Get pane layout """
         return dbc.Row([
-            dcc.Store('top-epoch-index'),
+            dcc.Store('top-epoch-index', data=model_sequence.current_epoch_index),
             dbc.Col([html.H1([font_awesome.icon('binoculars'), html.Span('Deep Neural Network Viewer',
                                                                          style={'marginLeft': '15px'})])
                      ], md=9),

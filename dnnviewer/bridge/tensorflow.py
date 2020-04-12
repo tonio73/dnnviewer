@@ -10,6 +10,7 @@ from ..layers.Input import Input
 from ..layers.Dense import Dense
 from ..layers.Convo2D import Convo2D
 from ..SimpleColorScale import SimpleColorScale
+from ..TestData import TestData
 
 import logging
 
@@ -87,35 +88,26 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         grapher.layers[-1].unit_names = test_data.output_classes
 
 
-def keras_load_cifar_test_data(test_data):
-    """ Load CIFAR using Keras, return a sample of the test """
+def keras_load_test_data(dataset_name):
+    """ Load dataset using Keras, return a sample of the test """
 
-    (_, _), (x_test, y_test) = keras.datasets.cifar10.load_data()
+    _datasets = {'cifar-10': (keras.datasets.cifar10.load_data, ['red', 'green', 'blue'],
+                              ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']),
+                 'mnist': (keras.datasets.mnist, ['bw'],
+                           [str(d) for d in range(10)]),
+                 'fashion-mnist': (keras.datasets.fashion_mnist, ['bw'],
+                                   ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker',
+                                    'Bag', 'Ankle boot'])
+                 }
 
-    test_data.set(x_test, y_test.ravel(),
-                  ['red', 'green', 'blue'],
-                  ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'])
+    if dataset_name in _datasets:
+        dataset = _datasets[dataset_name]
+        (_, _), (x_test, y_test) = dataset[0].load_data()
+        test_data = TestData()
+        test_data.set(x_test, y_test.ravel(), dataset[1], dataset[2])
+        return test_data
 
-
-def keras_load_mnist_test_data(test_data):
-    """ Load MNIST using Keras, return a sample of the test """
-
-    (_, _), (x_test, y_test) = keras.datasets.mnist.load_data()
-
-    test_data.set(x_test, y_test,
-                  ['bw'],
-                  [str(d) for d in range(10)])
-
-
-def keras_load_mnistfashion_test_data(test_data):
-    """ Load Fashion MNIST using Keras, return a sample of the test """
-
-    (_, _), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
-
-    test_data.set(x_test, y_test,
-                  ['bw'],
-                  ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker',
-                   'Bag', 'Ankle boot'])
+    return None
 
 
 def _get_caption(prop, dic):
