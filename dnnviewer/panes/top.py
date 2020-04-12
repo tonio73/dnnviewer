@@ -1,5 +1,4 @@
 from . import AbstractPane
-from .. import app, model_sequence, grapher
 from ..widgets import font_awesome
 
 from dash import callback_context
@@ -14,10 +13,7 @@ import logging
 class TopPane(AbstractPane):
     """ Top pane of the application """
 
-    def render(self):
-        return
-
-    def get_layout(self):
+    def get_layout(self, model_sequence, grapher, test_data):
         """ Get pane layout """
         return dbc.Row([
             dcc.Store('top-epoch-index'),
@@ -39,7 +35,7 @@ class TopPane(AbstractPane):
                     md=3, align='center')
         ])
 
-    def callbacks(self):
+    def callbacks(self, app, model_sequence, grapher, test_data):
         """ Local callbacks """
 
         logger = logging.getLogger(__name__)

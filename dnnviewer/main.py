@@ -4,9 +4,14 @@
 # Python application main entry point
 #
 
-from . import app, test_data, model_sequence
 from .main_network_view import MainNetworkView
+from .TestData import TestData
 from .bridge import tensorflow as tf_bridge
+from .bridge.KerasModelSequence import KerasModelSequence
+from .widgets import font_awesome
+
+import dash
+import dash_bootstrap_components as dbc
 import flask
 
 import argparse
@@ -33,6 +38,18 @@ def parse_arguments():
 def run_app(args):
     """ Run the app """
 
+    # Create App, set stylesheets
+    app = dash.Dash(__name__,
+                    assets_folder="assets",
+                    external_stylesheets=[dbc.themes.BOOTSTRAP, font_awesome.CDN_CSS_URL])
+    app.title = 'DNN Viewer'
+
+    # Manager for test data
+    test_data = TestData()
+
+    # Model sequence : currently only supporting from Keras
+    model_sequence = KerasModelSequence(test_data)
+
     # Test data
     if args.test_dataset:
         if args.test_dataset == 'cifar-10':
@@ -52,13 +69,12 @@ def run_app(args):
     elif args.sequence_keras:
         model_sequence.load_sequence(args.sequence_keras)
 
-    network_view = MainNetworkView()
+    network_view = MainNetworkView(app, model_sequence, test_data)
 
     # Prepare the layout
     def serve_layout():
         has_request = flask.has_request_context()
 
-        network_view.render(has_request)
         layout = network_view.layout(has_request)
         return layout
 

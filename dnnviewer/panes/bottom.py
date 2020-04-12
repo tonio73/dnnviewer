@@ -3,7 +3,6 @@
 #
 
 from . import AbstractPane
-from .. import app, grapher, test_data, model_sequence
 from ..layers.AbstractLayer import AbstractLayer
 from ..widgets import tabs
 from ..imageutils import array_to_img_src
@@ -15,6 +14,11 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 
+def _get_maps_tabs(active_tab: str = None):
+    """ Tabs for the maps """
+    return tabs.make('bottom-maps', {'activation': 'Activation'}, active_tab)
+
+
 class BottomPane(AbstractPane):
     # Test sample to show on init
     test_sample_init = 0
@@ -22,10 +26,7 @@ class BottomPane(AbstractPane):
     # maximum number of test sample to display in selectors
     max_test_samples = 40
 
-    def render(self):
-        return
-
-    def get_layout(self):
+    def get_layout(self, model_sequence, grapher, test_data):
         """ Get pane layout """
 
         dummy_layer = AbstractLayer('dummy')
@@ -55,7 +56,7 @@ class BottomPane(AbstractPane):
                         html.Div(className='detail-section',
                                  children=[html.Div(id='bottom-layer-title'),
                                            html.Div(id='bottom-layer-tabs',
-                                                    children=dummy_layer.get_layer_tabs(None))
+                                                    children=dummy_layer.get_layer_tabs())
                                            ])
                     ]),
 
@@ -64,7 +65,7 @@ class BottomPane(AbstractPane):
                     children=html.Div(className='detail-section',
                                       children=[html.Div(id='bottom-unit-title', children=html.H5('Maps')),
                                                 html.Div(id='bottom-unit-tabs',
-                                                         children=dummy_layer.get_unit_tabs(0, None))
+                                                         children=dummy_layer.get_unit_tabs(0))
                                                 ])),
 
             #  Maps
@@ -73,10 +74,10 @@ class BottomPane(AbstractPane):
                                       children=[html.Div(id='bottom-maps-title',
                                                          children=html.H5('Maps')),
                                                 html.Div(id='bottom-maps-tabs',
-                                                         children=self._get_maps_tabs(None))]))
+                                                         children=_get_maps_tabs(None))]))
         ])
 
-    def callbacks(self):
+    def callbacks(self, app, model_sequence, grapher, test_data):
         """ Local callbacks """
 
         @app.callback(Output('bottom-test-sample-img', 'src'),
@@ -137,9 +138,9 @@ class BottomPane(AbstractPane):
             if selected_unit:
                 layer = grapher.layers[selected_unit['layer_idx']]
                 return layer.get_layer_title(), \
-                       layer.get_layer_tabs(active_layer_tab), \
-                       layer.get_unit_title(selected_unit['unit_idx']), \
-                       layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
+                     layer.get_layer_tabs(active_layer_tab), \
+                     layer.get_unit_title(selected_unit['unit_idx']), \
+                     layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
             dummy_layer = AbstractLayer('dummy')
             return [], dummy_layer.get_layer_tabs(active_layer_tab), [], dummy_layer.get_unit_tabs(0, active_unit_tab)
 
@@ -160,7 +161,3 @@ class BottomPane(AbstractPane):
             raise PreventUpdate
 
         return
-
-    def _get_maps_tabs(self, active_tab):
-        """ Tabs for the maps """
-        return tabs.make('bottom-maps', {'activation': 'Activation'}, active_tab)

@@ -13,6 +13,5 @@ dependencies:
   - dash_core_components
   - dash_html_components
   - dash-bootstrap-components
-  - ipython
-  - ipywidgets
+  - flask
   - pillow

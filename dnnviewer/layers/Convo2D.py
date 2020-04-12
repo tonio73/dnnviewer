@@ -111,7 +111,7 @@ class Convo2D(AbstractLayer):
         return html.H5("Convo 2D '%s'" % self.name)
 
     # @override
-    def get_layer_tabs(self, previous_active: str):
+    def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights'}, previous_active,
                          AbstractLayer.get_layer_tab_content(self, None))

@@ -77,8 +77,8 @@ class Grapher:
 
         logger.debug('plot_topn_connections', ref_layer_idx, ref_unit)
 
-        assert(0 <= ref_layer_idx < len(self.layers), 'Attempting to reach layer %d while number of layer is %d' %
-               (ref_layer_idx, len(self.layers)))
+        assert 0 <= ref_layer_idx < len(self.layers), 'Attempting to reach layer %d while number of layer is %d' % \
+                                                      (ref_layer_idx, len(self.layers))
 
         # Plot connections as shapes (SVG paths)
         shapes = []

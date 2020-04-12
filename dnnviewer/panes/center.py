@@ -3,7 +3,6 @@
 #
 
 from . import AbstractPane
-from .. import app, grapher, test_data
 
 import plotly.graph_objects as go
 import dash_core_components as dcc
@@ -19,13 +18,13 @@ class CenterPane(AbstractPane):
     # Main network view
     main_view = None
 
-    def render(self):
+    def render(self, grapher):
         """ Prepare graphical structures before Dash rendering """
         self.main_view = go.Figure()
         self.main_view.update_layout(margin=dict(l=10, r=10, b=30, t=30))  # noqa: E741
         grapher.plot_layers(self.main_view)
 
-    def get_layout(self):
+    def get_layout(self, model_sequence, grapher, test_data):
         """ Get pane layout """
 
         # Initialize the selected unit to the output corresponding to the selected test data
@@ -48,7 +47,7 @@ class CenterPane(AbstractPane):
                              ]), md=3)
         ])
 
-    def callbacks(self):
+    def callbacks(self, app, model_sequence, grapher, test_data):
         """ Dash callbacks """
 
         logger = logging.getLogger(__name__)

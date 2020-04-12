@@ -1,4 +1,3 @@
-from ..layers.AbstractLayer import AbstractLayer
 from ..Grapher import Grapher
 
 
