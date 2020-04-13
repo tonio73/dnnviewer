@@ -99,8 +99,7 @@ class BottomPane(AbstractPane):
         def update_activation_map(active_tab, index, selected_unit, _):
             if active_tab is not None \
                     and index is not None and test_data.x is not None \
-                    and model_sequence \
-                    and selected_unit:
+                    and selected_unit and selected_unit['layer_idx'] is not None:
                 if active_tab == 'activation':
                     layer = grapher.layers[selected_unit['layer_idx']]
                     return layer.get_activation_map(model_sequence, test_data.x[index], selected_unit['unit_idx'])
