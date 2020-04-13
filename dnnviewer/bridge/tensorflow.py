@@ -25,7 +25,7 @@ def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
     return
 
 
-def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model, test_data):
+def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model, test_data: TestData):
     """ Create a graphical representation of a Keras Sequential model's layers """
 
     logger = logging.getLogger(__name__)
@@ -88,10 +88,12 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         grapher.layers[-1].unit_names = test_data.output_classes
 
 
-def keras_load_test_data(dataset_name):
+def keras_load_test_data(dataset_name, test_data: TestData):
     """ Load dataset using Keras, return a sample of the test """
 
-    _datasets = {'cifar-10': (keras.datasets.cifar10.load_data, ['red', 'green', 'blue'],
+    test_data.reset()
+
+    _datasets = {'cifar-10': (keras.datasets.cifar10, ['red', 'green', 'blue'],
                               ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']),
                  'mnist': (keras.datasets.mnist, ['bw'],
                            [str(d) for d in range(10)]),
@@ -103,11 +105,14 @@ def keras_load_test_data(dataset_name):
     if dataset_name in _datasets:
         dataset = _datasets[dataset_name]
         (_, _), (x_test, y_test) = dataset[0].load_data()
-        test_data = TestData()
         test_data.set(x_test, y_test.ravel(), dataset[1], dataset[2])
-        return test_data
 
-    return None
+
+def keras_test_data_listing():
+    """ @return dictionary id: caption of available test datasets """
+    return {'mnist': "MNIST digits",
+            'fashion-mnist': "Fashion MNIST",
+            'cifar-10': "CIFAR 10"}
 
 
 def _get_caption(prop, dic):

@@ -9,6 +9,7 @@ import numpy as np
 from pathlib import Path
 import glob
 import re
+import logging
 
 
 class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
@@ -20,13 +21,22 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         self.current_model = None
         self.test_data = test_data
 
+    def reset(self):
+        AbstractModelSequence.reset(self)
+        self.model_paths = []
+        self.current_model = None
+
     def load_single(self, file_path):
         """" Load a single Keras model from file_path"""
+
+        self.reset()
         self.number_epochs = 1
         self.model_paths = [file_path]
 
     def load_sequence(self, dir_path):
         """ Load a sequence of models over epochs from dir_path with pattern on {epoch} tag """
+
+        self.reset()
         checkpoint_glob = dir_path.replace('{epoch}', '[0-9]*')
 
         checkpoint_path_list = glob.glob(checkpoint_glob)
@@ -36,6 +46,39 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         checkpoint_epochs.sort()
         self.model_paths = [checkpoints[i] for i in checkpoint_epochs]
         self.number_epochs = len(self.model_paths)
+
+    def list_models(self, directories=[], model_sequence_pattern='{model}_{epoch}'):
+        """ List all models in directories """
+        seq_pat1 = model_sequence_pattern.replace('{model}', '*').replace('{epoch}', '[0-9]*')
+        seq_pat2 = model_sequence_pattern.replace('{model}', r'(\w+)').replace('{epoch}', '([0-9]+)')
+        models = []
+
+        logger = logging.getLogger(__name__)
+
+        try:
+            for dir_path in directories:
+
+                # HDF5 & TF files
+                model_glob_hdf5 = dir_path + '/*.h5'
+                model_path_list = glob.glob(model_glob_hdf5)
+                models.extend(model_path_list)
+                model_glob_tf = dir_path + '/*.tf'
+                model_path_list = glob.glob(model_glob_tf)
+                models.extend(model_path_list)
+
+                # Checkpoints using pattern
+                model_glob_seq = dir_path + '/' + seq_pat1
+                model_path_list = glob.glob(model_glob_seq)
+                # Detect unique models
+                reg1 = re.compile(dir_path + '/' + seq_pat2)
+                seq_model_path_list = [reg1.search(path).group(1) for path in model_path_list]
+                model_path_list = [dir_path + '/' + model_sequence_pattern.replace('{model}', m)
+                                   for m in set(seq_model_path_list)]
+                models.extend(model_path_list)
+        except Exception:
+            logger.warning('Failed to list directories')
+        models.sort()
+        return models
 
     # @override
     def get_activation(self, img, layer: AbstractLayer, unit=None):

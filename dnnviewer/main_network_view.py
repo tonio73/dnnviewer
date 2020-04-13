@@ -14,7 +14,7 @@ class MainNetworkView(AbstractDashboard):
         - bottom sample data, layer and unit details, activation maps
     """
 
-    def __init__(self, app, model_sequence: AbstractModelSequence, test_data: TestData.TestData):
+    def __init__(self, app, model_sequence: AbstractModelSequence, test_data: TestData.TestData, enable_navigation):
         # Dash app
         self.app = app
         # DNN model as single or sequence over epochs
@@ -24,7 +24,7 @@ class MainNetworkView(AbstractDashboard):
         # Graphical representation of DNN
         self.grapher: Grapher = Grapher()
         # Panes
-        self.panes = [top.TopPane(), center.CenterPane(), bottom.BottomPane()]
+        self.panes = [top.TopPane(enable_navigation), center.CenterPane(), bottom.BottomPane()]
 
     def layout(self, has_request):
 

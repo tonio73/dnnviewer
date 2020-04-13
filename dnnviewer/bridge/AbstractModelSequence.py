@@ -8,6 +8,15 @@ class AbstractModelSequence:
         self.number_epochs = 0
         self.current_epoch_index = -1
 
+    def reset(self):
+        self.number_epochs = 0
+        self.current_epoch_index = -1
+
+    # @abstract
+    def list_models(self, directories=[], model_sequence_pattern='{model}_{epoch}'):
+        """ List all models in directories """
+        return []
+
     def first_epoch(self, grapher: Grapher):
         """ Go to first epoch in sequence and update graph """
         assert self.number_epochs > 0

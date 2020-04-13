@@ -13,12 +13,17 @@ import logging
 class TopPane(AbstractPane):
     """ Top pane of the application """
 
+    def __init__(self, enable_navigation):
+        self.enable_navigation = enable_navigation
+
     def get_layout(self, model_sequence, grapher, test_data):
         """ Get pane layout """
         return dbc.Row([
             dcc.Store('top-epoch-index', data=model_sequence.current_epoch_index),
-            dbc.Col([html.H1([font_awesome.icon('binoculars'), html.Span('Deep Neural Network Viewer',
-                                                                         style={'marginLeft': '15px'})])
+            dbc.Col([html.H1([html.Span(dcc.Link(font_awesome.icon('arrow-left'), href='/'),
+                                        hidden=not self.enable_navigation,
+                                        style={'marginRight': '15px'}),
+                              html.Span('Deep Neural Network Viewer')])
                      ], md=9),
             dbc.Col(html.Div([dbc.Button(font_awesome.icon('fast-backward'), className="mr-1",
                                          id='top-fast-backward'),

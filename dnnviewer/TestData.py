@@ -15,3 +15,10 @@ class TestData:
         self.input_classes = input_classes
         self.output_classes = output_classes
         self.has_test_sample = True
+
+    def reset(self):
+        self.x = []
+        self.y = []
+        self.input_classes = None
+        self.output_classes = None
+        self.has_test_sample = False

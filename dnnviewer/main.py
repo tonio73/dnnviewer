@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #
 # Python application main entry point
 #
@@ -9,15 +7,11 @@ from .main_network_view import MainNetworkView
 from .TestData import TestData
 from .bridge import tensorflow as tf_bridge
 from .bridge.KerasModelSequence import KerasModelSequence
+from .widgets.Router import Router
 from .widgets import font_awesome
 
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
-import flask
 
 import argparse
 import logging
@@ -29,13 +23,14 @@ def parse_arguments():
     # Command line options
     parser = argparse.ArgumentParser()
     parser_group = parser.add_mutually_exclusive_group(required=True)
+    parser_group.add_argument("--model-directories", help="Comma separated list of directories to select models from")
     parser_group.add_argument("--model-keras", "-m", help="Load a Keras model from file")
     parser_group.add_argument("--sequence-keras", "-s",
                               help="Load sequence of Keras checkpoints following the pattern "
                                    "'dirpath/model_prefix{epoch}'")
-    parser_group.add_argument("--model-directory", help="Select a directory to load models from ")
     parser.add_argument("--test-dataset", "-t", help="Load a predefined test dataset (mnist, fashion-mnist, cifar-10)")
     parser.add_argument("--debug", help="Set Dash in debug mode", dest="debug", default=False, action='store_true')
+    parser.add_argument("--sequence-pattern", default="{model}_{epoch}", help="Pattern to apply to detect sequences")
     parser.parse_args()
 
     # Handle command line arguments
@@ -54,13 +49,11 @@ def run_app(args):
     app.title = 'DNN Viewer'
 
     # Test data
+    test_data = TestData()
     if args.test_dataset:
-        test_data = tf_bridge.keras_load_test_data(args.test_dataset)
-        if test_data is None:
+        tf_bridge.keras_load_test_data(args.test_dataset, test_data)
+        if not test_data.has_test_sample:
             logger.error('Unable to load dataset %s', args.test_dataset)
-            test_data = TestData()
-    else:
-        test_data = TestData()
 
     # Model sequence : currently only supporting from Keras
     model_sequence = KerasModelSequence(test_data)
@@ -73,44 +66,25 @@ def run_app(args):
         model_sequence.load_sequence(args.sequence_keras)
 
     # Top level pages
-    pages = {
-        '/': MainModelSelection(app, model_sequence, test_data),
-        '/network-view': MainNetworkView(app, model_sequence, test_data)
-    }
+    router = Router()
+    if model_sequence.number_epochs > 0:
+        # Model already selected => single page on the main network view
+        router.add_route('/', MainNetworkView(app, model_sequence, test_data, False))
+    else:
+        router.add_route('/', MainModelSelection(app, model_sequence, test_data,
+                                                 args.model_directories.split(','), args.sequence_pattern))
+        router.add_route('/network-view', MainNetworkView(app, model_sequence, test_data, True))
 
     def main_layout():
-        if flask.has_request_context():
-            return html.Div([dcc.Location(id='url-path', refresh=False),
-                             dcc.Store(id='saved-url-path'),
-                             html.Div(id='page-content', children=html.Div('Request coming...'))])
-        else:
-            return html.Div([dcc.Location(id='url-path', refresh=False),
-                             dcc.Store(id='saved-url-path'),
-                             html.Div(id='page-content',
-                                      # All pages for validation
-                                      children=[page.layout(False) for page in pages.values()])])
+        return router.layout()
 
     # Top level layout : manage URL + current page content
     app.layout = main_layout
 
     # Install the callbacks
-    [p.callbacks() for p in pages.values()]
+    [p.callbacks() for p in router.pages.values()]
 
-    # Dispatch URL path name
-    @app.callback([Output('page-content', 'children'),
-                   Output('saved-url-path', 'data')],
-                  [Input('url-path', 'pathname')],
-                  [State('saved-url-path', 'data')])
-    def update_layout(path_name, saved_path):
-        has_request = flask.has_request_context()
-
-        logger.info("Reaching path %s from %s", path_name, saved_path)
-        if path_name == saved_path:
-            raise PreventUpdate
-
-        if has_request and path_name in pages:
-            return pages[path_name].layout(True), path_name
-        return '404', path_name
+    router.callbacks(app)
 
     # Run the server, will call the layout
     app.run_server(debug=args.debug)
