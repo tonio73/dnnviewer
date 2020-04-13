@@ -65,6 +65,15 @@ class MainModelSelection(AbstractDashboard):
         def model_validate(model_path):
             return model_path is None or len(model_path) == 0
 
+        @self.app.callback(Output('model-selection-dropdown', 'options'),
+                           [Input('model-selection-refresh', 'n_clicks')])
+        def refresh_models(n_clicks):
+            if n_clicks is None:
+                raise PreventUpdate
+
+            model_paths = self.model_sequence.list_models(self.model_directories, self.model_sequence_pattern)
+            return [{'label': path, 'value': path} for path in model_paths]
+
     def _model_selection_form(self):
 
         model_paths = self.model_sequence.list_models(self.model_directories, self.model_sequence_pattern)
@@ -75,7 +84,6 @@ class MainModelSelection(AbstractDashboard):
             dbc.FormGroup([
                 dbc.Label("Select a DNN model"),
                 dcc.Dropdown(id='model-selection-dropdown',
-                             # style={'marginTop': '12px'},
                              value=None,
                              options=[{'label': path, 'value': path} for path in model_paths]
                              )
@@ -84,11 +92,11 @@ class MainModelSelection(AbstractDashboard):
             dbc.FormGroup([
                 dbc.Label("Test data (optional)"),
                 dcc.Dropdown(id='test-data-selection-dropdown',
-                             # style={'marginTop': '12px'},
                              value=None,
                              options=[{'label': test_datasets[i], 'value': i} for i in test_datasets]
                              )
             ]),
             # Submit
-            dbc.Button("OK", id='model-selection-submit', color='primary', className="mr-1")
+            dbc.Row([dbc.Col(dbc.Button("OK", id='model-selection-submit', color='primary', block=True), xs=2),
+                     dbc.Col(dbc.Button(id='model-selection-refresh', children=font_awesome.icon('sync')))])
         ])
