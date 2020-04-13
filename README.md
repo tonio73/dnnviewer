@@ -6,7 +6,7 @@ Current version is targeted at the **image classification**. However, coming ver
 
 This project is for learning and teaching purpose, do not try to display a network with hundreds of layers.
 
-![Screenshot](assets/screenshots/screen3_1024.png)
+![Screenshot](assets/screenshots/screen4_1024.png)
 
 # Install
 
@@ -33,6 +33,21 @@ $ git clone https://github.com/tonio73/dnnviewer-data.git
 
 Test data is provided by Keras.
 
+### Selecting the model within the application`
+
+Launch the application with command line `--model-directories` that set a comma separated list of directory paths where the models are located
+
+```shell
+$ dnnviewer --model-directories dnnviewer-data/models,dnnviewer-data/models/FashionMNIST_checkpoints
+```
+
+Then select the network model and the corresponding test data (optional) on the user interface
+
+![Model selection UI](assets/screenshots/select_model1.png)
+
+Models containing the '{epoch}' tag are sequences over epochs. They are detected based on the pattern set by 
+command line option `--sequence-pattern` whose default is `{model}_{epoch}
+
 ### Loading a single model
 
 Keras models are loaded from Checkpoint or HDF5 format with option `--model-keras <file>`
@@ -43,22 +58,10 @@ Keras models are loaded from Checkpoint or HDF5 format with option `--model-kera
 $ dnnviewer --model-keras dnnviewer-data/models/CIFAR-10_CNN5.h5 --test-dataset cifar-10
 ```
 
-Larger model:
-
-```shell
-$ dnnviewer --model-keras dnnviewer-data/models/CIFAR-10_LeNetLarge.030.h5 --test-dataset cifar-10
-```
-
 #### MNIST Convolutional neural network based on LeNet5
 
 ```shell
 $ dnnviewer --model-keras dnnviewer-data/models/MNIST_LeNet60.h5 --test-dataset mnist
-```
-
-#### MNIST Dense only neural network
-
-```shell
-$ dnnviewer --model-keras dnnviewer-data/models/MNIST_dense128.h5 --test-dataset mnist
 ```
 
 ### Loading several epochs of a model

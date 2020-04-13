@@ -37,5 +37,5 @@ class Router:
             logger.info("Reaching path %s", path_name)
 
             if has_request and path_name in self.pages:
-                return self.pages[path_name].layout(True), path_name
+                return self.pages[path_name].layout(True)
             return '404'

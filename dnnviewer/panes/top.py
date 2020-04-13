@@ -19,7 +19,7 @@ class TopPane(AbstractPane):
     def get_layout(self, model_sequence, grapher, test_data):
         """ Get pane layout """
         return dbc.Row([
-            dcc.Store('top-epoch-index', data=model_sequence.current_epoch_index),
+            dcc.Store('top-epoch-index', data=model_sequence.current_epoch_index, storage_type='session'),
             dbc.Col([html.H1([html.Span(dcc.Link(font_awesome.icon('arrow-left'), href='/'),
                                         hidden=not self.enable_navigation,
                                         style={'marginRight': '15px'}),
