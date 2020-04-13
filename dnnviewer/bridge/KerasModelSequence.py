@@ -21,6 +21,7 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         self.current_model = None
         self.test_data = test_data
 
+    # @override
     def reset(self):
         AbstractModelSequence.reset(self)
         self.model_paths = []
@@ -47,7 +48,8 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         self.model_paths = [checkpoints[i] for i in checkpoint_epochs]
         self.number_epochs = len(self.model_paths)
 
-    def list_models(self, directories=[], model_sequence_pattern='{model}_{epoch}'):
+    # @override
+    def list_models(self, directories, model_sequence_pattern='{model}_{epoch}'):
         """ List all models in directories """
         seq_pat1 = model_sequence_pattern.replace('{model}', '*').replace('{epoch}', '[0-9]*')
         seq_pat2 = model_sequence_pattern.replace('{model}', r'(\w+)').replace('{epoch}', '([0-9]+)')
@@ -83,6 +85,8 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
     # @override
     def get_activation(self, img, layer: AbstractLayer, unit=None):
 
+        logger = logging.getLogger(__name__)
+
         # Format input if needed
         if img.dtype == np.uint8:
             img = img.astype(np.float) / 255
@@ -98,9 +102,11 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
             for d in [0, 1]:
                 delta = input_shape[d + 1] - img.shape[0]
                 if delta > 0:
-                    padding[d, 1] = delta
+                    padding[d, 0] = delta // 2
+                    padding[d, 1] = delta - padding[d, 0]
                     pad = True
             if pad:
+                logger.warning(f'Padding image before activation with pad={padding}')
                 img = np.pad(img, padding)
 
             # Convolution requires 3D input
@@ -111,6 +117,7 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         intermediate_model = keras.models.Model(inputs=self.current_model.input,
                                                 outputs=self.current_model.get_layer(layer.name).output)
 
+        # Expand dimension to create a mini-batch of 1 element
         maps = intermediate_model.predict(np.expand_dims(img, 0))[0]
         if unit is None:
             return maps

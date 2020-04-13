@@ -13,7 +13,7 @@ class AbstractModelSequence:
         self.current_epoch_index = -1
 
     # @abstract
-    def list_models(self, directories=[], model_sequence_pattern='{model}_{epoch}'):
+    def list_models(self, directories, model_sequence_pattern='{model}_{epoch}'):
         """ List all models in directories """
         return []
 
