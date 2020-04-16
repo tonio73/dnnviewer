@@ -68,7 +68,7 @@ class Dense(AbstractLayer):
         return html.H5("Dense '%s'" % self.name)
 
     # @override
-    def get_layer_tabs(self, previous_active: str):
+    def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'},
                          previous_active, AbstractLayer.get_layer_tab_content(self, None))
@@ -95,7 +95,7 @@ class Dense(AbstractLayer):
         return html.Div()
 
     # @override
-    def get_unit_tabs(self, unit_idx: int, previous_active: str):
+    def get_unit_tabs(self, unit_idx: int, previous_active: str = None):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-unit', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'}, previous_active)
 

@@ -73,7 +73,7 @@ class Grapher:
 
         logger = logging.getLogger(__name__)
 
-        logger.debug('plot_topn_connections', ref_layer_idx, ref_unit)
+        logger.debug('plot_topn_connections, layer=%d, unit=%d', ref_layer_idx, ref_unit)
 
         assert 0 <= ref_layer_idx < len(self.layers), 'Attempting to reach layer %d while number of layer is %d' % \
                                                       (ref_layer_idx, len(self.layers))

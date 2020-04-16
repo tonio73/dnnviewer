@@ -85,11 +85,11 @@ class CenterPane(AbstractPane):
                 epoch_index = 0
 
             if selected_unit is None:
-                logger.warning('update_figure prevent update since %s %s', selected_unit)
+                logger.warning('update_figure prevent update since selected unit is %s', selected_unit)
                 raise PreventUpdate
 
             if selected_unit:
-                logger.debug("update_figure: selected_unit", selected_unit)
+                logger.debug(f"update_figure: selected_unit{selected_unit}")
                 grapher.plot_topn_connections(self.main_view, int(topn),
                                               selected_unit['layer_idx'], selected_unit['unit_idx'])
             return self.main_view

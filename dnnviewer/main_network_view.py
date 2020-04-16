@@ -4,6 +4,9 @@ from .Grapher import Grapher
 from .panes import top, center, bottom
 
 import dash_bootstrap_components as dbc
+import dash_html_components as html
+
+import time
 
 
 class MainNetworkView(AbstractDashboard):
@@ -26,19 +29,32 @@ class MainNetworkView(AbstractDashboard):
         # Panes
         self.panes = [top.TopPane(enable_navigation), center.CenterPane(), bottom.BottomPane()]
 
+        self.refresh_count = 0
+
     def layout(self, has_request):
 
-        if has_request:
-            # Force loading first model of sequence
-            self.model_sequence.first_epoch(self.grapher)
+        # Work around double firing of route : https://github.com/plotly/dash/issues/1049
+        self.refresh_count += 1
 
-            # Prepare rendering of panes
-            [pane.render(self.grapher) for pane in self.panes]
+        if (self.refresh_count & 1) or not has_request:
 
-        # Layout
-        return dbc.Container([
-            *[pane.get_layout(self.model_sequence, self.grapher, self.test_data) for pane in self.panes]
-        ], fluid=True)
+            if has_request:
+                # Force loading first model of sequence
+                self.model_sequence.first_epoch(self.grapher)
+
+                # Prepare rendering of panes
+                [pane.render(self.grapher) for pane in self.panes]
+
+            # Layout
+            content = dbc.Container([
+                *[pane.get_layout(self.model_sequence, self.grapher, self.test_data) for pane in self.panes]
+            ], fluid=True)
+
+            return content
+
+        else:
+            time.sleep(15.0)
+            return html.Div()
 
     def callbacks(self):
 

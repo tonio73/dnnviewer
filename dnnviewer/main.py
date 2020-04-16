@@ -31,6 +31,7 @@ def parse_arguments():
     parser.add_argument("--test-dataset", "-t", help="Load a predefined test dataset (mnist, fashion-mnist, cifar-10)")
     parser.add_argument("--debug", help="Set Dash in debug mode", dest="debug", default=False, action='store_true')
     parser.add_argument("--sequence-pattern", default="{model}_{epoch}", help="Pattern to apply to detect sequences")
+    parser.add_argument("--log-level", default="WARNING", help="Log level in (DEBUG, INFO, WARNING, ERROR)")
     parser.parse_args()
 
     # Handle command line arguments
@@ -40,7 +41,18 @@ def parse_arguments():
 def run_app(args):
     """ Run the app """
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('dnnviewer')
+
+    # create console handler
+    console_handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    numeric_level = getattr(logging, args.log_level.upper(), None)
+    if isinstance(numeric_level, int):
+        logger.setLevel(numeric_level)
+        console_handler.setLevel(numeric_level)
 
     # Create App, set stylesheets
     app = dash.Dash(__name__,
