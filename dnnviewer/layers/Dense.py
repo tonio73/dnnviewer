@@ -90,7 +90,7 @@ class Dense(AbstractLayer):
         elif active_tab == 'grads':
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
-                             figure=layer_minimax_graph.figure([self.grads], self.num_unit,
+                             figure=layer_minimax_graph.figure(self.grads, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
         return html.Div()
 
