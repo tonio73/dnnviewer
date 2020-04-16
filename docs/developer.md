@@ -72,14 +72,19 @@ Exceptions within the _bridge_ package are based on the exception class `bridge.
 
 From project root directory:
 
-```shell
+```shell script
 $ python -m pytest
+```
+
+or, simpler:
+```shell script
+$ make tests
 ```
 
 #### Code linting
 
-```shell
-$ flake8  --max-line-length=120
+```shell script
+$ make lint
 ```
 
 ### Create and upload package
