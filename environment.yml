@@ -10,8 +10,8 @@ dependencies:
   - tensorflow-datasets
   - plotly>=4.0
   - dash
-  - dash_core_components
-  - dash_html_components
+  - dash-core-components
+  - dash-html-components
   - dash-bootstrap-components
   - flask
   - pillow

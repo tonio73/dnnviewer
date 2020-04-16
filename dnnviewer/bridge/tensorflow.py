@@ -2,8 +2,6 @@
 # Method to create graph view of a TensorFlow model
 #
 
-from tensorflow import keras
-
 from .AbstractModelSequence import ModelError
 from ..Grapher import Grapher
 from ..layers.Input import Input
@@ -12,6 +10,9 @@ from ..layers.Convo2D import Convo2D
 from ..SimpleColorScale import SimpleColorScale
 from ..TestData import TestData
 
+import numpy as np
+from tensorflow import keras
+import tensorflow as tf
 import logging
 
 
@@ -26,7 +27,9 @@ def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
 
 
 def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model, test_data: TestData):
-    """ Create a graphical representation of a Keras Sequential model's layers """
+    """ Create a graphical representation of a Keras Sequential model's layers
+        Compute gradients from test samples
+    """
 
     logger = logging.getLogger(__name__)
 
@@ -54,19 +57,34 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         grapher.add_layer(input_layer)
         previous_layer = input_layer
 
+    # Compute gradients applying a mini-batch of test data
+    with tf.GradientTape() as tape:
+        y_est = model(test_data.x[:1000].astype(np.float))
+        objective = model.loss_functions[0](test_data.y[:1000], y_est)
+        grads = tape.gradient(objective, model.trainable_variables)
+
+    idx_grads = 0
     for keras_layer in model.layers:
+
         layer_class = type(keras_layer).__name__
+
         if layer_class == 'Dense':
-            layer = Dense(keras_layer.name, keras_layer.output_shape[-1], keras_layer.weights[0].numpy(),
+            layer = Dense(keras_layer.name, keras_layer.output_shape[-1],
+                          keras_layer.weights[0].numpy(),
+                          grads[idx_grads].numpy(),
                           plotly_theme, color_scale)
             grapher.add_layer(layer)
             previous_layer = layer
+            idx_grads += 2
 
         elif layer_class == 'Conv2D':
-            layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1], keras_layer.weights[0].numpy(),
+            layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1],
+                            keras_layer.weights[0].numpy(),
+                            grads[idx_grads].numpy(),
                             plotly_theme, color_scale)
             grapher.add_layer(layer)
             previous_layer = layer
+            idx_grads += 2
 
         elif layer_class == 'Flatten':
             if isinstance(previous_layer, Convo2D):
