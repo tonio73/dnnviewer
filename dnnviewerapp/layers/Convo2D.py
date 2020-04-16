@@ -122,12 +122,12 @@ class Convo2D(AbstractLayer):
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
             return dcc.Graph(id='bottom-layer-figure', animate=True,
                              figure=layer_minimax_graph.figure(weights1, self.num_unit,
-                                                               self.unit_names, self.plotly_theme))
+                                                               self.unit_names, self.plotly_theme, 'weights'))
         elif active_tab == 'grads':
             grads1 = self.grads.reshape(-1, self.weights.shape[3])
             return dcc.Graph(id='bottom-layer-figure', animate=True,
                              figure=layer_minimax_graph.figure(grads1, self.num_unit,
-                                                               self.unit_names, self.plotly_theme))
+                                                               self.unit_names, self.plotly_theme, 'gradients'))
 
         return html.Div()
 
@@ -165,7 +165,6 @@ class Convo2D(AbstractLayer):
                               coloraxis=self.link_color_scale.as_dict(),
                               template=self.plotly_theme)
             return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
-
         elif active_tab == 'grads':
             num_maps = min(g.shape[2], 12)
             if g.shape[1] < 4:

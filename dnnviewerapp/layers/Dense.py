@@ -81,11 +81,11 @@ class Dense(AbstractLayer):
         elif active_tab == 'weights':
             return dcc.Graph(id='bottom-layer-figure', animate=True,
                              figure=layer_minimax_graph.figure(self.weights, self.num_unit,
-                                                               self.unit_names, self.plotly_theme))
+                                                               self.unit_names, self.plotly_theme, 'weights'))
         elif active_tab == 'grads':
             return dcc.Graph(id='bottom-layer-figure', animate=True,
                              figure=layer_minimax_graph.figure([self.grads], self.num_unit,
-                                                               self.unit_names, self.plotly_theme))
+                                                               self.unit_names, self.plotly_theme, 'gradients'))
         return html.Div()
 
     # @override
@@ -97,7 +97,7 @@ class Dense(AbstractLayer):
     def get_unit_tab_content(self, unit_idx, active_tab):
         """ Get the content of the selected tab """
         w = self.weights[:, unit_idx]
-        #g = self.grads[:, unit_idx] offset indexing for dense layer
+        g = self.grads[:, unit_idx]
         if active_tab == 'info':
             return html.Ul([html.Li("%d coefficients" % len(w))])
         elif active_tab == 'weights':
@@ -109,7 +109,6 @@ class Dense(AbstractLayer):
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.plotly_theme)
             return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
-
         elif active_tab == 'grads':
             fig = go.Figure(data=[go.Histogram(x=g)])
             fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741

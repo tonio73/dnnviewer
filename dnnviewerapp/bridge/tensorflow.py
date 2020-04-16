@@ -60,22 +60,27 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         objective = model.loss_functions[0](test_data.y[:1000], y_est)
         grads = tape.gradient(objective, model.trainable_variables)
 
-    for idx_layer, keras_layer in enumerate(model.layers):
+    idx_layer = 0
+    for keras_layer in model.layers:
         layer_class = type(keras_layer).__name__
         if layer_class == 'Dense':
-            #print(keras_layer.weights[0].shape, grads[idx_layer].shape) # offset indexing for dense layer
             layer = Dense(keras_layer.name, keras_layer.output_shape[-1], keras_layer.weights[0].numpy(),
-                          grads[idx_layer].numpy(), plotly_theme, color_scale)
+                          grads[idx_layer-1].numpy(), plotly_theme, color_scale)
             grapher.add_layer(layer)
             previous_layer = layer
+            idx_layer += 2
+
+
 
         elif layer_class == 'Conv2D':
             layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1], keras_layer.weights[0].numpy(),
                             grads[idx_layer].numpy(), plotly_theme, color_scale)
             grapher.add_layer(layer)
             previous_layer = layer
+            idx_layer += 1
 
         elif layer_class == 'Flatten':
+            idx_layer += 1
             if isinstance(previous_layer, Convo2D):
                 previous_layer.flatten_output = True
             elif previous_layer is None:
@@ -86,9 +91,11 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
                 previous_layer = input_layer
 
         elif layer_class in _keras_ignored_layers:
+            idx_layer += 1
             print('Ignored', keras_layer.name)
 
         else:
+            idx_layer += 1
             print('Not handled layer %s of type %s' % (keras_layer.name, type(keras_layer)))
 
     if test_data.output_classes is not None:
