@@ -2,6 +2,10 @@ body {
     overflow-y: scroll;
 }
 
+#center-main-view.dash-graph {
+    height: 40vh;
+}
+
 .thumbnail {
     margin-top: 1rem;
     text-align: center;
@@ -18,4 +22,8 @@ body {
 
 .detail-tab ul {
     padding-inline-start: 20px;
+}
+
+.detail-tab .dash-graph {
+    height: 40vh;
 }

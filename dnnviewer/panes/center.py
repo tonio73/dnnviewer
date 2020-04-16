@@ -21,7 +21,7 @@ class CenterPane(AbstractPane):
     def render(self, grapher):
         """ Prepare graphical structures before Dash rendering """
         self.main_view = go.Figure()
-        self.main_view.update_layout(margin=dict(l=10, r=10, b=30, t=30))  # noqa: E741
+        self.main_view.update_layout(margin=dict(l=10, r=10, b=30, t=30), autosize=True)  # noqa: E741
         grapher.plot_layers(self.main_view)
 
     def get_layout(self, model_sequence, grapher, test_data):
@@ -36,7 +36,7 @@ class CenterPane(AbstractPane):
         return dbc.Row([
             dcc.Store(id='center-selected-unit', data=selected_unit),
             dbc.Col(dcc.Graph(id='center-main-view', figure=self.main_view, config=dict(scrollZoom=True),
-                              animate=True), md=9),
+                              animate=True, responsive=True), md=9),
             dbc.Col(html.Div(className='detail-section',
                              children=[
                                  dcc.Store(id='center-topn-criteria', data=grapher.topn_init),
