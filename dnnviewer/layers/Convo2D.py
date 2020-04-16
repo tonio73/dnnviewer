@@ -125,6 +125,7 @@ class Convo2D(AbstractLayer):
         elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
             return dcc.Graph(id='bottom-layer-figure', animate=True,
+                             config=AbstractLayer._get_graph_config(),
                              figure=layer_minimax_graph.figure(weights1, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
         return AbstractLayer.get_layer_tab_content(self, active_tab)
@@ -161,7 +162,9 @@ class Convo2D(AbstractLayer):
                                          (' (%d out of %d)' % (num_maps, w.shape[2]) if w.shape[2] > num_maps else ''),
                               coloraxis=self.link_color_scale.as_dict(),
                               template=self.plotly_theme)
-            return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
+            return dcc.Graph(id='bottom-unit-figure', animate=True,
+                             config=AbstractLayer._get_graph_config(),
+                             figure=fig)
         return html.Div()
 
     def get_activation_map(self, activation_mapper: AbstractActivationMapper, input_img, unit_idx):

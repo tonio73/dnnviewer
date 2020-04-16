@@ -33,9 +33,13 @@ class CenterPane(AbstractPane):
         else:
             selected_unit = None
 
+        graph_config = dict(scrollZoom=True, displaylogo=False,
+                            modeBarButtonsToRemove=['lasso2d', 'resetScale2d', 'toggleSpikelines',
+                                                    'hoverClosestCartesian', 'hoverCompareCartesian'])
+
         return dbc.Row([
             dcc.Store(id='center-selected-unit', data=selected_unit),
-            dbc.Col(dcc.Graph(id='center-main-view', figure=self.main_view, config=dict(scrollZoom=True),
+            dbc.Col(dcc.Graph(id='center-main-view', figure=self.main_view, config=graph_config,
                               animate=True, responsive=True), md=9),
             dbc.Col(html.Div(className='detail-section',
                              children=[

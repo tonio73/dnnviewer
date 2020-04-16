@@ -110,3 +110,11 @@ class AbstractLayer:
         """ Get series of labels corresponding to units """
         return ['%s%d' % (prefix, idx) for idx in np.arange(self.num_unit)] if self.unit_names is None \
             else self.unit_names
+
+    @staticmethod
+    def _get_graph_config():
+        """" Graph config for all detail layer/unit figures """
+        return dict(scrollZoom=True, displaylogo=False,
+                    modeBarButtonsToRemove=['lasso2d', 'resetScale2d', 'zoomIn2d', 'zoomOut2d',
+                                            'toggleSpikelines', 'select2d',
+                                            'hoverClosestCartesian', 'hoverCompareCartesian'])

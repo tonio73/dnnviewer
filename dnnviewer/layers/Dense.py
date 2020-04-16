@@ -81,6 +81,7 @@ class Dense(AbstractLayer):
                     html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)]
         elif active_tab == 'weights':
             return dcc.Graph(id='bottom-layer-figure', animate=True,
+                             config=AbstractLayer._get_graph_config(),
                              figure=layer_minimax_graph.figure(self.weights, self.num_unit,
                                                                self.unit_names, self.plotly_theme))
         return AbstractLayer.get_layer_tab_content(self, active_tab)
@@ -103,7 +104,9 @@ class Dense(AbstractLayer):
                               xaxis_title_text='Amplitude',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.plotly_theme)
-            return dcc.Graph(id='bottom-unit-figure', animate=True, figure=fig)
+            return dcc.Graph(id='bottom-unit-figure', animate=True,
+                             config=AbstractLayer._get_graph_config(),
+                             figure=fig)
         return html.Div()
 
     def get_activation_map(self, activation_mapper: AbstractActivationMapper, input_img, unit_idx):
@@ -120,5 +123,7 @@ class Dense(AbstractLayer):
                           template=self.plotly_theme)
 
         return html.Div(
-                    dcc.Graph(id='bottom-activation', animate=False, figure=fig)
+                    dcc.Graph(id='bottom-activation', animate=False,
+                              config=AbstractLayer._get_graph_config(),
+                              figure=fig)
                )
