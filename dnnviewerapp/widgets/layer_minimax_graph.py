@@ -7,7 +7,7 @@ def figure(weights, num_unit, unit_names, plotly_theme, title):
 
     w_min = np.amin(weights, axis=0)
     w_max = np.amax(weights, axis=0)
-    w_mean = np.mean(weights, axis=0)
+    w_mean = np.mean(np.absolute(weights), axis=0)
     hover_text_min = ['Min unit %d' % idx for idx in np.arange(num_unit)] if unit_names is None else unit_names
     hover_text_max = ['Max unit %d' % idx for idx in np.arange(num_unit)] if unit_names is None else unit_names
     fig = go.Figure(data=[go.Bar(x=w_min, hovertext=hover_text_min, hoverinfo='text',
