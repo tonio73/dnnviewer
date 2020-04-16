@@ -5,7 +5,7 @@
 from .main_model_selection import MainModelSelection
 from .main_network_view import MainNetworkView
 from .TestData import TestData
-from .bridge import tensorflow as tf_bridge
+from .bridge import tensorflow_datasets as tf_bridge
 from .bridge.KerasModelSequence import KerasModelSequence
 from .widgets.Router import Router
 from .widgets import font_awesome

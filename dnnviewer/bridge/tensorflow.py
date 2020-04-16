@@ -59,7 +59,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
 
     # Compute gradients applying a mini-batch of test data
     with tf.GradientTape() as tape:
-        y_est = model(test_data.x[:1000].astype(np.float))
+        y_est = model(keras_prepare_input(model, test_data.x[:1000]))
         objective = model.loss_functions[0](test_data.y[:1000], y_est)
         grads = tape.gradient(objective, model.trainable_variables)
 
@@ -106,31 +106,41 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         grapher.layers[-1].unit_names = test_data.output_classes
 
 
-def keras_load_test_data(dataset_name, test_data: TestData):
-    """ Load dataset using Keras, return a sample of the test """
+def keras_prepare_input(model, data):
+    """ Expand dimensions and pad data if needed for the model
+    Expect a batch of data that match the input of the model:
+    - In case the first
+    -
+    """
 
-    test_data.reset()
+    logger = logging.getLogger(__name__)
 
-    _datasets = {'cifar-10': (keras.datasets.cifar10, ['red', 'green', 'blue'],
-                              ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']),
-                 'mnist': (keras.datasets.mnist, ['bw'],
-                           [str(d) for d in range(10)]),
-                 'fashion-mnist': (keras.datasets.fashion_mnist, ['bw'],
-                                   ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker',
-                                    'Bag', 'Ankle boot'])
-                 }
+    # Format input if needed
+    if data.dtype == np.uint8:
+        data = data.astype(np.float) / 255
 
-    if dataset_name in _datasets:
-        dataset = _datasets[dataset_name]
-        (_, _), (x_test, y_test) = dataset[0].load_data()
-        test_data.set(x_test, y_test.ravel(), dataset[1], dataset[2])
+    # Handle convolution input
+    if len(model.layers) > 0 and type(model.layers[0]).__name__ == 'Conv2D':
 
+        # Convolution requires 3D input
+        if len(data.shape) == 3:
+            data = np.expand_dims(data, 3)
 
-def keras_test_data_listing():
-    """ @return dictionary id: caption of available test datasets """
-    return {'mnist': "MNIST digits",
-            'fashion-mnist': "Fashion MNIST",
-            'cifar-10': "CIFAR 10"}
+        # Padding if required
+        pad = False
+        padding = np.zeros((len(data.shape), 2), dtype=np.int)
+        input_shape = model.layers[0].input.get_shape()
+        for d in [1, 2]:
+            delta = input_shape[d] - data.shape[d]
+            if delta > 0:
+                padding[d, 0] = delta // 2
+                padding[d, 1] = delta - padding[d, 0]
+                pad = True
+        if pad:
+            logger.warning(f'Padding image before activation with pad={padding}')
+            data = np.pad(data, padding)
+
+    return data
 
 
 def _get_caption(prop, dic):

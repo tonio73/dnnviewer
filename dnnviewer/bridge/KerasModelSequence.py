@@ -1,4 +1,4 @@
-from . import tensorflow
+from . import tensorflow as tf_bridge
 from .AbstractModelSequence import AbstractModelSequence, ModelError
 from .AbstractActivationMapper import AbstractActivationMapper
 from ..Grapher import Grapher
@@ -85,40 +85,14 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
     # @override
     def get_activation(self, img, layer: AbstractLayer, unit=None):
 
-        logger = logging.getLogger(__name__)
-
-        # Format input if needed
-        if img.dtype == np.uint8:
-            img = img.astype(np.float) / 255
-
-        # Handle convolution input
-        if len(self.current_model.layers) > 0 \
-                and type(self.current_model.layers[0]).__name__ == 'Conv2D':
-
-            # Padding if required
-            pad = False
-            padding = np.zeros((2, 2), dtype=np.int)
-            input_shape = self.current_model.layers[0].input.get_shape()
-            for d in [0, 1]:
-                delta = input_shape[d + 1] - img.shape[0]
-                if delta > 0:
-                    padding[d, 0] = delta // 2
-                    padding[d, 1] = delta - padding[d, 0]
-                    pad = True
-            if pad:
-                logger.warning(f'Padding image before activation with pad={padding}')
-                img = np.pad(img, padding)
-
-            # Convolution requires 3D input
-            if len(img.shape) == 2:
-                img = np.expand_dims(img, 2)
+        batch = tf_bridge.keras_prepare_input(self.current_model, np.expand_dims(img, 0))
 
         # Create partial model
         intermediate_model = keras.models.Model(inputs=self.current_model.input,
                                                 outputs=self.current_model.get_layer(layer.name).output)
 
         # Expand dimension to create a mini-batch of 1 element
-        maps = intermediate_model.predict(np.expand_dims(img, 0))[0]
+        maps = intermediate_model.predict(batch)[0]
         if unit is None:
             return maps
         else:
@@ -134,10 +108,10 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         self.current_model = keras.models.load_model(str(model_path))
 
         # Top level properties of the DNN model
-        tensorflow.keras_set_model_properties(grapher, self.current_model)
+        tf_bridge.keras_set_model_properties(grapher, self.current_model)
 
         # Create all other layers from the Keras Sequential model
-        tensorflow.keras_extract_sequential_network(grapher, self.current_model, self.test_data)
+        tf_bridge.keras_extract_sequential_network(grapher, self.current_model, self.test_data)
 
         self.current_epoch_index = model_index
         return self.current_epoch_index

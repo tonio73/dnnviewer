@@ -1,5 +1,5 @@
 from . import AbstractDashboard, TestData
-from .bridge import AbstractModelSequence, tensorflow as tf_bridge
+from .bridge import AbstractModelSequence, tensorflow_datasets as tf_ds_bridge
 from .widgets import font_awesome
 
 import dash_core_components as dcc
@@ -54,7 +54,7 @@ class MainModelSelection(AbstractDashboard):
                 raise PreventUpdate
 
             if test_dataset_id is not None:
-                tf_bridge.keras_load_test_data(test_dataset_id, self.test_data)
+                tf_ds_bridge.keras_load_test_data(test_dataset_id, self.test_data)
                 if not self.test_data.has_test_sample:
                     logger.error('Unable to load dataset %s', test_dataset_id)
 
@@ -77,7 +77,7 @@ class MainModelSelection(AbstractDashboard):
     def _model_selection_form(self):
 
         model_paths = self.model_sequence.list_models(self.model_directories, self.model_sequence_pattern)
-        test_datasets = tf_bridge.keras_test_data_listing()
+        test_datasets = tf_ds_bridge.keras_test_data_listing()
 
         return dbc.Form([
             # Model selection

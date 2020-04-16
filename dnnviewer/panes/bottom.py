@@ -13,6 +13,8 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
+import numpy as np
+
 
 def _get_maps_tabs(active_tab: str = None):
     """ Tabs for the maps """
@@ -30,6 +32,7 @@ class BottomPane(AbstractPane):
         """ Get pane layout """
 
         dummy_layer = AbstractLayer('dummy')
+        true_labels = np.squeeze(test_data.y)
 
         return dbc.Row(style={'marginTop': '10px', 'marginBottom': '20px'}, children=[
             # Input sample selection
@@ -43,7 +46,7 @@ class BottomPane(AbstractPane):
                                                     options=[{'label': "%d (%s)" % (i, test_data.output_classes[c]),
                                                               'value': i}
                                                              for i, c in
-                                                             enumerate(test_data.y[:self.max_test_samples])]
+                                                             enumerate(true_labels[:self.max_test_samples])]
                                                 ),
                                                 html.P([html.Img(id='bottom-test-sample-img', alt='Sample input')],
                                                        className='thumbnail', hidden=not test_data.has_test_sample)
