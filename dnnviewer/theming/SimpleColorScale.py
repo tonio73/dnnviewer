@@ -19,9 +19,12 @@ class SimpleColorScale:
             idx = np.clip(np.floor((values - self.min) / self.step).astype(np.int), 0, len(self.seq) - 1)
             return [self.seq[c] for c in idx]
 
-    def as_dict(self):
+    def as_dict(self, value=None):
         """ Export as a dictionary to be used as colorscale argument in plotly """
-        return dict(colorscale=self.seq, cmin=self.min, cmax=self.max)
+        if value is None:
+            return dict(colorscale=self.seq, cmin=self.min, cmax=self.max)
+        else:
+            return dict(color=value, colorscale=self.seq, cmin=self.min, cmax=self.max)
 
     def min_color(self):
         return self.seq[0]

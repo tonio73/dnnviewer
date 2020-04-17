@@ -3,7 +3,7 @@ from ..Connector import Connector
 from ..Statistics import Statistics
 from ..bridge.AbstractActivationMapper import AbstractActivationMapper
 from ..theming.Theme import Theme
-from ..widgets import layer_minimax_graph, tabs
+from ..widgets import layer_minimax_graph, tabs, conv_filter_map
 from ..imageutils import array_to_img_src, to_8bit_img
 
 import plotly.graph_objects as go
@@ -127,17 +127,19 @@ class Convo2D(AbstractLayer):
 
         elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
+            fig = layer_minimax_graph.figure(weights1, self.num_unit, self.unit_names,
+                                             self.theme, self.theme.weight_color_scale)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
-                             figure=layer_minimax_graph.figure(weights1, self.num_unit,
-                                                               self.unit_names, self.theme))
+                             figure=fig)
 
         elif active_tab == 'grads':
             grads1 = self.grads.reshape(-1, self.grads.shape[3])
+            fig = layer_minimax_graph.figure(grads1, self.num_unit, self.unit_names,
+                                             self.theme, self.theme.gradient_color_scale)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
-                             figure=layer_minimax_graph.figure(grads1, self.num_unit,
-                                                               self.unit_names, self.theme))
+                             figure=fig)
 
         return AbstractLayer.get_layer_tab_content(self, active_tab)
 
@@ -155,52 +157,13 @@ class Convo2D(AbstractLayer):
             return html.Ul([html.Li("%d coefficients" % (w.shape[0] * w.shape[1] * w.shape[2]))])
 
         elif active_tab == 'weights':
-            num_maps = min(w.shape[2], 12)
-            if w.shape[1] < 4:
-                num_cols = 3
-            elif w.shape[1] < 6:
-                num_cols = 2
-            else:
-                num_cols = 1
-            num_rows = int(np.ceil(num_maps / num_cols))
-            titles = [str(i) for i in range(num_maps)]
-            fig = make_subplots(rows=num_rows, cols=num_cols, subplot_titles=titles,
-                                shared_xaxes=True, shared_yaxes=True,
-                                horizontal_spacing=0.02, vertical_spacing=0.06)
-            for i in range(num_maps):
-                fig.add_trace(go.Heatmap(z=w[:, :, i], coloraxis="coloraxis"),
-                              row=(i // num_cols) + 1, col=(i % num_cols) + 1)
-            fig.update_layout(margin=self.theme.bottom_figure_layout,
-                              title_text='Filters' +
-                                         (' (%d out of %d)' % (num_maps, w.shape[2]) if w.shape[2] > num_maps else ''),
-                              coloraxis=self.theme.weight_color_scale.as_dict(),
-                              template=self.theme.plotly)
+            fig = conv_filter_map.figure(w, self.theme, self.theme.weight_color_scale)
             return dcc.Graph(id='bottom-unit-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)
 
         elif active_tab == 'grads':
-            g = self.grads[:, :, :, unit_idx]
-            num_maps = min(g.shape[2], 12)
-            if g.shape[1] < 4:
-                num_cols = 3
-            elif g.shape[1] < 6:
-                num_cols = 2
-            else:
-                num_cols = 1
-            num_rows = int(np.ceil(num_maps / num_cols))
-            titles = [str(i) for i in range(num_maps)]
-            fig = make_subplots(rows=num_rows, cols=num_cols, subplot_titles=titles,
-                                shared_xaxes=True, shared_yaxes=True,
-                                horizontal_spacing=0.02, vertical_spacing=0.06)
-            for i in range(num_maps):
-                fig.add_trace(go.Heatmap(z=g[:, :, i], coloraxis="coloraxis"),
-                              row=(i // num_cols) + 1, col=(i % num_cols) + 1)
-            fig.update_layout(margin=self.theme.bottom_figure_layout,
-                              title_text='Filters' +
-                                         (' (%d out of %d)' % (num_maps, g.shape[2]) if g.shape[2] > num_maps else ''),
-                              coloraxis=self.theme.gradient_color_scale.as_dict(),
-                              template=self.theme.plotly)
+            fig = conv_filter_map.figure(self.grads[:, :, :, unit_idx], self.theme, self.theme.gradient_color_scale)
             return dcc.Graph(id='bottom-unit-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)

@@ -82,16 +82,18 @@ class Dense(AbstractLayer):
                     html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)]
 
         elif active_tab == 'weights':
+            fig = layer_minimax_graph.figure(self.weights, self.num_unit, self.unit_names,
+                                             self.theme, self.theme.weight_color_scale)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
-                             figure=layer_minimax_graph.figure(self.weights, self.num_unit,
-                                                               self.unit_names, self.theme))
+                             figure=fig)
 
         elif active_tab == 'grads':
+            fig = layer_minimax_graph.figure(self.grads, self.num_unit, self.unit_names,
+                                             self.theme, self.theme.gradient_color_scale)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
-                             figure=layer_minimax_graph.figure(self.grads, self.num_unit,
-                                                               self.unit_names, self.theme))
+                             figure=fig)
         return html.Div()
 
     # @override
@@ -108,9 +110,9 @@ class Dense(AbstractLayer):
             return html.Ul([html.Li("%d coefficients" % len(w))])
 
         elif active_tab == 'weights':
-            fig = go.Figure(data=[go.Histogram(x=w)])
-            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
-                              title_text='Weight histogram',
+            fig = go.Figure(data=[go.Histogram(x=w, marker=self.theme.gradient_color_scale.as_dict(w))])
+            fig.update_layout(margin=self.theme.bottom_figure_margins,
+                              title=dict(text='Weight histogram', font=dict(size=14)),
                               xaxis_title_text='Amplitude',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.theme.plotly)
@@ -119,9 +121,10 @@ class Dense(AbstractLayer):
                              figure=fig)
 
         elif active_tab == 'grads':
-            fig = go.Figure(data=[go.Histogram(x=self.grads[:, unit_idx])])
-            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
-                              title_text='Gradients histogram',
+            g = self.grads[:, unit_idx]
+            fig = go.Figure(data=[go.Histogram(x=g, marker=self.theme.gradient_color_scale.as_dict(g))])
+            fig.update_layout(margin=self.theme.bottom_figure_margins,
+                              title=dict(text='Gradients histogram', font=dict(size=14)),
                               xaxis_title_text='Amplitude',
                               # yaxis_title_text='Count',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
@@ -137,16 +140,17 @@ class Dense(AbstractLayer):
 
         activation = activation_mapper.get_activation(input_img, self)
         hover_text = self._get_unit_labels()
-        fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text')])
-        fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
-                          title_text='Layer activation',
+        fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text',
+                                     marker=self.theme.activation_color_scale.as_dict(activation))])
+        fig.update_layout(margin=self.theme.bottom_figure_margins,
+                          title=dict(text='Layer activation', font=dict(size=14)),
                           xaxis_title_text='Amplitude',
                           yaxis_title_text='Unit',
                           bargap=0.2,  # gap between bars of adjacent location coordinates)
                           template=self.theme.plotly)
 
         return html.Div(
-                    dcc.Graph(id='bottom-activation', animate=False,
-                              config=AbstractLayer._get_graph_config(),
-                              figure=fig)
-               )
+            dcc.Graph(id='bottom-activation', animate=False,
+                      config=AbstractLayer._get_graph_config(),
+                      figure=fig)
+        )
