@@ -8,4 +8,4 @@ class Theme:
         self.plotly = 'plotly_dark'
         self.weight_color_scale = SimpleColorScale()
         self.gradient_color_scale = SimpleColorScale()
-        self.bottom_figure_layout = dict(l=10, r=10, b=30, t=40),  # noqa: E741
+        self.bottom_figure_layout = dict(l=10, r=10, b=30, t=40)  # noqa: E741
