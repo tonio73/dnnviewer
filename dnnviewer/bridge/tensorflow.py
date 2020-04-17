@@ -7,7 +7,6 @@ from ..Grapher import Grapher
 from ..layers.Input import Input
 from ..layers.Dense import Dense
 from ..layers.Convo2D import Convo2D
-from ..SimpleColorScale import SimpleColorScale
 from ..TestData import TestData
 
 import numpy as np
@@ -40,8 +39,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         logger.error("Empty model")
         return
 
-    plotly_theme = grapher.plotly_theme
-    color_scale = SimpleColorScale()
+    theme = grapher.theme
 
     previous_layer = None
     grapher.clear_layers()
@@ -53,7 +51,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
             logger.error("Wrong length of input classes, got %d, expecting %d" %
                          (len(test_data.input_classes), input_dim))
 
-        input_layer = Input('input', input_dim, plotly_theme, test_data.input_classes)
+        input_layer = Input('input', input_dim, theme, test_data.input_classes)
         grapher.add_layer(input_layer)
         previous_layer = input_layer
 
@@ -70,18 +68,16 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
 
         if layer_class == 'Dense':
             layer = Dense(keras_layer.name, keras_layer.output_shape[-1],
-                          keras_layer.weights[0].numpy(),
-                          grads[idx_grads].numpy(),
-                          plotly_theme, color_scale)
+                          keras_layer.weights[0].numpy(),  grads[idx_grads].numpy(),
+                          theme)
             grapher.add_layer(layer)
             previous_layer = layer
             idx_grads += 2
 
         elif layer_class == 'Conv2D':
             layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1],
-                            keras_layer.weights[0].numpy(),
-                            grads[idx_grads].numpy(),
-                            plotly_theme, color_scale)
+                            keras_layer.weights[0].numpy(), grads[idx_grads].numpy(),
+                            theme)
             grapher.add_layer(layer)
             previous_layer = layer
             idx_grads += 2
@@ -92,7 +88,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
             elif previous_layer is None:
                 # Input layer
                 input_dim = keras_layer.get_output_shape_at(0)[-1]
-                input_layer = Input('input', input_dim, plotly_theme, test_data.input_classes)
+                input_layer = Input('input', input_dim, theme, test_data.input_classes)
                 grapher.add_layer(input_layer)
                 previous_layer = input_layer
 

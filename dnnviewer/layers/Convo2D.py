@@ -2,7 +2,7 @@ from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
 from ..bridge.AbstractActivationMapper import AbstractActivationMapper
-from ..SimpleColorScale import SimpleColorScale
+from ..theming.Theme import Theme
 from ..widgets import layer_minimax_graph, tabs
 from ..imageutils import array_to_img_src, to_8bit_img
 
@@ -18,13 +18,14 @@ class Convo2D(AbstractLayer):
     """ Convolutional layer of n units """
     """ Assume 4D weight tensor with dimensions: filter_x, filter_y, input_filter, output_filter """
 
-    def __init__(self, name, num_unit, weights, grads, plotly_theme, link_color_scale=SimpleColorScale(), unit_names=None,
-                 flatten_output=False):
+    def __init__(self, name, num_unit, weights, grads, theme=Theme(),
+                 unit_names=None, flatten_output=False):
 
         assert weights.ndim == 4
         assert num_unit == weights.shape[3]
 
-        AbstractLayer.__init__(self, name, num_unit, weights, grads, plotly_theme, link_color_scale, unit_names)
+        AbstractLayer.__init__(self, name, num_unit, weights, grads, theme, unit_names)
+
         self.flatten_output = flatten_output
 
     # @override
@@ -81,7 +82,7 @@ class Convo2D(AbstractLayer):
 
             connectors = Connector(backward_layer, self,
                                    strongest_idx, to_indexes, strongest,
-                                   self.link_color_scale)
+                                   self.theme.weight_color_scale)
 
         else:
             # Max on the 2D convolution filters
@@ -102,7 +103,7 @@ class Convo2D(AbstractLayer):
 
             connectors = Connector(backward_layer, self,
                                    from_indexes, strongest_idx, strongest,
-                                   self.link_color_scale)
+                                   self.theme.weight_color_scale)
 
         return np.unique(strongest_idx), connectors.get_shapes()
 
@@ -129,19 +130,19 @@ class Convo2D(AbstractLayer):
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=layer_minimax_graph.figure(weights1, self.num_unit,
-                                                               self.unit_names, self.plotly_theme))
+                                                               self.unit_names, self.theme))
 
         elif active_tab == 'grads':
             grads1 = self.grads.reshape(-1, self.grads.shape[3])
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=layer_minimax_graph.figure(grads1, self.num_unit,
-                                                               self.unit_names, self.plotly_theme))
+                                                               self.unit_names, self.theme))
 
         return AbstractLayer.get_layer_tab_content(self, active_tab)
 
     # @override
-    def get_unit_tabs(self, unit_idx: int, previous_active: str):
+    def get_unit_tabs(self, unit_idx: int, previous_active: str = None):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-unit', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'}, previous_active)
 
@@ -149,8 +150,10 @@ class Convo2D(AbstractLayer):
     def get_unit_tab_content(self, unit_idx, active_tab):
         """ Get the content of the selected tab """
         w = self.weights[:, :, :, unit_idx]
+
         if active_tab == 'info':
             return html.Ul([html.Li("%d coefficients" % (w.shape[0] * w.shape[1] * w.shape[2]))])
+
         elif active_tab == 'weights':
             num_maps = min(w.shape[2], 12)
             if w.shape[1] < 4:
@@ -167,11 +170,11 @@ class Convo2D(AbstractLayer):
             for i in range(num_maps):
                 fig.add_trace(go.Heatmap(z=w[:, :, i], coloraxis="coloraxis"),
                               row=(i // num_cols) + 1, col=(i % num_cols) + 1)
-            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
+            fig.update_layout(margin=self.theme.bottom_figure_layout,
                               title_text='Filters' +
                                          (' (%d out of %d)' % (num_maps, w.shape[2]) if w.shape[2] > num_maps else ''),
-                              coloraxis=self.link_color_scale.as_dict(),
-                              template=self.plotly_theme)
+                              coloraxis=self.theme.weight_color_scale.as_dict(),
+                              template=self.theme.plotly)
             return dcc.Graph(id='bottom-unit-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)
@@ -193,11 +196,11 @@ class Convo2D(AbstractLayer):
             for i in range(num_maps):
                 fig.add_trace(go.Heatmap(z=g[:, :, i], coloraxis="coloraxis"),
                               row=(i // num_cols) + 1, col=(i % num_cols) + 1)
-            fig.update_layout(margin=dict(l=10, r=10, b=30, t=40),  # noqa: E741
+            fig.update_layout(margin=self.theme.bottom_figure_layout,
                               title_text='Filters' +
                                          (' (%d out of %d)' % (num_maps, g.shape[2]) if g.shape[2] > num_maps else ''),
-                              coloraxis=self.link_color_scale.as_dict(),
-                              template=self.plotly_theme)
+                              coloraxis=self.theme.gradient_color_scale.as_dict(),
+                              template=self.theme.plotly)
             return dcc.Graph(id='bottom-unit-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)

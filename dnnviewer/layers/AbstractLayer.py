@@ -1,5 +1,5 @@
-from ..SimpleColorScale import SimpleColorScale
 from ..widgets import tabs
+from ..theming.Theme import Theme
 
 import numpy as np
 import plotly.graph_objects as go
@@ -11,15 +11,14 @@ class AbstractLayer:
     """ Abstract layer representation in Viewer """
 
     def __init__(self, name, num_unit=0, weights=None, grads=None,
-                 plotly_theme='plotly_dark', link_color_scale=SimpleColorScale(),
+                 theme: Theme = Theme(),
                  unit_names=None):
         self.name = name
         self.num_unit = num_unit
         self.weights = weights
         self.grads = grads
         self.unit_names = unit_names
-        self.link_color_scale = link_color_scale
-        self.plotly_theme = plotly_theme
+        self.theme = theme
         self.spacing_y = 1.
         self.xoffset = 0
         return

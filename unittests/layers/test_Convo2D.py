@@ -15,10 +15,10 @@ class TestConvo2D:
                             [[[-3, 0, 5], [+0, 1, 2]], [[0, 2, 4], [5, 1, 4]], [[9, 1, 2], [4, 6, 6]]]])
         # Max on convolution filters
         # [[9, 2, 6], [5, 6, 8]]
-        layer = Convo2D('test_1', 3, weights, plotly_theme='plotly_dark')
+        layer = Convo2D('test_1', 3, weights, weights)
         layer.set_xoffset(10)
 
-        prev_layer = Dense('test_prev', 2, np.ones((3, 2)), 'plotly_dark')  # weights of other do no matter
+        prev_layer = Dense('test_prev', 2, np.ones((3, 2)), np.ones((3, 2)))  # weights/grads of other do no matter
         prev_layer.set_xoffset(0)
 
         strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [1, 2], True)
@@ -37,9 +37,9 @@ class TestConvo2D:
                             [[[+1, 1, 2], [-1, 1, 2]], [[1, 0, 6], [4, 1, 8]], [[6, 1, 2], [2, 0, 2]]],
                             [[[-3, 0, 5], [+0, 1, 2]], [[0, 2, 4], [5, 1, 4]], [[9, 1, 2], [4, 6, 6]]]])
 
-        layer = Convo2D('test_2', 3, weights, plotly_theme='plotly_dark')
+        layer = Convo2D('test_2', 3, weights, weights)
         layer.set_xoffset(10)
-        prev_layer = Dense('test_prev', 2, np.ones((3, 2)), plotly_theme='plotly_dark')  # weights of other do no matter
+        prev_layer = Dense('test_prev', 2, np.ones((3, 2)), np.ones((3, 2)))  # weights/grads of other do no matter
         prev_layer.set_xoffset(0)
 
         strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [1], False)

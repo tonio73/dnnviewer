@@ -12,11 +12,11 @@ def keras_load_test_data(dataset_name, test_data: TestData):
 
     _datasets = {'cifar-10': (keras.datasets.cifar10, ['red', 'green', 'blue'],
                               ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']),
-                 'mnist': (keras.datasets.mnist, ['bw'],
-                           [str(d) for d in range(10)]),
                  'fashion-mnist': (keras.datasets.fashion_mnist, ['bw'],
                                    ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker',
-                                    'Bag', 'Ankle boot'])
+                                    'Bag', 'Ankle boot']),
+                 'mnist': (keras.datasets.mnist, ['bw'],
+                           [str(d) for d in range(10)]),
                  }
 
     if dataset_name in _datasets:
@@ -27,6 +27,6 @@ def keras_load_test_data(dataset_name, test_data: TestData):
 
 def keras_test_data_listing():
     """ @return dictionary id: caption of available test datasets """
-    return {'mnist': "MNIST digits",
+    return {'cifar-10': "CIFAR 10",
             'fashion-mnist': "Fashion MNIST",
-            'cifar-10': "CIFAR 10"}
+            'mnist': "MNIST digits"}

@@ -1,6 +1,7 @@
 from .layers.AbstractLayer import AbstractLayer
 from .layers import Convo2D, Dense
 from .widgets import tabs, property_list
+from .theming.Theme import  Theme
 
 import plotly.graph_objects as go
 import dash_core_components as dcc
@@ -19,14 +20,14 @@ class Grapher:
 
     layers: List[AbstractLayer]
 
-    def __init__(self, plotly_theme='plotly_dark'):
+    def __init__(self, theme=Theme()):
         self.name = ''
         self.layers = []
         self.x_spacing = 1.
         self.x_offset = 0
         self.structure_props = {'num_dense': 0, 'num_convo2d': 0}
         self.training_props = {'loss': '', 'optimizer': ''}
-        self.plotly_theme = plotly_theme
+        self.theme = theme
 
     def clear_layers(self):
         """ Reset layers """
@@ -66,7 +67,7 @@ class Grapher:
             ticktext=layer_names
         )
 
-        fig.update_layout(showlegend=False, xaxis=x_axis, clickmode='event+select', template=self.plotly_theme)
+        fig.update_layout(showlegend=False, xaxis=x_axis, clickmode='event+select', template=self.theme.plotly)
 
     def plot_topn_connections(self, fig: go.Figure, topn: int, ref_layer_idx: int, ref_unit: int):
         """ Add the top N connections of each neuron on the graph """

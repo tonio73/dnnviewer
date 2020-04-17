@@ -1,7 +1,7 @@
 from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
 from ..Statistics import Statistics
-from ..SimpleColorScale import SimpleColorScale
+from ..theming.Theme import Theme
 from ..widgets import layer_minimax_graph, tabs
 from ..bridge.AbstractActivationMapper import AbstractActivationMapper
 
@@ -15,11 +15,11 @@ class Dense(AbstractLayer):
     """ Dense (aka fully connected) layer of n units """
     """ Assume 2D weight tensor with dimensions: previous layer unit, self unit """
 
-    def __init__(self, name, num_unit, weights, grads, plotly_theme, link_color_scale=SimpleColorScale(), unit_names=None):
+    def __init__(self, name, num_unit, weights, grads, theme=Theme(), unit_names=None):
         assert weights.ndim == 2
         assert num_unit == weights.shape[1]
 
-        AbstractLayer.__init__(self, name, num_unit, weights, grads, plotly_theme, link_color_scale, unit_names)
+        AbstractLayer.__init__(self, name, num_unit, weights, grads, theme, unit_names)
 
     # @override
     def plot(self, fig):
@@ -46,7 +46,7 @@ class Dense(AbstractLayer):
 
             connectors = Connector(backward_layer, self,
                                    strongest_idx, to_indexes, strongest,
-                                   self.link_color_scale)
+                                   self.theme.weight_color_scale)
         else:
             strongest_idx, strongest = Statistics.get_strongest(self.weights.T[:, active_units],  # <--
                                                                 min(topn, backward_layer.num_unit))
@@ -59,7 +59,7 @@ class Dense(AbstractLayer):
 
             connectors = Connector(backward_layer, self,
                                    from_indexes, strongest_idx, strongest,
-                                   self.link_color_scale)
+                                   self.theme.weight_color_scale)
 
         return np.unique(strongest_idx), connectors.get_shapes()
 
@@ -85,13 +85,13 @@ class Dense(AbstractLayer):
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=layer_minimax_graph.figure(self.weights, self.num_unit,
-                                                               self.unit_names, self.plotly_theme))
+                                                               self.unit_names, self.theme))
 
         elif active_tab == 'grads':
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=layer_minimax_graph.figure(self.grads, self.num_unit,
-                                                               self.unit_names, self.plotly_theme))
+                                                               self.unit_names, self.theme))
         return html.Div()
 
     # @override
@@ -113,7 +113,7 @@ class Dense(AbstractLayer):
                               title_text='Weight histogram',
                               xaxis_title_text='Amplitude',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
-                              template=self.plotly_theme)
+                              template=self.theme.plotly)
             return dcc.Graph(id='bottom-unit-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)
@@ -125,7 +125,7 @@ class Dense(AbstractLayer):
                               xaxis_title_text='Amplitude',
                               # yaxis_title_text='Count',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
-                              template=self.plotly_theme)
+                              template=self.theme.plotly)
             return dcc.Graph(id='bottom-unit-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)
@@ -143,7 +143,7 @@ class Dense(AbstractLayer):
                           xaxis_title_text='Amplitude',
                           yaxis_title_text='Unit',
                           bargap=0.2,  # gap between bars of adjacent location coordinates)
-                          template=self.plotly_theme)
+                          template=self.theme.plotly)
 
         return html.Div(
                     dcc.Graph(id='bottom-activation', animate=False,

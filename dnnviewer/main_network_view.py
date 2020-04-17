@@ -53,8 +53,8 @@ class MainNetworkView(AbstractDashboard):
             return content
 
         else:
-            time.sleep(15.0)
-            return html.Div()
+            time.sleep(10.0)
+            return html.Div(html.H2('There has been an issue during model loading, please reload this page'))
 
     def callbacks(self):
 
