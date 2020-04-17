@@ -7,7 +7,6 @@ from ..widgets import layer_minimax_graph, tabs, conv_filter_map
 from ..imageutils import array_to_img_src, to_8bit_img
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import dash_core_components as dcc
 import dash_html_components as html
 

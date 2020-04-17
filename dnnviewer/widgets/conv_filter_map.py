@@ -17,7 +17,7 @@ def figure(values, theme: Theme, color_scale: SimpleColorScale):
         num_cols = 2
     else:
         num_cols = 1
-    num_rows = int(np.ceil(num_maps / num_cols))
+    num_rows = max(num_cols, int(np.ceil(num_maps / num_cols)))
 
     titles = [str(i) for i in range(num_maps)]
 

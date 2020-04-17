@@ -1,7 +1,7 @@
 from .layers.AbstractLayer import AbstractLayer
 from .layers import Convo2D, Dense
 from .widgets import tabs, property_list
-from .theming.Theme import  Theme
+from .theming.Theme import Theme
 
 import plotly.graph_objects as go
 import dash_core_components as dcc
