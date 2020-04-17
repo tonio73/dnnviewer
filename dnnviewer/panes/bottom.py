@@ -6,14 +6,13 @@ from . import AbstractPane
 from ..layers.AbstractLayer import AbstractLayer
 from ..widgets import tabs
 from ..imageutils import array_to_img_src
+from ..TestData import TestData
 
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-
-import numpy as np
 
 
 def _get_maps_tabs(active_tab: str = None):
@@ -28,29 +27,37 @@ class BottomPane(AbstractPane):
     # maximum number of test sample to display in selectors
     max_test_samples = 40
 
-    def get_layout(self, model_sequence, grapher, test_data):
+    def get_layout(self, model_sequence, grapher, test_data: TestData):
         """ Get pane layout """
 
         dummy_layer = AbstractLayer('dummy')
-        true_labels = np.squeeze(test_data.y)
+
+        if test_data.has_test_sample:
+            test_data_selector = [html.H5('Test sample'),
+                                  dcc.Dropdown(
+                                      id='bottom-select-test-sample',
+                                      style={'marginTop': '12px'},
+                                      value=self.test_sample_init,
+                                      options=[{'label': "%d (%s)" % (i, test_data.output_classes[c]),
+                                                'value': i}
+                                               for i, c in
+                                               enumerate(test_data.y[:self.max_test_samples])]
+                                  ),
+                                  html.P([html.Img(id='bottom-test-sample-img', alt='Sample input')],
+                                         className='thumbnail', hidden=not test_data.has_test_sample)
+                                  ]
+        else:
+            test_data_selector = [html.H5('Test sample'),
+                                  html.P('No test data selected'),
+                                  html.Div([dcc.Dropdown(id='bottom-select-test-sample'),
+                                            html.Img(id='bottom-test-sample-img')],
+                                           hidden=True)]
 
         return dbc.Row(style={'marginTop': '10px', 'marginBottom': '20px'}, children=[
             # Input sample selection
             dbc.Col(md=2, align='start',
                     children=html.Div(className='detail-section',
-                                      children=[html.H5('Test sample'),
-                                                dcc.Dropdown(
-                                                    id='bottom-select-test-sample',
-                                                    style={'marginTop': '12px'},
-                                                    value=self.test_sample_init,
-                                                    options=[{'label': "%d (%s)" % (i, test_data.output_classes[c]),
-                                                              'value': i}
-                                                             for i, c in
-                                                             enumerate(true_labels[:self.max_test_samples])]
-                                                ),
-                                                html.P([html.Img(id='bottom-test-sample-img', alt='Sample input')],
-                                                       className='thumbnail', hidden=not test_data.has_test_sample)
-                                                ])),
+                                      children=test_data_selector)),
 
             # Layer information
             dbc.Col(md=3, align='start',
@@ -104,8 +111,11 @@ class BottomPane(AbstractPane):
                     and index is not None and test_data.x is not None \
                     and selected_unit and selected_unit['layer_idx'] is not None:
                 if active_tab == 'activation':
-                    layer = grapher.layers[selected_unit['layer_idx']]
-                    return layer.get_activation_map(model_sequence, test_data.x[index], selected_unit['unit_idx'])
+                    if test_data.has_test_sample:
+                        layer = grapher.layers[selected_unit['layer_idx']]
+                        return layer.get_activation_map(model_sequence, test_data.x[index], selected_unit['unit_idx'])
+                    else:
+                        return html.H5('Activation maps require test data')
             return []
 
         @app.callback(Output("bottom-layer-tab-content", "children"),

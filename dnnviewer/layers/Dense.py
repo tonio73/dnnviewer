@@ -89,6 +89,9 @@ class Dense(AbstractLayer):
                              figure=fig)
 
         elif active_tab == 'grads':
+            if self.grads is None:
+                return html.P("No gradients available")
+
             fig = layer_minimax_graph.figure(self.grads, self.num_unit, self.unit_names,
                                              self.theme, self.theme.gradient_color_scale)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
@@ -121,6 +124,9 @@ class Dense(AbstractLayer):
                              figure=fig)
 
         elif active_tab == 'grads':
+            if self.grads is None:
+                return html.P("No gradients available")
+
             g = self.grads[:, unit_idx]
             fig = go.Figure(data=[go.Histogram(x=g, marker=self.theme.gradient_color_scale.as_dict(g))])
             fig.update_layout(margin=self.theme.bottom_figure_margins,

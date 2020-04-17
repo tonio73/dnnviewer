@@ -62,7 +62,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
                 grads = tape.gradient(objective, model.trainable_variables)
         else:
             grads = None
-    except:
+    except Exception:
         logger.error('Unable to compute gradients for model %s', model.name)
         grads = None
 

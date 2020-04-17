@@ -53,6 +53,7 @@ class MainModelSelection(AbstractDashboard):
             if self.model_sequence.number_epochs == 0:
                 raise PreventUpdate
 
+            self.test_data.reset()
             if test_dataset_id is not None:
                 tf_ds_bridge.keras_load_test_data(test_dataset_id, self.test_data)
                 if not self.test_data.has_test_sample:
