@@ -56,10 +56,14 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         previous_layer = input_layer
 
     # Compute gradients applying a mini-batch of test data
-    with tf.GradientTape() as tape:
-        y_est = model(keras_prepare_input(model, test_data.x[:1000]))
-        objective = model.loss_functions[0](test_data.y[:1000], y_est)
-        grads = tape.gradient(objective, model.trainable_variables)
+    if test_data.has_test_sample:
+        with tf.GradientTape() as tape:
+            n_grad_samples = 256
+            y_est = model(keras_prepare_input(model, test_data.x[:n_grad_samples]))
+            objective = model.loss_functions[0](test_data.y[:n_grad_samples], y_est)
+            grads = tape.gradient(objective, model.trainable_variables)
+    else:
+        grads = None
 
     idx_grads = 0
     for keras_layer in model.layers:
@@ -68,7 +72,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
 
         if layer_class == 'Dense':
             layer = Dense(keras_layer.name, keras_layer.output_shape[-1],
-                          keras_layer.weights[0].numpy(),  grads[idx_grads].numpy(),
+                          keras_layer.weights[0].numpy(), grads[idx_grads].numpy() if grads else None,
                           theme)
             grapher.add_layer(layer)
             previous_layer = layer
@@ -76,7 +80,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
 
         elif layer_class == 'Conv2D':
             layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1],
-                            keras_layer.weights[0].numpy(), grads[idx_grads].numpy(),
+                            keras_layer.weights[0].numpy(), grads[idx_grads].numpy() if grads else None,
                             theme)
             grapher.add_layer(layer)
             previous_layer = layer
