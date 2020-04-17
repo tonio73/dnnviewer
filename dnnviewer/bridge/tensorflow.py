@@ -77,7 +77,6 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
                           theme)
             grapher.add_layer(layer)
             previous_layer = layer
-            idx_grads += 2
 
         elif layer_class == 'Conv2D':
             layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1],
@@ -85,7 +84,6 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
                             theme)
             grapher.add_layer(layer)
             previous_layer = layer
-            idx_grads += 2
 
         elif layer_class == 'Flatten':
             if isinstance(previous_layer, Convo2D):
@@ -102,6 +100,8 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
 
         else:
             logger.error('Not handled layer %s of type %s' % (keras_layer.name, type(keras_layer)))
+
+        idx_grads += len(keras_layer.trainable_weights)
 
     if test_data.output_classes is not None:
         grapher.layers[-1].unit_names = test_data.output_classes
