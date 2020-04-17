@@ -52,14 +52,18 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         previous_layer = input_layer
 
     # Compute gradients applying a mini-batch of test data
-    if test_data.has_test_sample:
-        with tf.GradientTape() as tape:
-            n_grad_samples = 256
-            y_est = model(keras_prepare_input(model, test_data.x[:n_grad_samples]))
-            objective = model.loss_functions[0](keras_prepare_labels(model, test_data.y[:n_grad_samples]),
-                                                y_est)
-            grads = tape.gradient(objective, model.trainable_variables)
-    else:
+    try:
+        if test_data.has_test_sample:
+            with tf.GradientTape() as tape:
+                n_grad_samples = 256
+                y_est = model(keras_prepare_input(model, test_data.x[:n_grad_samples]))
+                objective = model.loss_functions[0](keras_prepare_labels(model, test_data.y[:n_grad_samples]),
+                                                    y_est)
+                grads = tape.gradient(objective, model.trainable_variables)
+        else:
+            grads = None
+    except:
+        logger.error('Unable to compute gradients for model %s', model.name)
         grads = None
 
     idx_grads = 0
