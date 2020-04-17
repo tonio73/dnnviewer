@@ -47,10 +47,6 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
     # Input placeholder if first layer is a layer with weights
     if len(model.layers[0].get_weights()) > 0:
         input_dim = model.layers[0].get_weights()[0].shape[-2]
-        if test_data.input_classes is not None and len(test_data.input_classes) != input_dim:
-            logger.error("Wrong length of input classes, got %d, expecting %d" %
-                         (len(test_data.input_classes), input_dim))
-
         input_layer = Input('input', input_dim, theme, test_data.input_classes)
         grapher.add_layer(input_layer)
         previous_layer = input_layer

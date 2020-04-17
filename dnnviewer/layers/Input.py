@@ -5,11 +5,16 @@ import plotly.graph_objects as go
 import dash_html_components as html
 
 import numpy as np
+import logging
 
 
 class Input(AbstractLayer):
     """ Simple placeholder layer to act as input to the network """
     def __init__(self, name, num_unit, plotly_theme, unit_names=None):
+        if unit_names is not None and len(unit_names) != num_unit:
+            logger = logging.getLogger(__name__)
+            logger.error("Wrong length of input classes, got %d, expecting %d", len(unit_names), num_unit)
+            unit_names = None
         AbstractLayer.__init__(self, name, num_unit, None, plotly_theme, unit_names=unit_names)
 
     # @override
@@ -23,7 +28,7 @@ class Input(AbstractLayer):
         return html.H5("Input '%s'" % self.name)
 
     # @override
-    def get_layer_tabs(self, previous_active: str):
+    def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {'info': 'Info'}, previous_active,
                          AbstractLayer.get_layer_tab_content(self, None))
