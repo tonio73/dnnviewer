@@ -117,7 +117,7 @@ class Convo2D(AbstractLayer):
                          previous_active, AbstractLayer.get_layer_tab_content(self, None))
 
     # @override
-    def get_layer_tab_content(self, active_tab):
+    def get_layer_tab_content(self, active_tab: str, unit_idx=None):
         """ Get the content of the selected tab """
 
         if active_tab == 'info':
@@ -127,7 +127,7 @@ class Convo2D(AbstractLayer):
         elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
             fig = layer_minimax_graph.figure(weights1, self.num_unit, self.unit_names,
-                                             self.theme, self.theme.weight_color_scale)
+                                             self.theme, self.theme.weight_color_scale, unit_idx)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)
@@ -138,7 +138,7 @@ class Convo2D(AbstractLayer):
 
             grads1 = self.grads.reshape(-1, self.grads.shape[3])
             fig = layer_minimax_graph.figure(grads1, self.num_unit, self.unit_names,
-                                             self.theme, self.theme.gradient_color_scale)
+                                             self.theme, self.theme.gradient_color_scale, unit_idx)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)

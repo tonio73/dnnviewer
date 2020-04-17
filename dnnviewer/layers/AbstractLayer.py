@@ -63,7 +63,7 @@ class AbstractLayer:
                          html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True))
 
     # @abstract
-    def get_layer_tab_content(self, active_tab):
+    def get_layer_tab_content(self, active_tab: str, unit_idx=None):
         """ Get the content of the selected tab """
         return html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)
 

@@ -126,7 +126,7 @@ class BottomPane(AbstractPane):
             if active_tab and selected_unit is not None:
                 layer = grapher.layers[selected_unit['layer_idx']]
                 if layer is not None:
-                    return layer.get_layer_tab_content(active_tab)
+                    return layer.get_layer_tab_content(active_tab, selected_unit['unit_idx'])
             return html.Div()
 
         @app.callback(Output("bottom-unit-tab-content", "children"),

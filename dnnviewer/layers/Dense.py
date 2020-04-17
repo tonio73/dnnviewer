@@ -74,7 +74,7 @@ class Dense(AbstractLayer):
                          previous_active, AbstractLayer.get_layer_tab_content(self, None))
 
     # @override
-    def get_layer_tab_content(self, active_tab):
+    def get_layer_tab_content(self, active_tab, unit_idx=None):
         """ Get the content of the selected tab """
 
         if active_tab == 'info':
@@ -83,7 +83,7 @@ class Dense(AbstractLayer):
 
         elif active_tab == 'weights':
             fig = layer_minimax_graph.figure(self.weights, self.num_unit, self.unit_names,
-                                             self.theme, self.theme.weight_color_scale)
+                                             self.theme, self.theme.weight_color_scale, unit_idx)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)
@@ -93,7 +93,7 @@ class Dense(AbstractLayer):
                 return html.P("No gradients available")
 
             fig = layer_minimax_graph.figure(self.grads, self.num_unit, self.unit_names,
-                                             self.theme, self.theme.gradient_color_scale)
+                                             self.theme, self.theme.gradient_color_scale, unit_idx)
             return dcc.Graph(id='bottom-layer-figure', animate=False,
                              config=AbstractLayer._get_graph_config(),
                              figure=fig)
@@ -148,12 +148,28 @@ class Dense(AbstractLayer):
         hover_text = self._get_unit_labels()
         fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text',
                                      marker=self.theme.activation_color_scale.as_dict(activation))])
+
+        if unit_idx and unit_idx < self.num_unit:
+            if self.unit_names:
+                annotation_title = ("#%d (%s): %.3g" % (unit_idx, self.unit_names[unit_idx], activation[unit_idx]))
+            else:
+                annotation_title = "#%d: %.3g" % (unit_idx, activation[unit_idx])
+            annotations = [dict(x=activation[unit_idx], y=unit_idx,
+                                xref="x", yref="y",
+                                text=annotation_title,
+                                showarrow=True, arrowhead=3, arrowcolor="#aaa",
+                                bgcolor="#666", borderpad=4,
+                                ax=-30, ay=-30)]
+        else:
+            annotations = []
+
         fig.update_layout(margin=self.theme.bottom_figure_margins,
                           title=dict(text='Layer activation', font=dict(size=14)),
                           xaxis_title_text='Amplitude',
                           yaxis_title_text='Unit',
                           bargap=0.2,  # gap between bars of adjacent location coordinates)
-                          template=self.theme.plotly)
+                          template=self.theme.plotly,
+                          annotations=annotations)
 
         return html.Div(
             dcc.Graph(id='bottom-activation', animate=False,
