@@ -60,7 +60,8 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
         with tf.GradientTape() as tape:
             n_grad_samples = 256
             y_est = model(keras_prepare_input(model, test_data.x[:n_grad_samples]))
-            objective = model.loss_functions[0](test_data.y[:n_grad_samples], y_est)
+            objective = model.loss_functions[0](keras_prepare_labels(model, test_data.y[:n_grad_samples]),
+                                                y_est)
             grads = tape.gradient(objective, model.trainable_variables)
     else:
         grads = None
@@ -109,8 +110,7 @@ def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model
 def keras_prepare_input(model, data):
     """ Expand dimensions and pad data if needed for the model
     Expect a batch of data that match the input of the model:
-    - In case the first
-    -
+    - In case the first layer is a convolution, expects input to be 4D, adjust padding
     """
 
     logger = logging.getLogger(__name__)
@@ -143,6 +143,15 @@ def keras_prepare_input(model, data):
     return data
 
 
+def keras_prepare_labels(model, labels):
+    """ Preformat labels, mainly handle the case of categorical_crossentropy """
+    loss = model.loss_functions[0]
+    if (isinstance(loss, str) and loss == 'categorical_crossentropy') \
+            or type(loss).__name__ == 'CategoricalCrossentropy':
+        labels = keras.utils.to_categorical(labels)
+    return labels
+
+
 def _get_caption(prop, dic):
     """ Get a textual caption of a keras property that my be $
         - a literal string label (e.g. 'mse')
@@ -151,21 +160,21 @@ def _get_caption(prop, dic):
     """
     if prop is not None:
         if isinstance(prop, str):
-            loss_extract = prop.lower().replace('_', '')
-            if loss_extract in dic:
-                return dic[loss_extract]
+            prop_extract = prop.lower().replace('_', '')
+            if prop_extract in dic:
+                return dic[prop_extract]
             else:
                 return prop
         else:
-            loss_extract = type(prop).__name__.lower()
-            if loss_extract == 'function':
-                loss_extract = prop.__name__.lower().replace('_', '')
-                if loss_extract in dic:
-                    return dic[loss_extract]
+            prop_extract = type(prop).__name__.lower()
+            if prop_extract == 'function':
+                prop_extract = prop.__name__.lower().replace('_', '')
+                if prop_extract in dic:
+                    return dic[prop_extract]
                 else:
                     return prop.__name__
-            elif loss_extract in dic:
-                return dic[loss_extract]
+            elif prop_extract in dic:
+                return dic[prop_extract]
             else:
                 return type(prop).__name__
 
