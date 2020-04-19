@@ -9,6 +9,7 @@ from ..imageutils import array_to_img_src
 from ..TestData import TestData
 
 import plotly.graph_objects as go
+from dash import callback_context
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -110,12 +111,25 @@ class BottomPane(AbstractPane):
             return layer_title, layer_tabs, unit_title, unit_tabs
 
         @app.callback(Output('center-main-view', 'clickData'),
-                      [Input('bottom-layer-figure', 'clickData')],
+                      [Input('bottom-layer-figure', 'clickData'),
+                       Input('bottom-maps-figure', 'clickData')],
                       [State('center-main-view', 'clickData')])
-        def update_unit_selection(click_data, network_click_data):
+        def update_unit_selection(layer_click_data, activation_click_data, network_click_data):
             """ Click on the layer figure => update the main selection's unit """
-            if click_data and network_click_data:
-                network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
+
+            if network_click_data:
+                click_data = None
+                ctx = callback_context
+                if ctx.triggered:
+                    figure_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+                    if figure_id == 'bottom-layer-figure':
+                        click_data = layer_click_data
+                    elif figure_id == 'bottom-maps-figure':
+                        click_data = activation_click_data
+
+                if click_data:
+                    network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
             return network_click_data
 
         @app.callback([Output("bottom-layer-tab-content", "children"),
