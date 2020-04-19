@@ -8,16 +8,11 @@ from ..widgets import tabs
 from ..imageutils import array_to_img_src
 from ..TestData import TestData
 
+import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
-
-
-def _get_maps_tabs(active_tab: str = None):
-    """ Tabs for the maps """
-    return tabs.make('bottom-maps', {'activation': 'Activation'}, active_tab)
 
 
 class BottomPane(AbstractPane):
@@ -61,22 +56,18 @@ class BottomPane(AbstractPane):
 
             # Layer information
             dbc.Col(md=3, align='start',
-                    children=[
-                        dcc.Store(id='bottom-layer-click-data'),
-                        html.Div(className='detail-section',
-                                 children=[html.Div(id='bottom-layer-title'),
-                                           html.Div(id='bottom-layer-tabs',
-                                                    children=dummy_layer.get_layer_tabs())
-                                           ])
-                    ]),
+                    children=html.Div(className='detail-section',
+                                      children=[html.Div(id='bottom-layer-title'),
+                                                html.Div(id='bottom-layer-tabs',
+                                                         children=dummy_layer.get_layer_tabs())])
+                    ),
 
             # Unit information
             dbc.Col(md=4, align='start',
                     children=html.Div(className='detail-section',
                                       children=[html.Div(id='bottom-unit-title', children=html.H5('Maps')),
                                                 html.Div(id='bottom-unit-tabs',
-                                                         children=dummy_layer.get_unit_tabs(0))
-                                                ])),
+                                                         children=dummy_layer.get_unit_tabs(0))])),
 
             #  Maps
             dbc.Col(md=3, align='start',
@@ -84,7 +75,7 @@ class BottomPane(AbstractPane):
                                       children=[html.Div(id='bottom-maps-title',
                                                          children=html.H5('Maps')),
                                                 html.Div(id='bottom-maps-tabs',
-                                                         children=_get_maps_tabs(None))]))
+                                                         children=BottomPane._get_maps_tabs(None))]))
         ])
 
     def callbacks(self, app, model_sequence, grapher, test_data):
@@ -101,8 +92,64 @@ class BottomPane(AbstractPane):
                 return array_to_img_src(img)
             return ''
 
-        @app.callback(Output('bottom-maps-tab-content', 'children'),
-                      [Input("bottom-maps-tab-bar", "active_tab"),
+        @app.callback([Output('bottom-layer-title', 'children'), Output('bottom-layer-tabs', 'children'),
+                       Output('bottom-unit-title', 'children'), Output('bottom-unit-tabs', 'children')],
+                      [Input('center-selected-unit', 'data'), Input('top-epoch-index', 'data')],
+                      [State('bottom-layer-tab-bar', 'active_tab'),
+                       State('bottom-unit-tab-bar', 'active_tab')])
+        def update_layer_info(selected_unit, _, active_layer_tab, active_unit_tab):
+            """ Display selected layer/unit title and tabs """
+            if selected_unit:
+                layer = grapher.layers[selected_unit['layer_idx']]
+            else:
+                layer = AbstractLayer('dummy')
+            layer_title = layer.get_layer_title()
+            layer_tabs = layer.get_layer_tabs(active_layer_tab)
+            unit_title = layer.get_unit_title(selected_unit['unit_idx'])
+            unit_tabs = layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
+            return layer_title, layer_tabs, unit_title, unit_tabs
+
+        @app.callback(Output('center-main-view', 'clickData'),
+                      [Input('bottom-layer-figure', 'clickData')],
+                      [State('center-main-view', 'clickData')])
+        def update_unit_selection(click_data, network_click_data):
+            """ Click on the layer figure => update the main selection's unit """
+            if click_data and network_click_data:
+                network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
+            return network_click_data
+
+        @app.callback([Output("bottom-layer-tab-content", "children"),
+                       Output("bottom-layer-figure", "figure"),
+                       Output("bottom-layer-tab-figure", "hidden")],
+                      [Input("bottom-layer-tab-bar", "active_tab"),
+                       Input('center-selected-unit', 'data')])
+        def render_layer_tab_content(active_tab, selected_unit):
+            """ layer info tab selected => update content """
+            if active_tab and selected_unit is not None:
+                layer = grapher.layers[selected_unit['layer_idx']]
+                if layer is not None:
+                    content, figure = layer.get_layer_tab_content(active_tab, selected_unit['unit_idx'])
+                    return content, go.Figure() if figure is None else figure, figure is None
+            return [], go.Figure(), True
+
+        @app.callback([Output("bottom-unit-tab-content", "children"),
+                       Output("bottom-unit-figure", "figure"),
+                       Output("bottom-unit-tab-figure", "hidden")],
+                      [Input("bottom-unit-tab-bar", "active_tab")],
+                      [State('center-selected-unit', 'data')])
+        def render_unit_tab_content(active_tab, selected_unit):
+            """ layer info tab selected => update content """
+            if active_tab and selected_unit is not None:
+                layer = grapher.layers[selected_unit['layer_idx']]
+                if layer is not None:
+                    content, figure = layer.get_unit_tab_content(selected_unit['unit_idx'], active_tab)
+                    return content, go.Figure() if figure is None else figure, figure is None
+            return [], go.Figure(), True
+
+        @app.callback([Output('bottom-maps-tab-content', 'children'),
+                       Output('bottom-maps-figure', 'figure'),
+                       Output('bottom-maps-tab-figure', 'hidden')],
+                      [Input('bottom-maps-tab-bar', 'active_tab'),
                        Input('bottom-select-test-sample', 'value'),
                        Input('center-selected-unit', 'data'),
                        Input('top-epoch-index', 'data')])
@@ -113,63 +160,16 @@ class BottomPane(AbstractPane):
                 if active_tab == 'activation':
                     if test_data.has_test_sample:
                         layer = grapher.layers[selected_unit['layer_idx']]
-                        return layer.get_activation_map(model_sequence, test_data.x[index], selected_unit['unit_idx'])
+                        content, figure = layer.get_activation_map(model_sequence, test_data.x[index],
+                                                                   selected_unit['unit_idx'])
+                        return content, go.Figure() if figure is None else figure, figure is None
                     else:
-                        return html.H5('Activation maps require test data')
-            return []
-
-        @app.callback(Output("bottom-layer-tab-content", "children"),
-                      [Input("bottom-layer-tab-bar", "active_tab"),
-                       Input('center-selected-unit', 'data')])
-        def render_layer_tab_content(active_tab, selected_unit):
-            """ layer info tab selected => update content """
-            if active_tab and selected_unit is not None:
-                layer = grapher.layers[selected_unit['layer_idx']]
-                if layer is not None:
-                    return layer.get_layer_tab_content(active_tab, selected_unit['unit_idx'])
-            return html.Div()
-
-        @app.callback(Output("bottom-unit-tab-content", "children"),
-                      [Input("bottom-unit-tab-bar", "active_tab")],
-                      [State('center-selected-unit', 'data')])
-        def render_unit_tab_content(active_tab, selected_unit):
-            """ layer info tab selected => update content """
-            if active_tab and selected_unit is not None:
-                layer = grapher.layers[selected_unit['layer_idx']]
-                if layer is not None:
-                    return layer.get_unit_tab_content(selected_unit['unit_idx'], active_tab)
-            return html.Div()
-
-        @app.callback([Output('bottom-layer-title', 'children'), Output('bottom-layer-tabs', 'children'),
-                       Output('bottom-unit-title', 'children'), Output('bottom-unit-tabs', 'children')],
-                      [Input('center-selected-unit', 'data'), Input('top-epoch-index', 'data')],
-                      [State('bottom-layer-tab-bar', 'active_tab'),
-                       State('bottom-unit-tab-bar', 'active_tab')])
-        def update_layer_info(selected_unit, _, active_layer_tab, active_unit_tab):
-            """ Display selected layer/unit title and tabs """
-            if selected_unit:
-                layer = grapher.layers[selected_unit['layer_idx']]
-                return layer.get_layer_title(), \
-                     layer.get_layer_tabs(active_layer_tab), \
-                     layer.get_unit_title(selected_unit['unit_idx']), \
-                     layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
-            dummy_layer = AbstractLayer('dummy')
-            return [], dummy_layer.get_layer_tabs(active_layer_tab), [], dummy_layer.get_unit_tabs(0, active_unit_tab)
-
-        @app.callback(Output('center-main-view', 'clickData'),
-                      [Input('bottom-layer-click-data', 'data')],
-                      [State('center-main-view', 'clickData')])
-        def update_unit_selection(click_data, network_click_data):
-            """ Click on the layer figure => update the main selection's unit """
-            if click_data and network_click_data:
-                network_click_data['points'][0]['pointNumber'] = click_data['points'][0]['pointNumber']
-            return network_click_data
-
-        @app.callback(Output('bottom-layer-click-data', 'data'),
-                      [Input('bottom-layer-figure', 'clickData')])
-        def update_layer_click_data(click_data):
-            if click_data:
-                return click_data
-            raise PreventUpdate
+                        return html.H5('Activation maps require test data'), go.Figure, False
+            return [], go.Figure(), True
 
         return
+
+    @staticmethod
+    def _get_maps_tabs(active_tab: str = None):
+        """ Tabs for the maps """
+        return tabs.make('bottom-maps', {'activation': 'Activation'}, active_tab)

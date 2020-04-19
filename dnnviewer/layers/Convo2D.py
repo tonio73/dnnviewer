@@ -7,7 +7,6 @@ from ..widgets import layer_minimax_graph, tabs, conv_filter_map
 from ..imageutils import array_to_img_src, to_8bit_img
 
 import plotly.graph_objects as go
-import dash_core_components as dcc
 import dash_html_components as html
 
 import numpy as np
@@ -113,35 +112,29 @@ class Convo2D(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
-        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'},
-                         previous_active, AbstractLayer.get_layer_tab_content(self, None))
+        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'}, previous_active)
 
     # @override
     def get_layer_tab_content(self, active_tab: str, unit_idx=None):
         """ Get the content of the selected tab """
 
         if active_tab == 'info':
-            return [html.Ul([html.Li("%d units" % self.num_unit)]),
-                    html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)]
+            return html.Ul([html.Li("%d units" % self.num_unit)]), None
 
         elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
             fig = layer_minimax_graph.figure(weights1, self.num_unit, self.unit_names,
                                              self.theme, self.theme.weight_color_scale, unit_idx)
-            return dcc.Graph(id='bottom-layer-figure', animate=False,
-                             config=AbstractLayer._get_graph_config(),
-                             figure=fig)
+            return [], fig
 
         elif active_tab == 'grads':
             if self.grads is None:
-                return html.P("No gradients available")
+                return html.P("No gradients available"), None
 
             grads1 = self.grads.reshape(-1, self.grads.shape[3])
             fig = layer_minimax_graph.figure(grads1, self.num_unit, self.unit_names,
                                              self.theme, self.theme.gradient_color_scale, unit_idx)
-            return dcc.Graph(id='bottom-layer-figure', animate=False,
-                             config=AbstractLayer._get_graph_config(),
-                             figure=fig)
+            return [], fig
 
         return AbstractLayer.get_layer_tab_content(self, active_tab)
 
@@ -156,33 +149,31 @@ class Convo2D(AbstractLayer):
         w = self.weights[:, :, :, unit_idx]
 
         if active_tab == 'info':
-            return html.Ul([html.Li("%d coefficients" % (w.shape[0] * w.shape[1] * w.shape[2]))])
+            return html.Ul([html.Li("%d coefficients" % (w.shape[0] * w.shape[1] * w.shape[2]))]), None
 
         elif active_tab == 'weights':
             fig = conv_filter_map.figure(w, self.theme, self.theme.weight_color_scale)
-            return dcc.Graph(id='bottom-unit-figure', animate=False,
-                             config=AbstractLayer._get_graph_config(),
-                             figure=fig)
+            return [], fig
 
         elif active_tab == 'grads':
             if self.grads is None:
-                return html.P("No gradients available")
+                return html.P("No gradients available"), None
 
             fig = conv_filter_map.figure(self.grads[:, :, :, unit_idx], self.theme, self.theme.gradient_color_scale)
-            return dcc.Graph(id='bottom-unit-figure', animate=False,
-                             config=AbstractLayer._get_graph_config(),
-                             figure=fig)
-        return html.Div()
+            return [], fig
+
+        return AbstractLayer.get_layer_tab_content(self, active_tab)
 
     def get_activation_map(self, activation_mapper: AbstractActivationMapper, input_img, unit_idx):
         """ Get the activation map plot """
 
         maps = activation_mapper.get_activation(input_img, self, unit_idx)
+        # Images are wrapped in Img HTML element => no Plotly GO figure
         if unit_idx is None:
             return [html.Div(html.Img(id='activation-map', alt='Activation map',
                                       src=array_to_img_src(to_8bit_img(img))),
-                             className='thumbnail') for img in maps]
+                             className='thumbnail') for img in maps], None
         else:
             return html.Div(html.Img(id='activation-map', alt='Activation map',
                                      src=array_to_img_src(to_8bit_img(maps))),
-                            className='thumbnail')
+                            className='thumbnail'), None

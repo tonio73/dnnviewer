@@ -30,13 +30,11 @@ class Input(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
-        return tabs.make('bottom-layer', {'info': 'Info'}, previous_active,
-                         AbstractLayer.get_layer_tab_content(self, None))
+        return tabs.make('bottom-layer', {'info': 'Info'}, previous_active)
 
     # @override
     def get_layer_tab_content(self, active_tab):
         """ Get the content of the selected tab """
         if active_tab == 'info':
-            return [html.Ul([html.Li("%d units" % self.num_unit)]),
-                    AbstractLayer.get_layer_tab_content(self, active_tab)]
+            return [html.Ul([html.Li("%d units" % self.num_unit)])], None
         return AbstractLayer.get_layer_tab_content(self, active_tab)

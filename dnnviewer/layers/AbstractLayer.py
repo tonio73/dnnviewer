@@ -64,8 +64,10 @@ class AbstractLayer:
 
     # @abstract
     def get_layer_tab_content(self, active_tab: str, unit_idx=None):
-        """ Get the content of the selected tab """
-        return html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)
+        """ Get the content of the selected tab
+            @return duple: content (HTML) and figure (or None if no figure)
+        """
+        return [], None
 
     # @abstract
     def get_unit_title(self, unit_idx: int):
@@ -76,31 +78,21 @@ class AbstractLayer:
     # @abstract
     def get_unit_tabs(self, unit_idx: int, previous_active: str = None):
         """ Get the unit tab bar and layout function """
-        return [*tabs.make('bottom-unit', {}, previous_active),
-                # The graph needs always to be defined at init to check associated callback
-                html.Div(dcc.Graph(id='bottom-unit-figure'), hidden=True)]
+        return tabs.make('bottom-unit', {}, previous_active)
 
     # @abstract
     def get_unit_tab_content(self, unit_idx: int, active_tab: str):
         """ Get the content of the selected tab
-            @return Dash HTML element (list)
+            @return duple: content (HTML) and figure (or None if no figure)
         """
-        return html.Div(dcc.Graph(id='bottom-unit-figure'), hidden=True)
-
-    # @abstract
-    def get_unit_description(self, unit_idx: int):
-        """ Get layer Unit description to be included in a Dash Column
-            @return Dash HTML element list
-        """
-        return [html.H5(('Unit #%s' % unit_idx) +
-                        (' (%s)' % self.unit_names[unit_idx] if self.unit_names is not None else ""))]
+        return [], None
 
     # @abstract
     def get_activation_map(self, activation_mapper, input_img, unit_idx):
         """ Get the activation map plot
-            @return Dash HTML element list
+            @return duple: content (HTML) and figure (or None if no figure)
         """
-        return []
+        return [], None
 
     def _get_y_offset(self):
         """ index of the first unit (lowest y) """
@@ -110,11 +102,3 @@ class AbstractLayer:
         """ Get series of labels corresponding to units """
         return ['%s%d' % (prefix, idx) for idx in np.arange(self.num_unit)] if self.unit_names is None \
             else self.unit_names
-
-    @staticmethod
-    def _get_graph_config():
-        """" Graph config for all detail layer/unit figures """
-        return dict(scrollZoom=True, displaylogo=False,
-                    modeBarButtonsToRemove=['lasso2d', 'resetScale2d', 'zoomIn2d', 'zoomOut2d',
-                                            'toggleSpikelines', 'select2d',
-                                            'hoverClosestCartesian', 'hoverCompareCartesian'])

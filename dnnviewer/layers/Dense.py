@@ -7,7 +7,6 @@ from ..bridge.AbstractActivationMapper import AbstractActivationMapper
 
 import numpy as np
 import plotly.graph_objects as go
-import dash_core_components as dcc
 import dash_html_components as html
 
 
@@ -70,34 +69,29 @@ class Dense(AbstractLayer):
     # @override
     def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
-        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'},
-                         previous_active, AbstractLayer.get_layer_tab_content(self, None))
+        return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'}, previous_active)
 
     # @override
-    def get_layer_tab_content(self, active_tab, unit_idx=None):
+    def get_layer_tab_content(self, active_tab: str, unit_idx=None):
         """ Get the content of the selected tab """
 
         if active_tab == 'info':
-            return [html.Ul([html.Li("%d units" % self.num_unit)]),
-                    html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True)]
+            return html.Ul([html.Li("%d units" % self.num_unit)]), None
 
         elif active_tab == 'weights':
             fig = layer_minimax_graph.figure(self.weights, self.num_unit, self.unit_names,
                                              self.theme, self.theme.weight_color_scale, unit_idx)
-            return dcc.Graph(id='bottom-layer-figure', animate=False,
-                             config=AbstractLayer._get_graph_config(),
-                             figure=fig)
+            return [], fig
 
         elif active_tab == 'grads':
             if self.grads is None:
-                return html.P("No gradients available")
+                return html.P("No gradients available"), None
 
             fig = layer_minimax_graph.figure(self.grads, self.num_unit, self.unit_names,
                                              self.theme, self.theme.gradient_color_scale, unit_idx)
-            return dcc.Graph(id='bottom-layer-figure', animate=False,
-                             config=AbstractLayer._get_graph_config(),
-                             figure=fig)
-        return html.Div()
+            return [], fig
+
+        return AbstractLayer.get_layer_tab_content(self, active_tab)
 
     # @override
     def get_unit_tabs(self, unit_idx: int, previous_active: str = None):
@@ -110,7 +104,7 @@ class Dense(AbstractLayer):
         w = self.weights[:, unit_idx]
 
         if active_tab == 'info':
-            return html.Ul([html.Li("%d coefficients" % len(w))])
+            return html.Ul([html.Li("%d coefficients" % len(w))]), None
 
         elif active_tab == 'weights':
             fig = go.Figure(data=[go.Histogram(x=w, marker=self.theme.gradient_color_scale.as_dict(w))])
@@ -119,13 +113,11 @@ class Dense(AbstractLayer):
                               xaxis_title_text='Amplitude',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.theme.plotly)
-            return dcc.Graph(id='bottom-unit-figure', animate=False,
-                             config=AbstractLayer._get_graph_config(),
-                             figure=fig)
+            return [], fig
 
         elif active_tab == 'grads':
             if self.grads is None:
-                return html.P("No gradients available")
+                return html.P("No gradients available"), None
 
             g = self.grads[:, unit_idx]
             fig = go.Figure(data=[go.Histogram(x=g, marker=self.theme.gradient_color_scale.as_dict(g))])
@@ -135,11 +127,9 @@ class Dense(AbstractLayer):
                               # yaxis_title_text='Count',
                               bargap=0.2,  # gap between bars of adjacent location coordinates)
                               template=self.theme.plotly)
-            return dcc.Graph(id='bottom-unit-figure', animate=False,
-                             config=AbstractLayer._get_graph_config(),
-                             figure=fig)
+            return [], fig
 
-        return html.Div()
+        return AbstractLayer.get_layer_tab_content(self, active_tab)
 
     def get_activation_map(self, activation_mapper: AbstractActivationMapper, input_img, unit_idx):
         """ Get the activation map plot """
@@ -171,8 +161,4 @@ class Dense(AbstractLayer):
                           template=self.theme.plotly,
                           annotations=annotations)
 
-        return html.Div(
-            dcc.Graph(id='bottom-activation', animate=False,
-                      config=AbstractLayer._get_graph_config(),
-                      figure=fig)
-        )
+        return [], fig
