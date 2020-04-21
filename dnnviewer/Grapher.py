@@ -32,6 +32,8 @@ class Grapher:
     def clear_layers(self):
         """ Reset layers """
         self.layers = []
+        self.structure_props['num_dense'] = 0
+        self.structure_props['num_convo2d'] = 0
         self.x_offset = 0
 
     def add_layer(self, layer: AbstractLayer):
