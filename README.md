@@ -6,7 +6,7 @@ Current version is targeted at the **image classification**. However, coming ver
 
 This project is for learning and teaching purpose, do not try to display a network with hundreds of layers.
 
-![Screenshot](assets/screenshots/screen4_1024.png)
+![Screenshot](assets/screenshots/screen5.png)
 
 # Install
 
@@ -25,7 +25,7 @@ Access the web application at http://127.0.0.1:8050
 
 Currently accepted input formats are Keras Sequential models written to file in Checkpoint format or HDF5. A series of checkpoints along training epochs is also accepted as exemplified below.
 
-Some test models are provided in the GIT repository `dnnviewer-data` to clone from Github or download a zip from the [repository page](https://github.com/tonio73/dnnviewer-data)
+Some test models are provided in the GIT repository `_dnnviewer-data_` to clone from Github or download a zip from the [repository page](https://github.com/tonio73/dnnviewer-data), a full description of the models and their design is available in the repository [readme](https://github.com/tonio73/dnnviewer-data/blob/master/README.md).
 
 ```shell script
 $ git clone https://github.com/tonio73/dnnviewer-data.git
