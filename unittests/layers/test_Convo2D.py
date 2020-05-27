@@ -10,6 +10,7 @@ class TestConvo2D:
         """ Backward top 2 connections """
         # def plot_topn_connections(self, backward_layer, topn, active_units, True)
 
+        # 3 x 3 shape filters x 2 with 3 inputs => weights array of shape (3, 3, 2, 3)
         weights = np.array([[[[-1, 0, 1], [+0, 0, 1]], [[1, 1, 2], [2, 3, 3]], [[7, 1, 2], [2, 3, 4]]],
                             [[[+1, 1, 2], [-1, 1, 2]], [[1, 0, 6], [4, 1, 8]], [[6, 1, 2], [2, 0, 2]]],
                             [[[-3, 0, 5], [+0, 1, 2]], [[0, 2, 4], [5, 1, 4]], [[9, 1, 2], [4, 6, 6]]]])

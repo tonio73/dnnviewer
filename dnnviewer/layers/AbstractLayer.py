@@ -1,5 +1,5 @@
-from ..widgets import tabs
-from ..theming.Theme import Theme
+from ..widgets import tabs, property_list
+from ..theming.Theme import Theme, float_fmt
 
 import numpy as np
 import plotly.graph_objects as go
@@ -10,14 +10,19 @@ import dash_html_components as html
 class AbstractLayer:
     """ Abstract layer representation in Viewer """
 
-    def __init__(self, name, num_unit=0, weights=None, grads=None,
+    def __init__(self, name, type='unknown', num_unit=0, weights=None, grads=None,
                  theme: Theme = Theme(),
                  unit_names=None):
         self.name = name
         self.num_unit = num_unit
         self.weights = weights
+        self.bias = None
         self.grads = grads
         self.unit_names = unit_names
+        self.structure_props = {'type': type, 'num_unit': num_unit}
+        self.training_props = {}
+        self.input_props = {}
+        self.output_props = {}
         self.theme = theme
         self.spacing_y = 1.
         self.xoffset = 0
@@ -53,7 +58,7 @@ class AbstractLayer:
     # @abstract
     def get_layer_title(self):
         """ Get layer description to be included in the Dash Column """
-        return []
+        return html.H5("Layer '%s'" % self.name)
 
     # @abstract
     def get_layer_tabs(self, previous_active: str = None):
@@ -102,3 +107,38 @@ class AbstractLayer:
         """ Get series of labels corresponding to units """
         return ['%s%d' % (prefix, idx) for idx in np.arange(self.num_unit)] if self.unit_names is None \
             else self.unit_names
+
+    def _get_layer_info(self):
+        """ Build HTML components for the layer information (tab) """
+        return [*property_list.widget('Structure', _structure_properties_labels, self.structure_props),
+                *property_list.widget('Training', _training_properties_labels, self.training_props),
+                *property_list.widget('Input', _input_properties_labels, self.input_props),
+                *property_list.widget('Output', _output_properties_labels, self.output_props)]
+
+    def _get_unit_info(self, unit_idx, num_coef):
+        """ Build HTML components for the unit information (tab) """
+        unit_structure_props = {'num_coef': num_coef}
+        unit_training_props = {}
+        if self.bias is not None:
+            unit_training_props['bias'] = float_fmt % self.bias[unit_idx]
+        return [*property_list.widget('Structure', _unit_structure_properties_labels, unit_structure_props),
+                *property_list.widget('Training', _unit_training_properties_labels, unit_training_props)]
+
+
+# Property labels
+_structure_properties_labels = dict(type='Layer type',
+                                    num_unit="Num units",
+                                    strides="Strides",
+                                    padding='Padding',
+                                    input_shape='Input shape',
+                                    output_shape='Output shape')
+_training_properties_labels = dict(dropout="Drop out (at input)",
+                                   activity_regularizer="Activity reg.",
+                                   kernel_regularizer="Kernel reg.",
+                                   bias_regularizer="Bias reg.")
+_input_properties_labels = dict(batch_normalization="Batch normalization")
+_output_properties_labels = dict(pooling="Pooling")
+
+_unit_structure_properties_labels = dict(num_coef='Num coefficients')
+_unit_training_properties_labels = dict(bias='Bias')
+

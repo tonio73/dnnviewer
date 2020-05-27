@@ -111,7 +111,8 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         tf_bridge.keras_set_model_properties(grapher, self.current_model)
 
         # Create all other layers from the Keras Sequential model
-        tf_bridge.keras_extract_sequential_network(grapher, self.current_model, self.test_data)
+        extractor = tf_bridge.NetworkExtractor(grapher, self.current_model, self.test_data)
+        extractor.process()
 
         self.current_epoch_index = model_index
         return self.current_epoch_index

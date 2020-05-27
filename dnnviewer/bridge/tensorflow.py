@@ -8,12 +8,15 @@ from ..layers.Input import Input
 from ..layers.Dense import Dense
 from ..layers.Convo2D import Convo2D
 from ..TestData import TestData
+from ..theming.Theme import float_fmt
 
 import numpy as np
 from tensorflow import keras
 import tensorflow as tf
+import json
 import logging
 
+_logger = logging.getLogger(__name__)
 
 def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
     """ Map model level properties on grapher object """
@@ -25,86 +28,229 @@ def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
     return
 
 
-def keras_extract_sequential_network(grapher: Grapher, model: keras.models.Model, test_data: TestData):
-    """ Create a graphical representation of a Keras Sequential model's layers
-        Compute gradients from test samples
-    """
+class NetworkExtractor:
 
-    logger = logging.getLogger(__name__)
+    def __init__(self, grapher: Grapher, model: keras.models.Model, test_data: TestData):
+        self.grapher = grapher
+        self.model = model
+        self.test_data = test_data
 
-    if not isinstance(model, keras.models.Sequential):
-        raise ModelError("Unexpected model of type '%s', expecting Sequential model" % type(model))
+    def process(self):
+        """ Create a graphical representation of a Keras Sequential model's layers
+            Compute gradients from test samples
+        """
 
-    if len(model.layers) == 0:
-        logger.error("Empty model")
-        return
+        if not isinstance(self.model, keras.models.Sequential):
+            raise ModelError("Unexpected model of type '%s', expecting Sequential model" % type(self.model))
 
-    theme = grapher.theme
+        if len(self.model.layers) == 0:
+            _logger.error("Empty model")
+            return
 
-    previous_layer = None
-    grapher.clear_layers()
+        theme = self.grapher.theme
 
-    # Input placeholder if first layer is a layer with weights
-    if len(model.layers[0].get_weights()) > 0:
-        input_dim = model.layers[0].get_weights()[0].shape[-2]
-        input_layer = Input('input', input_dim, theme, test_data.input_classes)
-        grapher.add_layer(input_layer)
-        previous_layer = input_layer
+        previous_layer = None
+        layer_training_props, layer_input_props = {}, {}
+        self.grapher.clear_layers()
 
-    # Compute gradients applying a mini-batch of test data
-    try:
-        if test_data.has_test_sample:
-            with tf.GradientTape() as tape:
-                n_grad_samples = 256
-                y_est = model(keras_prepare_input(model, test_data.x[:n_grad_samples]))
-                objective = model.loss_functions[0](keras_prepare_labels(model, test_data.y[:n_grad_samples]),
-                                                    y_est)
-                grads = tape.gradient(objective, model.trainable_variables)
-        else:
-            grads = None
-    except Exception:
-        logger.error('Unable to compute gradients for model %s', model.name)
-        grads = None
+        # Get Gradients if test data is available
+        grads = self.compute_gradients()
 
-    idx_grads = 0
-    for keras_layer in model.layers:
+        # Input placeholder if first layer is a layer with weights
+        if len(self.model.layers[0].get_weights()) > 0:
+            input_dim = self.model.layers[0].get_weights()[0].shape[-2]
+            input_layer = Input('input', input_dim, theme, self.test_data.input_classes)
+            input_layer.structure_props['output_shape'] = self.model.layers[0].input_shape[1:]
+            self.grapher.add_layer(input_layer)
+            previous_layer = input_layer
 
-        layer_class = type(keras_layer).__name__
+        idx_grads = 0
+        for keras_layer in self.model.layers:
+            next_layer_input_props = {}
+            next_layer_training_props = {}
 
-        if layer_class == 'Dense':
-            layer = Dense(keras_layer.name, keras_layer.output_shape[-1],
-                          keras_layer.weights[0].numpy(), grads[idx_grads].numpy() if grads else None,
-                          theme)
-            grapher.add_layer(layer)
-            previous_layer = layer
+            layer_class = type(keras_layer).__name__
 
-        elif layer_class == 'Conv2D':
-            layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1],
-                            keras_layer.weights[0].numpy(), grads[idx_grads].numpy() if grads else None,
-                            theme)
-            grapher.add_layer(layer)
-            previous_layer = layer
+            if layer_class == 'Dense':
+                layer = Dense(keras_layer.name, keras_layer.output_shape[-1],
+                              keras_layer.weights[0].numpy(), grads[idx_grads].numpy() if grads else None,
+                              theme)
 
-        elif layer_class == 'Flatten':
-            if isinstance(previous_layer, Convo2D):
-                previous_layer.flatten_output = True
-            elif previous_layer is None:
-                # Input layer
-                input_dim = keras_layer.get_output_shape_at(0)[-1]
-                input_layer = Input('input', input_dim, theme, test_data.input_classes)
-                grapher.add_layer(input_layer)
-                previous_layer = input_layer
+                self.process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
 
-        elif layer_class in _keras_ignored_layers:
-            logger.info('Ignored %s', keras_layer.name)
+                previous_layer = layer
 
-        else:
-            logger.error('Not handled layer %s of type %s' % (keras_layer.name, type(keras_layer)))
+            elif layer_class == 'Conv2D':
+                layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1],
+                                keras_layer.weights[0].numpy(), grads[idx_grads].numpy() if grads else None,
+                                theme)
 
-        idx_grads += len(keras_layer.trainable_weights)
+                self.process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
 
-    if test_data.output_classes is not None:
-        grapher.layers[-1].unit_names = test_data.output_classes
+                # Extra properties
+                strides = NetworkExtractor._get_keras_layer_attribute(keras_layer, 'strides')
+                if strides and keras_layer.strides != (1, 1):
+                    layer.structure_props['strides'] = str(keras_layer.strides)
+                padding = NetworkExtractor._get_keras_layer_attribute(keras_layer, 'padding')
+                if padding:
+                    layer.structure_props['padding'] = padding
+
+                previous_layer = layer
+
+            elif layer_class == 'Flatten':
+                if isinstance(previous_layer, Convo2D):
+                    previous_layer.flatten_output = True
+                    # Update property on output shape
+                    previous_layer.structure_props['output_shape'] = "%s (flat)" % keras_layer.output_shape[1:]
+                elif previous_layer is None:
+                    # Input layer
+                    input_dim = keras_layer.get_output_shape_at(0)[-1]
+                    layer = Input('input', input_dim, theme, self.test_data.input_classes)
+                    layer.structure_props['output_shape'] = keras_layer.output_shape[1:]
+                    self.grapher.add_layer(layer)
+                    previous_layer = layer
+
+            # Pooling layers
+            elif layer_class in _pooling_layers:
+                if layer_class in _pooling_captions:
+                    pool_size = NetworkExtractor._get_keras_layer_attribute(keras_layer, 'pool_size')
+                    if pool_size is None:
+                        size = np.array(keras_layer.input_shape[1:-1]) / np.array(keras_layer.output_shape[1:-1])
+                        pool_size = tuple(size)
+                    previous_layer.output_props['pooling'] = str(pool_size)
+                    # Update output shape on previous layer to take into account for the pooling
+                    previous_layer.structure_props['output_shape'] = keras_layer.output_shape[1:]
+                else:
+                    _logger.error('Unsupported pooling layer: %s', layer_class)
+
+            # Dropout layers
+            elif layer_class in _dropout_layers:
+                if layer_class in _dropout_captions:
+                    rate = NetworkExtractor._get_keras_layer_attribute(keras_layer, 'rate')
+                    next_layer_training_props['dropout'] = "%s (%s)" % \
+                                                           (_dropout_captions[layer_class], rate if rate is not None else '-')
+                else:
+                    _logger.error('Unsupported dropout layer: %s', layer_class)
+
+            # Batch norm
+            elif layer_class == 'BatchNormalization':
+                next_layer_input_props['batch_normalization'] = 'Enabled'
+
+            # Ignored
+            elif layer_class in _keras_ignored_layers:
+                _logger.info('Ignored %s', keras_layer.name)
+
+            else:
+                _logger.error('Not handled layer %s of type %s' % (keras_layer.name, type(keras_layer)))
+
+            idx_grads += len(keras_layer.trainable_weights)
+            layer_training_props = next_layer_training_props
+            layer_input_props = next_layer_input_props
+
+        if self.test_data.output_classes is not None:
+            self.grapher.layers[-1].unit_names = self.test_data.output_classes
+
+    def process_add_layer(self, layer, keras_layer, layer_training_props, layer_input_props):
+        # Previously set properties
+        layer.training_props.update(layer_training_props)
+        layer.input_props.update(layer_input_props)
+
+        # Input-Output shape properties
+        layer.structure_props['input_shape'] = keras_layer.input_shape[1:]
+        layer.structure_props['output_shape'] = keras_layer.output_shape[1:]
+
+        # Regularizers
+        for reg_attr in ['activity_regularizer', 'bias_regularizer', 'kernel_regularizer']:
+            reg = NetworkExtractor._get_keras_layer_attribute(keras_layer, reg_attr, look_in_metadata=True)
+            value = None
+            if reg is not None:
+                if isinstance(reg, dict):
+                    l1, l2 = reg['l1'], reg['l2']
+                else:
+                    l1, l2 = reg.l1, reg.l2
+
+                if l1:
+                    if l2:
+                        value = _regularizers_captions['l1_l2'] % (l1, l2)
+                    else:
+                        value = _regularizers_captions['l1'] % l1
+                elif l2:
+                    value = _regularizers_captions['l2'] % l2
+            if value:
+                layer.training_props[reg_attr] = value
+
+        # Bias
+        if (not hasattr(keras_layer, 'use_bias') or keras_layer.use_bias) and keras_layer.bias is not None:
+            layer.bias = keras_layer.bias.numpy()
+
+        self.grapher.add_layer(layer)
+
+    def compute_gradients(self):
+        """ Compute gradients applying a mini-batch of test data """
+        try:
+            if self.test_data.has_test_sample:
+                with tf.GradientTape() as tape:
+                    n_grad_samples = 128
+                    y_est = self.model(keras_prepare_input(self.model, self.test_data.x[:n_grad_samples]))
+                    labels = keras_prepare_labels(self.model, self.test_data.y[:n_grad_samples])
+                    objective = self.model.loss_functions[0](labels, y_est)
+                    return tape.gradient(objective, self.model.trainable_variables)
+            else:
+                return None
+
+        except Exception:
+            _logger.error('Unable to compute gradients for model %s', self.model.name)
+            return None
+
+    @staticmethod
+    def _get_keras_layer_attribute(keras_layer, attribute: str, sub_attr=None, look_in_metadata=False):
+        """
+        Safely get the value of an attribute from a Keras layer
+        - If sub_attr is set, will return a dictionary with the listed sub attributes
+        - If look_in_metadata is set, will also look in the layer metadata
+        """
+        value = None
+        ret_attr = {}
+        try:
+            value = getattr(keras_layer, attribute)
+        except AttributeError:
+            pass
+
+        if value is not None:
+            if sub_attr is None:
+                return value
+
+            # Return a dictionary with only the required sub-attributes
+            for sa in sub_attr:
+                try:
+                    ret_attr[sa] = _get_caption(value, sa)
+
+                except AttributeError:
+                    pass
+            return ret_attr
+
+        # Could not find the attribute
+        # For some reason, saved models sometimes are squeezing some attributes but keep them in the metadata
+        if look_in_metadata:
+            metadata = json.loads(keras_layer._tracking_metadata)
+            if isinstance(metadata, dict) \
+                    and attribute in metadata['config'].keys() \
+                    and metadata['config'][attribute] is not None:
+                value = metadata['config'][attribute]['config']
+
+        if sub_attr is not None:
+            if value is not None:
+                # Return only requested sub-attributes as dictionary
+                # Return a dictionary with only the required sub-attributes
+                for sa in sub_attr:
+                    try:
+                        ret_attr[sa] = _get_caption(value, sa)
+
+                    except AttributeError:
+                        pass
+            return ret_attr
+
+        return value
 
 
 def keras_prepare_input(model, data):
@@ -112,8 +258,6 @@ def keras_prepare_input(model, data):
     Expect a batch of data that match the input of the model:
     - In case the first layer is a convolution, expects input to be 4D, adjust padding
     """
-
-    logger = logging.getLogger(__name__)
 
     # Format input if needed
     if data.dtype == np.uint8:
@@ -137,7 +281,7 @@ def keras_prepare_input(model, data):
                 padding[d, 1] = delta - padding[d, 0]
                 pad = True
         if pad:
-            logger.warning(f'Padding image before activation with pad={padding}')
+            _logger.warning(f'Padding image before activation with pad={padding}')
             data = np.pad(data, padding)
 
     return data
@@ -179,18 +323,40 @@ def _get_caption(prop, dic):
                 return type(prop).__name__
 
 
-_keras_ignored_layers = ['ActivityRegularization', 'Dropout',
-                         'SpatialDropout1D', 'SpatialDropout2D',
-                         'SpatialDropout3D',
-                         'Activation',
-                         'MaxPooling1D', 'MaxPooling2D', 'MaxPooling3D',
-                         'AveragePooling1D', 'AveragePooling2D',
-                         'AveragePooling3D',
-                         'GlobalAveragePooling1D', 'GlobalAveragePooling2D',
-                         'GlobalAveragePooling3D',
-                         'GlobalMaxPooling1D', 'GlobalMaxPooling2D',
-                         'GlobalMaxPooling3D',
-                         'BatchNormalization']
+# Layer types
+_pooling_layers = {
+    'MaxPooling1D', 'MaxPooling2D', 'MaxPooling3D',
+    'AveragePooling1D', 'AveragePooling2D', 'AveragePooling3D',
+    'GlobalAveragePooling1D', 'GlobalAveragePooling2D', 'GlobalAveragePooling3D',
+    'GlobalMaxPooling1D', 'GlobalMaxPooling2D', 'GlobalMaxPooling3D',
+}
+
+_dropout_layers = ['Dropout',
+                   'SpatialDropout1D', 'SpatialDropout2D', 'SpatialDropout3D']
+
+_keras_ignored_layers = ['ActivityRegularization',
+                         'Activation']
+
+# Captions
+_pooling_captions = {
+    'MaxPooling1D': 'Max 1D',
+    'MaxPooling2D': 'Max 2D',
+    'MaxPooling3D': 'Max 3D',
+    'AveragePooling1D': 'Average 1D',
+    'AveragePooling2D': 'Average 2D',
+    'AveragePooling3D': 'Average 3D',
+    'GlobalAveragePooling1D': 'Global average 1D',
+    'GlobalAveragePooling2D': 'Global average 2D',
+    'GlobalAveragePooling3D': 'Global average 3D',
+    'GlobalMaxPooling1D': 'Global max 1D',
+    'GlobalMaxPooling2D': 'Global max 2D',
+    'GlobalMaxPooling3D': 'Global max 3D'
+}
+
+_dropout_captions = {'Dropout': 'Standard',
+                     'SpatialDropout1D': 'Spatial 1D',
+                     'SpatialDropout2D': 'Spatial 2D',
+                     'SpatialDropout3D': 'Spatial 3D'}
 
 _loss_captions = {'binarycrossentropy': 'Binary cross-entropy',
                   'categoricalcrossentropy': 'Categorical cross-entropy',
@@ -221,3 +387,20 @@ _optimizer_captions = {'adadelta': 'Adadelta algorithm',
                        'nadam': 'NAdam algorithm',
                        'rmsprop': 'RMSprop algorithm',
                        'sgd': 'Stochastic gradient descent and momentum'}
+
+_activation_captions = dict(elu='Exponential linear unit',
+                            exponential='Exponential',
+                            hard_sigmoid='Hard sigmoid',
+                            linear='Linear',
+                            relu='Applies the rectified linear unit',
+                            selu='Scaled Exponential Linear Unit (SELU)',
+                            sigmoid='Sigmoid',
+                            softmax='Soft-max',
+                            softplus='Soft-plus',
+                            softsign='Soft-sign',
+                            swish='Swish',
+                            tanh='Hyperbolic tangent')
+
+_regularizers_captions = {'l1': 'L1 - Lasso (%s)' % float_fmt,
+                          'l2': 'L2 - Ridge (%s)' % float_fmt,
+                          'l1_l2': 'L1-L2 - Elasticnet (%s, %s)' % (float_fmt, float_fmt)}

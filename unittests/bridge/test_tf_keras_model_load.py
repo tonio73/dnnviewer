@@ -19,7 +19,8 @@ def test_model_not_sequential():
     model = keras.models.Model()
 
     with pytest.raises(ModelError):
-        btf.keras_extract_sequential_network(grapher, model, TestData())
+        extractor = btf.NetworkExtractor(grapher, model, TestData())
+        extractor.process()
 
 
 def test_model_empty():
@@ -28,7 +29,8 @@ def test_model_empty():
     grapher = Grapher()
     model = keras.models.Sequential()
 
-    btf.keras_extract_sequential_network(grapher, model, TestData())
+    extractor = btf.NetworkExtractor(grapher, model, TestData())
+    extractor.process()
     # Should raise en error in the logger
 
     assert len(grapher.layers) == 0
@@ -42,7 +44,8 @@ def test_model_1_dense():
     model.compile(loss='categorical_crossentropy')
     model.set_weights([np.ones((10, 32)), np.zeros(32)])
 
-    btf.keras_extract_sequential_network(grapher, model, TestData())
+    extractor = btf.NetworkExtractor(grapher, model, TestData())
+    extractor.process()
 
     # 1 layer added for input
     assert len(grapher.layers) == 2
@@ -66,7 +69,8 @@ def test_model_1_convo2d():
     model.compile(loss='categorical_crossentropy')
     model.set_weights([np.ones((3, 3, 3, 128)), np.zeros(128)])
 
-    btf.keras_extract_sequential_network(grapher, model, TestData())
+    extractor = btf.NetworkExtractor(grapher, model, TestData())
+    extractor.process()
 
     # 1 layer added for input
     assert len(grapher.layers) == 2

@@ -22,7 +22,7 @@ class Convo2D(AbstractLayer):
         assert weights.ndim == 4
         assert num_unit == weights.shape[3]
 
-        AbstractLayer.__init__(self, name, num_unit, weights, grads, theme, unit_names)
+        AbstractLayer.__init__(self, name, 'Convolutional 2D', num_unit, weights, grads, theme, unit_names)
 
         self.flatten_output = flatten_output
 
@@ -106,10 +106,6 @@ class Convo2D(AbstractLayer):
         return np.unique(strongest_idx), connectors.get_shapes()
 
     # @override
-    def get_layer_title(self):
-        return html.H5("Convo 2D '%s'" % self.name)
-
-    # @override
     def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'}, previous_active)
@@ -119,7 +115,7 @@ class Convo2D(AbstractLayer):
         """ Get the content of the selected tab """
 
         if active_tab == 'info':
-            return html.Ul([html.Li("%d units" % self.num_unit)]), None
+            return self._get_layer_info(), None
 
         elif active_tab == 'weights':
             weights1 = self.weights.reshape(-1, self.weights.shape[3])
@@ -149,7 +145,7 @@ class Convo2D(AbstractLayer):
         w = self.weights[:, :, :, unit_idx]
 
         if active_tab == 'info':
-            return html.Ul([html.Li("%d coefficients" % (w.shape[0] * w.shape[1] * w.shape[2]))]), None
+            return self._get_unit_info(unit_idx, len(w)), None
 
         elif active_tab == 'weights':
             fig = conv_filter_map.figure(w, self.theme, self.theme.weight_color_scale)

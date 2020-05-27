@@ -18,7 +18,7 @@ class Dense(AbstractLayer):
         assert weights.ndim == 2
         assert num_unit == weights.shape[1]
 
-        AbstractLayer.__init__(self, name, num_unit, weights, grads, theme, unit_names)
+        AbstractLayer.__init__(self, name, 'Dense', num_unit, weights, grads, theme, unit_names)
 
     # @override
     def plot(self, fig):
@@ -63,10 +63,6 @@ class Dense(AbstractLayer):
         return np.unique(strongest_idx), connectors.get_shapes()
 
     # @override
-    def get_layer_title(self):
-        return html.H5("Dense '%s'" % self.name)
-
-    # @override
     def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
         return tabs.make('bottom-layer', {'info': 'Info', 'weights': 'Weights', 'grads': 'Gradients'}, previous_active)
@@ -76,7 +72,7 @@ class Dense(AbstractLayer):
         """ Get the content of the selected tab """
 
         if active_tab == 'info':
-            return html.Ul([html.Li("%d units" % self.num_unit)]), None
+            return self._get_layer_info(), None
 
         elif active_tab == 'weights':
             fig = layer_minimax_graph.figure(self.weights, self.num_unit, self.unit_names,
@@ -104,7 +100,7 @@ class Dense(AbstractLayer):
         w = self.weights[:, unit_idx]
 
         if active_tab == 'info':
-            return html.Ul([html.Li("%d coefficients" % len(w))]), None
+            return self._get_unit_info(unit_idx, len(w)), None
 
         elif active_tab == 'weights':
             fig = go.Figure(data=[go.Histogram(x=w, marker=self.theme.gradient_color_scale.as_dict(w))])
