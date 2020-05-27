@@ -145,7 +145,7 @@ class Convo2D(AbstractLayer):
         w = self.weights[:, :, :, unit_idx]
 
         if active_tab == 'info':
-            return self._get_unit_info(unit_idx, len(w)), None
+            return self._get_unit_info(unit_idx, len(w.ravel())), None
 
         elif active_tab == 'weights':
             fig = conv_filter_map.figure(w, self.theme, self.theme.weight_color_scale)
