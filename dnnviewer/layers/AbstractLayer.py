@@ -112,9 +112,9 @@ class AbstractLayer:
         """ Build HTML components for the layer information (tab) """
         return [*property_list.widget('layer_structure', 'Structure',
                                       _structure_properties_labels, self.structure_props),
-                *property_list.widget('layer_training', 'Training', _training_properties_labels, self.training_props),
                 *property_list.widget('layer_input', 'Input', _input_properties_labels, self.input_props),
-                *property_list.widget('layer_output', 'Output', _output_properties_labels, self.output_props)]
+                *property_list.widget('layer_output', 'Output', _output_properties_labels, self.output_props),
+                *property_list.widget('layer_training', 'Training', _training_properties_labels, self.training_props)]
 
     def _get_unit_info(self, unit_idx, num_coef):
         """ Build HTML components for the unit information (tab) """
@@ -133,15 +133,15 @@ _structure_properties_labels = {'type': 'Layer type',
                                 'num_unit': "Num units",
                                 'strides': "Strides",
                                 'padding': 'Padding',
-                                'activation': 'Activation',
-                                'input_shape': 'Input shape',
-                                'output_shape': 'Output shape'}
+                                'activation': 'Activation'}
 _training_properties_labels = {'dropout': "Drop out (at input)",
                                'activity_regularizer': "Activity reg.",
                                'kernel_regularizer': "Kernel reg.",
                                'bias_regularizer': "Bias reg."}
-_input_properties_labels = {'batch_normalization': "Batch normalization"}
-_output_properties_labels = {'pooling': "Pooling"}
+_input_properties_labels = {'shape': "Shape",
+                            'batch_normalization': "Batch normalization"}
+_output_properties_labels = {'shape': "Shape",
+                             'pooling': "Pooling"}
 
 _unit_structure_properties_labels = {'num_coef': 'Num coefficients'}
 _unit_training_properties_labels = {'bias': 'Bias'}

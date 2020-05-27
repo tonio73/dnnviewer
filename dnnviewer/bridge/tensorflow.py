@@ -60,7 +60,7 @@ class NetworkExtractor:
         if len(self.model.layers[0].get_weights()) > 0:
             input_dim = self.model.layers[0].get_weights()[0].shape[-2]
             input_layer = Input('input', input_dim, theme, self.test_data.input_classes)
-            input_layer.structure_props['output_shape'] = self.model.layers[0].input_shape[1:]
+            input_layer.output_props['shape'] = self.model.layers[0].input_shape[1:]
             self.grapher.add_layer(input_layer)
             previous_layer = input_layer
 
@@ -101,12 +101,12 @@ class NetworkExtractor:
                 if isinstance(previous_layer, Convo2D):
                     previous_layer.flatten_output = True
                     # Update property on output shape
-                    previous_layer.structure_props['output_shape'] = "%s (flat)" % keras_layer.output_shape[1:]
+                    previous_layer.output_props['shape'] = "%s (flat)" % keras_layer.output_shape[1:]
                 elif previous_layer is None:
                     # Input layer
                     input_dim = keras_layer.get_output_shape_at(0)[-1]
                     layer = Input('input', input_dim, theme, self.test_data.input_classes)
-                    layer.structure_props['output_shape'] = keras_layer.output_shape[1:]
+                    layer.output_props['shape'] = keras_layer.output_shape[1:]
                     self.grapher.add_layer(layer)
                     previous_layer = layer
 
@@ -119,7 +119,7 @@ class NetworkExtractor:
                         pool_size = tuple(size)
                     previous_layer.output_props['pooling'] = str(pool_size)
                     # Update output shape on previous layer to take into account for the pooling
-                    previous_layer.structure_props['output_shape'] = keras_layer.output_shape[1:]
+                    previous_layer.output_props['shape'] = keras_layer.output_shape[1:]
                 else:
                     _logger.error('Unsupported pooling layer: %s', layer_class)
 
@@ -158,8 +158,8 @@ class NetworkExtractor:
         layer.input_props.update(layer_input_props)
 
         # Input-Output shape properties
-        layer.structure_props['input_shape'] = keras_layer.input_shape[1:]
-        layer.structure_props['output_shape'] = keras_layer.output_shape[1:]
+        layer.input_props['shape'] = keras_layer.input_shape[1:]
+        layer.output_props['shape'] = keras_layer.output_shape[1:]
 
         # Regularizers
         for reg_attr in ['activity_regularizer', 'bias_regularizer', 'kernel_regularizer']:
