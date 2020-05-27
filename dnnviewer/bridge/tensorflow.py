@@ -126,9 +126,11 @@ class NetworkExtractor:
             # Dropout layers
             elif layer_class in _dropout_layers:
                 if layer_class in _dropout_captions:
-                    rate = NetworkExtractor._get_keras_layer_attribute(keras_layer, 'rate')
+                    rate = NetworkExtractor._get_keras_layer_attribute(keras_layer, 'rate',  look_in_config=True)
+                    if rate is None:
+                        rate = '-'
                     next_layer_training_props['dropout'] = "%s (%s)" % \
-                                                           (_dropout_captions[layer_class], rate if rate is not None else '-')
+                                                           (_dropout_captions[layer_class], rate)
                 else:
                     _logger.error('Unsupported dropout layer: %s', layer_class)
 
@@ -161,7 +163,8 @@ class NetworkExtractor:
 
         # Regularizers
         for reg_attr in ['activity_regularizer', 'bias_regularizer', 'kernel_regularizer']:
-            reg = NetworkExtractor._get_keras_layer_attribute(keras_layer, reg_attr, ['l1', 'l2'], look_in_metadata=True)
+            attrs = ['l1', 'l2']
+            reg = NetworkExtractor._get_keras_layer_attribute(keras_layer, reg_attr, attrs, look_in_config=True)
             value = None
             if reg is not None:
 
@@ -178,6 +181,11 @@ class NetworkExtractor:
         # Bias
         if (not hasattr(keras_layer, 'use_bias') or keras_layer.use_bias) and keras_layer.bias is not None:
             layer.bias = keras_layer.bias.numpy()
+
+        # Activation
+        activation = NetworkExtractor._get_keras_layer_attribute(keras_layer, 'activation', look_in_config=True)
+        if activation is not None:
+            layer.structure_props['activation'] = _get_caption(activation, _activation_captions)
 
         self.grapher.add_layer(layer)
 
@@ -199,7 +207,7 @@ class NetworkExtractor:
             return None
 
     @staticmethod
-    def _get_keras_layer_attribute(keras_layer, attribute: str, sub_attr=None, look_in_metadata=False):
+    def _get_keras_layer_attribute(keras_layer, attribute: str, sub_attr=None, look_in_config=False):
         """
         Safely get the value of an attribute from a Keras layer
         - If sub_attr is set, will return a dictionary with the listed sub attributes
@@ -213,26 +221,25 @@ class NetworkExtractor:
             pass
 
         if value is not None:
-            if sub_attr is None:
-                return value
+            if sub_attr is not None:
 
-            # Return a dictionary with only the required sub-attributes
-            for sa in sub_attr:
-                try:
-                    ret_attr[sa] = getattr(value, sa)
-
-                except AttributeError:
-                    pass
-            return ret_attr
+                # Return a dictionary with only the required sub-attributes
+                for sa in sub_attr:
+                    try:
+                        ret_attr[sa] = getattr(value, sa)
+                    except AttributeError:
+                        pass
+                return ret_attr
 
         # Could not find the attribute
         # For some reason, saved models sometimes are squeezing some attributes but keep them in the metadata
-        if look_in_metadata:
-            metadata = json.loads(keras_layer._tracking_metadata)
-            if isinstance(metadata, dict) \
-                    and attribute in metadata['config'].keys() \
-                    and metadata['config'][attribute] is not None:
-                value = metadata['config'][attribute]['config']
+        if look_in_config:
+            config = keras_layer.get_config()
+            if config is not None and attribute in config.keys():
+                if isinstance(config[attribute], dict) and 'config' in config[attribute].keys():
+                    value = config[attribute]['config']
+                elif isinstance(config[attribute], (str, int, float)):
+                    value = config[attribute]
 
         if value is not None:
             if sub_attr is not None:
@@ -242,10 +249,9 @@ class NetworkExtractor:
                 for sa in sub_attr:
                     try:
                         ret_attr[sa] = value[sa]
-
                     except AttributeError:
                         pass
-            return ret_attr
+                return ret_attr
 
         return value
 
@@ -385,18 +391,17 @@ _optimizer_captions = {'adadelta': 'Adadelta algorithm',
                        'rmsprop': 'RMSprop algorithm',
                        'sgd': 'Stochastic gradient descent and momentum'}
 
-_activation_captions = dict(elu='Exponential linear unit',
-                            exponential='Exponential',
-                            hard_sigmoid='Hard sigmoid',
-                            linear='Linear',
-                            relu='Applies the rectified linear unit',
-                            selu='Scaled Exponential Linear Unit (SELU)',
-                            sigmoid='Sigmoid',
-                            softmax='Soft-max',
-                            softplus='Soft-plus',
-                            softsign='Soft-sign',
-                            swish='Swish',
-                            tanh='Hyperbolic tangent')
+_activation_captions = {'elu': 'Exponential linear unit',
+                        'exponential': 'Exponential',
+                        'hard_sigmoid': 'Hard sigmoid',
+                        'linear': 'Linear',
+                        'relu': 'Rectified linear unit',
+                        'selu': 'Scaled Exponential Linear Unit (SELU)',
+                        'sigmoid': 'Sigmoid', 'softmax': 'Soft-max',
+                        'softplus': 'Soft-plus',
+                        'softsign': 'Soft-sign',
+                        'swish': 'Swish',
+                        'tanh': 'Hyperbolic tangent'}
 
 _regularizers_captions = {'l1': 'L1 - Lasso (%s)' % float_fmt,
                           'l2': 'L2 - Ridge (%s)' % float_fmt,

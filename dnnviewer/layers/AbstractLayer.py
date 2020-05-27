@@ -126,19 +126,14 @@ class AbstractLayer:
 
 
 # Property labels
-_structure_properties_labels = dict(type='Layer type',
-                                    num_unit="Num units",
-                                    strides="Strides",
-                                    padding='Padding',
-                                    input_shape='Input shape',
-                                    output_shape='Output shape')
-_training_properties_labels = dict(dropout="Drop out (at input)",
-                                   activity_regularizer="Activity reg.",
-                                   kernel_regularizer="Kernel reg.",
-                                   bias_regularizer="Bias reg.")
-_input_properties_labels = dict(batch_normalization="Batch normalization")
-_output_properties_labels = dict(pooling="Pooling")
+_structure_properties_labels = {'type': 'Layer type', 'num_unit': "Num units", 'strides': "Strides",
+                                'padding': 'Padding', 'activation': 'Activation', 'input_shape': 'Input shape',
+                                'output_shape': 'Output shape'}
+_training_properties_labels = {'dropout': "Drop out (at input)", 'activity_regularizer': "Activity reg.",
+                               'kernel_regularizer': "Kernel reg.", 'bias_regularizer': "Bias reg."}
+_input_properties_labels = {'batch_normalization': "Batch normalization"}
+_output_properties_labels = {'pooling': "Pooling"}
 
-_unit_structure_properties_labels = dict(num_coef='Num coefficients')
-_unit_training_properties_labels = dict(bias='Bias')
+_unit_structure_properties_labels = {'num_coef': 'Num coefficients'}
+_unit_training_properties_labels = {'bias': 'Bias'}
 
