@@ -127,8 +127,10 @@ class Grapher:
     def get_model_tab_content(self, active_tab=None):
         """ Get the content of the selected tab """
         if active_tab == 'info':
-            return [*property_list.widget('model_structure', 'Structure', Grapher._structure_properties_labels, self.structure_props),
-                    *property_list.widget('model_training', 'Training', Grapher._training_properties_labels, self.training_props)]
+            return [*property_list.widget('model_structure', 'Structure',
+                                          Grapher._structure_properties_labels, self.structure_props),
+                    *property_list.widget('model_training', 'Training',
+                                          Grapher._training_properties_labels, self.training_props)]
         elif active_tab == 'config':
             return [html.Label('Show top n connections:'),
                     dcc.Slider(id='center-topn-criteria-slider',

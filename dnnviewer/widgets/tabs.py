@@ -30,4 +30,3 @@ def _get_graph_config():
                 modeBarButtonsToRemove=['lasso2d', 'resetScale2d', 'zoomIn2d', 'zoomOut2d',
                                         'toggleSpikelines', 'select2d',
                                         'hoverClosestCartesian', 'hoverCompareCartesian'])
-
