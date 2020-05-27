@@ -29,7 +29,7 @@ class BottomPane(AbstractPane):
         dummy_layer = AbstractLayer('dummy')
 
         if test_data.has_test_sample:
-            test_data_selector = [html.H5('Test sample'),
+            test_data_selector = [html.H5('Test sample', key='bottom-test-data-title-text'),
                                   dcc.Dropdown(
                                       id='bottom-select-test-sample',
                                       style={'marginTop': '12px'},
@@ -39,43 +39,47 @@ class BottomPane(AbstractPane):
                                                for i, c in
                                                enumerate(test_data.y[:self.max_test_samples])]
                                   ),
-                                  html.P([html.Img(id='bottom-test-sample-img', alt='Sample input')],
+                                  html.P(key='bottom-test-data-img-wrap',
+                                         children=[
+                                             html.Img(id='bottom-test-sample-img', key='bottom-test-data-img',
+                                                      alt='Sample input')],
                                          className='thumbnail', hidden=not test_data.has_test_sample)
                                   ]
         else:
-            test_data_selector = [html.H5('Test sample'),
-                                  html.P('No test data selected'),
+            test_data_selector = [html.H5('Test sample', key='bottom-test-data-title-text'),
+                                  html.P('No test data selected', key='bottom-test-data-default'),
                                   html.Div([dcc.Dropdown(id='bottom-select-test-sample'),
-                                            html.Img(id='bottom-test-sample-img')],
+                                            html.Img(id='bottom-test-sample-img', key='bottom-test-data-img')],
                                            hidden=True)]
 
         return dbc.Row(style={'marginTop': '10px', 'marginBottom': '20px'}, children=[
             # Input sample selection
             dbc.Col(md=2, align='start',
-                    children=html.Div(className='detail-section',
+                    children=html.Div(className='detail-section', key='bottom-test-data',
                                       children=test_data_selector)),
 
             # Layer information
             dbc.Col(md=3, align='start',
-                    children=html.Div(className='detail-section',
+                    children=html.Div(className='detail-section', key='bottom-layer',
                                       children=[html.Div(id='bottom-layer-title'),
-                                                html.Div(id='bottom-layer-tabs',
+                                                html.Div(id='bottom-layer-tabs', key='bottom-layer-tabs',
                                                          children=dummy_layer.get_layer_tabs())])
                     ),
 
             # Unit information
             dbc.Col(md=4, align='start',
-                    children=html.Div(className='detail-section',
-                                      children=[html.Div(id='bottom-unit-title', children=html.H5('Maps')),
-                                                html.Div(id='bottom-unit-tabs',
+                    children=html.Div(className='detail-section', key='bottom-unit',
+                                      children=[html.Div(id='bottom-unit-title', key='bottom-unit-title',
+                                                         children=html.H5('Maps', key='bottom-unit-title-text')),
+                                                html.Div(id='bottom-unit-tabs', key='bottom-unit-tabs',
                                                          children=dummy_layer.get_unit_tabs(0))])),
 
             #  Maps
             dbc.Col(md=3, align='start',
-                    children=html.Div(className='detail-section',
-                                      children=[html.Div(id='bottom-maps-title',
-                                                         children=html.H5('Maps')),
-                                                html.Div(id='bottom-maps-tabs',
+                    children=html.Div(className='detail-section', key='bottom-maps',
+                                      children=[html.Div(id='bottom-maps-title', key='bottom-maps-title',
+                                                         children=html.H5('Maps', key='bottom-maps-title-text')),
+                                                html.Div(id='bottom-maps-tabs', key='bottom-maps-tabs',
                                                          children=BottomPane._get_maps_tabs(None))]))
         ])
 

@@ -14,11 +14,11 @@ def make(prefix: str, tab_def, previous_active: str = None, default_tab_content=
 
     return [dbc.Tabs(id=prefix + "-tab-bar", active_tab=active_tab,
                      children=[dbc.Tab(label=tab_def[t], tab_id=t) for t in tab_def]),
-            html.Div(className="p-2 detail-tab border-left",
+            html.Div(className="p-2 detail-tab border-left", key=prefix + "-tab-wrap",
                      children=[
-                         html.Div(id=prefix + "-tab-content",
+                         html.Div(id=prefix + "-tab-content", key=prefix + "-tab-content-wrap",
                                   children=default_tab_content),
-                         html.Div(id=prefix + "-tab-figure", hidden=True,
+                         html.Div(id=prefix + "-tab-figure", hidden=True, key=prefix + "-tab-figure-wrap",
                                   children=dcc.Graph(id=prefix + '-figure',
                                                      config=_get_graph_config()))
                      ])]
