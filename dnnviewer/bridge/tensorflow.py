@@ -13,10 +13,10 @@ from ..theming.Theme import float_fmt
 import numpy as np
 from tensorflow import keras
 import tensorflow as tf
-import json
 import logging
 
 _logger = logging.getLogger(__name__)
+
 
 def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
     """ Map model level properties on grapher object """

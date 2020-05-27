@@ -10,7 +10,7 @@ import dash_html_components as html
 class AbstractLayer:
     """ Abstract layer representation in Viewer """
 
-    def __init__(self, name, type='unknown', num_unit=0, weights=None, grads=None,
+    def __init__(self, name, layer_type='unknown', num_unit=0, weights=None, grads=None,
                  theme: Theme = Theme(),
                  unit_names=None):
         self.name = name
@@ -19,7 +19,7 @@ class AbstractLayer:
         self.bias = None
         self.grads = grads
         self.unit_names = unit_names
-        self.structure_props = {'type': type, 'num_unit': num_unit}
+        self.structure_props = {'type': layer_type, 'num_unit': num_unit}
         self.training_props = {}
         self.input_props = {}
         self.output_props = {}
@@ -110,10 +110,11 @@ class AbstractLayer:
 
     def _get_layer_info(self):
         """ Build HTML components for the layer information (tab) """
-        return [*property_list.widget('Structure', _structure_properties_labels, self.structure_props),
-                *property_list.widget('Training', _training_properties_labels, self.training_props),
-                *property_list.widget('Input', _input_properties_labels, self.input_props),
-                *property_list.widget('Output', _output_properties_labels, self.output_props)]
+        return [*property_list.widget('layer_structure', 'Structure',
+                                      _structure_properties_labels, self.structure_props),
+                *property_list.widget('layer_training', 'Training', _training_properties_labels, self.training_props),
+                *property_list.widget('layer_input', 'Input', _input_properties_labels, self.input_props),
+                *property_list.widget('layer_output', 'Output', _output_properties_labels, self.output_props)]
 
     def _get_unit_info(self, unit_idx, num_coef):
         """ Build HTML components for the unit information (tab) """
@@ -121,19 +122,26 @@ class AbstractLayer:
         unit_training_props = {}
         if self.bias is not None:
             unit_training_props['bias'] = float_fmt % self.bias[unit_idx]
-        return [*property_list.widget('Structure', _unit_structure_properties_labels, unit_structure_props),
-                *property_list.widget('Training', _unit_training_properties_labels, unit_training_props)]
+        return [*property_list.widget('unit_structure', 'Structure',
+                                      _unit_structure_properties_labels, unit_structure_props),
+                *property_list.widget('unit_training', 'Training',
+                                      _unit_training_properties_labels, unit_training_props)]
 
 
 # Property labels
-_structure_properties_labels = {'type': 'Layer type', 'num_unit': "Num units", 'strides': "Strides",
-                                'padding': 'Padding', 'activation': 'Activation', 'input_shape': 'Input shape',
+_structure_properties_labels = {'type': 'Layer type',
+                                'num_unit': "Num units",
+                                'strides': "Strides",
+                                'padding': 'Padding',
+                                'activation': 'Activation',
+                                'input_shape': 'Input shape',
                                 'output_shape': 'Output shape'}
-_training_properties_labels = {'dropout': "Drop out (at input)", 'activity_regularizer': "Activity reg.",
-                               'kernel_regularizer': "Kernel reg.", 'bias_regularizer': "Bias reg."}
+_training_properties_labels = {'dropout': "Drop out (at input)",
+                               'activity_regularizer': "Activity reg.",
+                               'kernel_regularizer': "Kernel reg.",
+                               'bias_regularizer': "Bias reg."}
 _input_properties_labels = {'batch_normalization': "Batch normalization"}
 _output_properties_labels = {'pooling': "Pooling"}
 
 _unit_structure_properties_labels = {'num_coef': 'Num coefficients'}
 _unit_training_properties_labels = {'bias': 'Bias'}
-
