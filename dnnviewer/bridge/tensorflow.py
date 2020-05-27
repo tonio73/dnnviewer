@@ -161,21 +161,17 @@ class NetworkExtractor:
 
         # Regularizers
         for reg_attr in ['activity_regularizer', 'bias_regularizer', 'kernel_regularizer']:
-            reg = NetworkExtractor._get_keras_layer_attribute(keras_layer, reg_attr, look_in_metadata=True)
+            reg = NetworkExtractor._get_keras_layer_attribute(keras_layer, reg_attr, ['l1', 'l2'], look_in_metadata=True)
             value = None
             if reg is not None:
-                if isinstance(reg, dict):
-                    l1, l2 = reg['l1'], reg['l2']
-                else:
-                    l1, l2 = reg.l1, reg.l2
 
-                if l1:
-                    if l2:
-                        value = _regularizers_captions['l1_l2'] % (l1, l2)
+                if reg['l1']:
+                    if reg['l2']:
+                        value = _regularizers_captions['l1_l2'] % (reg['l1'], reg['l2'])
                     else:
-                        value = _regularizers_captions['l1'] % l1
-                elif l2:
-                    value = _regularizers_captions['l2'] % l2
+                        value = _regularizers_captions['l1'] % reg['l1']
+                elif reg['l2']:
+                    value = _regularizers_captions['l2'] % reg['l2']
             if value:
                 layer.training_props[reg_attr] = value
 
@@ -223,7 +219,7 @@ class NetworkExtractor:
             # Return a dictionary with only the required sub-attributes
             for sa in sub_attr:
                 try:
-                    ret_attr[sa] = _get_caption(value, sa)
+                    ret_attr[sa] = getattr(value, sa)
 
                 except AttributeError:
                     pass
@@ -238,13 +234,14 @@ class NetworkExtractor:
                     and metadata['config'][attribute] is not None:
                 value = metadata['config'][attribute]['config']
 
-        if sub_attr is not None:
-            if value is not None:
+        if value is not None:
+            if sub_attr is not None:
+
                 # Return only requested sub-attributes as dictionary
                 # Return a dictionary with only the required sub-attributes
                 for sa in sub_attr:
                     try:
-                        ret_attr[sa] = _get_caption(value, sa)
+                        ret_attr[sa] = value[sa]
 
                     except AttributeError:
                         pass
