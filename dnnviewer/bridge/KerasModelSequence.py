@@ -10,6 +10,7 @@ from pathlib import Path
 import glob
 import re
 import logging
+import traceback
 
 
 class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
@@ -63,25 +64,25 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
                 dir_path = Path(path)
 
                 # HDF5 & TF files
-                model_glob_hdf5 = dir_path / '*.h5'
+                model_glob_hdf5 = str(dir_path / '*.h5')
                 model_path_list = glob.glob(model_glob_hdf5)
                 models.extend(model_path_list)
-                model_glob_tf = dir_path / '*.tf'
+                model_glob_tf = str(dir_path / '*.tf')
                 model_path_list = glob.glob(model_glob_tf)
                 models.extend(model_path_list)
 
                 # Checkpoints using pattern
-                model_glob_seq = dir_path / seq_pat1
+                model_glob_seq = str(dir_path / seq_pat1)
                 model_path_list = glob.glob(model_glob_seq)
                 # Detect unique models
-                reg1 = re.compile(dir_path / seq_pat2)
-                seq_model_path_list = [reg1.search(path).group(1) for path in model_path_list]
-                model_path_list = [dir_path / model_sequence_pattern.replace('{model}', m)
+                reg2 = re.compile(seq_pat2)
+                seq_model_path_list = [reg2.search(path).group(1) for path in model_path_list]
+                model_path_list = [str(dir_path / model_sequence_pattern.replace('{model}', m))
                                    for m in set(seq_model_path_list)]
                 models.extend(model_path_list)
         except Exception as e:
             logger.warning('Failed to list directories')
-            logger.debug('Exception message: %s', e)
+            logger.debug(traceback.format_exc(e))
         models.sort()
         return models
 
