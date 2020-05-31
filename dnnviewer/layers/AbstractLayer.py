@@ -63,9 +63,7 @@ class AbstractLayer:
     # @abstract
     def get_layer_tabs(self, previous_active: str = None):
         """ Get the layer tab bar and layout function """
-        return tabs.make('bottom-layer', {}, previous_active,
-                         # The graph needs always to be defined at init to check associated callback
-                         html.Div(dcc.Graph(id='bottom-layer-figure'), hidden=True))
+        return tabs.make('bottom-layer', {}, previous_active)
 
     # @abstract
     def get_layer_tab_content(self, active_tab: str, unit_idx=None):
