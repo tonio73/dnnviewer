@@ -1,9 +1,12 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from dash.exceptions import CallbackException
 import flask
 
 import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class Router:
@@ -11,6 +14,7 @@ class Router:
 
     def __init__(self):
         self.pages = {}
+        self.previous_path = ''
 
     def add_route(self, path, page):
         self.pages[path] = page
@@ -27,14 +31,14 @@ class Router:
 
     def callbacks(self, app):
 
-        logger = logging.getLogger(__name__)
-
         @app.callback(Output('page-content', 'children'),
                       [Input('url-path', 'pathname')])
         def dispatch(path_name):
             has_request = flask.has_request_context()
 
-            logger.info("Reaching path %s", path_name)
+            # Work around double firing of route : https://github.com/plotly/dash/issues/1049
+            _logger.info("Reaching path: %s, previous: %s", path_name, self.previous_path)
+            self.previous_path = path_name
 
             if has_request and path_name in self.pages:
                 return self.pages[path_name].layout(True)

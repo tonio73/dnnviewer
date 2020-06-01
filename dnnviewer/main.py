@@ -5,7 +5,7 @@
 from .main_model_selection import MainModelSelection
 from .main_network_view import MainNetworkView
 from .TestData import TestData
-from .bridge import tensorflow_datasets as tf_bridge
+from .Grapher import Grapher
 from .bridge.KerasModelSequence import KerasModelSequence
 from .widgets.Router import Router
 from .widgets import font_awesome
@@ -60,32 +60,33 @@ def run_app(args):
                     external_stylesheets=[dbc.themes.BOOTSTRAP, font_awesome.CDN_CSS_URL])
     app.title = 'DNN Viewer'
 
+    # Parameters for model selection
+    model_selection = {}
+
     # Test data
     test_data = TestData()
-    if args.test_dataset:
-        tf_bridge.keras_load_test_data(args.test_dataset, test_data)
-        if not test_data.has_test_sample:
-            logger.error('Unable to load dataset %s', args.test_dataset)
+    model_selection['test_dataset'] = args.test_dataset
 
     # Model sequence : currently only supporting from Keras
     model_sequence = KerasModelSequence(test_data)
 
     # Initialize the model sequence
-    if args.model_keras:
-        # Create all other layers from the Keras Sequential model
-        model_sequence.load_single(args.model_keras)
-    elif args.sequence_keras:
-        model_sequence.load_sequence(args.sequence_keras)
+    model_selection['model'] = args.model_keras
+    model_selection['sequence'] = args.sequence_keras
+    preselection = True and model_selection['model'] or model_selection['sequence']
+
+    # Model selection
+    if args.model_directories:
+        model_selection['directories'] = args.model_directories.split(',')
+    else:
+        model_selection['directories'] = []
+    model_selection['pattern'] = args.sequence_pattern
 
     # Top level pages
+    grapher = Grapher()
     router = Router()
-    if model_sequence.number_epochs > 0:
-        # Model already selected => single page on the main network view
-        router.add_route('/', MainNetworkView(app, model_sequence, test_data, False))
-    else:
-        router.add_route('/', MainModelSelection(app, model_sequence, test_data,
-                                                 args.model_directories.split(','), args.sequence_pattern))
-        router.add_route('/network-view', MainNetworkView(app, model_sequence, test_data, True))
+    router.add_route('/', MainModelSelection(app, model_selection, model_sequence, test_data, grapher))
+    router.add_route('/network-view', MainNetworkView(app, model_sequence, test_data, grapher, not preselection))
 
     def main_layout():
         return router.layout()
@@ -101,6 +102,7 @@ def run_app(args):
     # Run the server, will call the layout
     app.run_server(debug=args.debug)
 
+    app.serve_routes()
 
 def main():
     """ Application main entry point """
