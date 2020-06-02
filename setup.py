@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='dnnviewer',
-    version='0.1.0.dev11',
+    version='0.1.0.dev12',
     author='A. Hue',
     url='https://github.com/tonio73/dnnviewer',
     license='MIT',
