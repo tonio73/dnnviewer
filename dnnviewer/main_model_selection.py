@@ -30,6 +30,12 @@ class MainModelSelection(AbstractDashboard):
         self.test_data = test_data
         self.grapher = grapher
         self.progress = Progress()
+        self.model_path = None
+
+    def reset(self):
+
+        self.progress.reset()
+
         # Preselected model path if any
         self.model_path = (self.model_selection['model'] or self.model_selection['sequence'])
 
@@ -39,19 +45,20 @@ class MainModelSelection(AbstractDashboard):
     def layout(self, has_request: bool):
         """ @return layout """
 
+        if has_request:
+            self.reset()
+
         # Directly go to loading if pre-selection
         loading = True if self.model_path else False
 
         return dbc.Container([dcc.Interval(id='model-selection-loading-refresh', interval=500, disabled=not loading,
-                                           max_intervals=10),
+                                           max_intervals=100),
+                              html.H1([font_awesome.icon('binoculars'),
+                                       html.Span('Deep Neural Network Viewer',
+                                                 style={'marginLeft': '15px'})]),
                               html.Div(id='model-selection-loading', hidden=not loading),
                               html.Div(id='model-selection-wrap', hidden=loading,
-                                       children=[html.H1([font_awesome.icon('binoculars'),
-                                                          html.Span('Deep Neural Network Viewer',
-                                                                    style={'marginLeft': '15px'}),
-                                                          ]),
-                                                 self._model_selection_form()
-                                                 ])
+                                       children=self._model_selection_form())
                               ])
 
     def callbacks(self):
@@ -76,11 +83,11 @@ class MainModelSelection(AbstractDashboard):
                            [Input('model-selection-loading-refresh', 'n_intervals')])
         def loading_completed(n_intervals):
             if n_intervals is None:
-                _logger.warning('Prevent URL redirect as refresh counter undefined')
+                _logger.debug('Prevent URL redirect as refresh counter undefined')
                 raise PreventUpdate
 
             if self.progress.num_steps is None:
-                _logger.warning('Prevent URL redirect as progress setup incomplete')
+                _logger.debug('Prevent URL redirect as progress setup incomplete')
                 raise PreventUpdate
 
             status = self.progress.get_status()
@@ -88,8 +95,8 @@ class MainModelSelection(AbstractDashboard):
                 # Loading incomplete
                 raise PreventUpdate
 
-            if status[2] == Progress.ERROR:
-                _logger.warning('Prevent URL redirect as loading completed with error')
+            if status[1] == Progress.ERROR:
+                _logger.debug('Prevent URL redirect as loading completed with error')
                 raise PreventUpdate
 
             return '/network-view'
@@ -98,18 +105,21 @@ class MainModelSelection(AbstractDashboard):
                            [Input('model-selection-loading-refresh', 'n_intervals')])
         def model_loading_progress(n_intervals):
             if n_intervals is None:
-                _logger.warning('Prevent loading status update')
+                _logger.debug('Prevent loading status update')
                 raise PreventUpdate
 
             if self.progress.num_steps is None:
-                _logger.warning('Prevent loading status update as progress setup incomplete')
+                _logger.debug('Prevent loading status update as progress setup incomplete')
                 raise PreventUpdate
 
-            progress_message = '%d/%d - %s' % \
-                               (self.progress.current_step, self.progress.num_steps, self.progress.get_status()[2])
-
-            return [html.H1('Loading model "%s"' % self.model_path),
-                    html.H2(progress_message)]
+            status = self.progress.get_status()
+            progress_color = "danger" if status[1] == Progress.ERROR else "info"
+            progress_message = 'Step %d - %s' % (self.progress.current_step, status[2])
+            progress_percent = int(self.progress.current_step / self.progress.num_steps * 100)
+            return [html.H2('Loading model "%s"' % self.model_path),
+                    dbc.Progress(value=progress_percent, striped=True, color=progress_color),
+                    html.H3(progress_message),
+                    html.H3('On going: %s' % self.progress.next if self.progress.next else '')]
 
         @self.app.callback(Output('model-selection-submit', 'disabled'),
                            [Input('model-selection-dropdown', 'value')])
@@ -165,6 +175,7 @@ def load_model_and_data(self, model_path, test_dataset_id):
 
     _logger.info("Start loading model '%s'", model_path)
 
+    # Load sequence, test dataset, model #0
     num_steps = 3 if test_dataset_id is not None else 2
     self.progress.reset(num_steps)
     self.test_data.reset()
@@ -186,7 +197,7 @@ def load_model_and_data(self, model_path, test_dataset_id):
         tf_ds_bridge.keras_load_test_data(test_dataset_id, self.test_data)
         if not self.test_data.has_test_sample:
             _logger.error('Unable to load dataset %s', test_dataset_id)
-            self.progress.forward(0, Progress.ERROR, 'Unable to load dataset %s' % test_dataset_id)
+            self.progress.forward(1, Progress.ERROR, 'Unable to load dataset %s' % test_dataset_id)
             return
         self.progress.forward(1, Progress.INFO, "Test dataset loaded")
 
@@ -196,8 +207,11 @@ def load_model_and_data(self, model_path, test_dataset_id):
         # Force loading first model of sequence
         self.model_sequence.first_epoch(self.grapher)
     except ModelError as e:
-        self.progress.forward(0, Progress.ERROR, "Error while loading model: %s" % e.message)
+        self.progress.forward(1, Progress.ERROR, "Error while loading model: %s" % e.message)
         return
 
     _logger.info("Model loaded '%s'", model_path)
     self.progress.forward(1, Progress.INFO, "Model loaded")
+
+    self.progress.set_next('Opening the main dashboard')
+
