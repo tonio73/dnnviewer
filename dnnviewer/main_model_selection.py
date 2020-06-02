@@ -1,5 +1,9 @@
-from . import AbstractDashboard, TestData, Grapher
+from . import AbstractDashboard
+from .TestData import TestData
+from .Grapher import Grapher
+from .Progress import Progress
 from .bridge import AbstractModelSequence, tensorflow_datasets as tf_ds_bridge
+from .bridge.AbstractModelSequence import ModelError
 from .widgets import font_awesome
 
 import dash_core_components as dcc
@@ -9,6 +13,8 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
 import logging
+# Using Threads until asyncio is supported by Flask
+from threading import Thread
 
 _logger = logging.getLogger(__name__)
 
@@ -16,24 +22,30 @@ _logger = logging.getLogger(__name__)
 class MainModelSelection(AbstractDashboard):
     """ Select model (sequence) and test data """
 
-    def __init__(self, app, model_selection, model_sequence: AbstractModelSequence, test_data: TestData.TestData,
+    def __init__(self, app, model_selection, model_sequence: AbstractModelSequence, test_data: TestData,
                  grapher: Grapher):
         self.app = app
         self.model_selection = model_selection
         self.model_sequence = model_sequence
         self.test_data = test_data
         self.grapher = grapher
+        self.progress = Progress()
+        # Preselected model path if any
+        self.model_path = (self.model_selection['model'] or self.model_selection['sequence'])
+
+        if self.model_path is not None:
+            self._load_model(self.model_path, self.model_selection['test_dataset'])
 
     def layout(self, has_request: bool):
         """ @return layout """
 
-        model_path = (self.model_selection['model'] or self.model_selection['sequence'])
-        preselection = True if model_path else False
-        return dbc.Container([dcc.Interval(id='model-selection-preselect', interval=500, disabled=not preselection,
-                                           max_intervals=1),
-                              html.Div(hidden=not preselection,
-                                       children=html.H1('Selected model: %s' % model_path)),
-                              html.Div(hidden=preselection,
+        # Directly go to loading if pre-selection
+        loading = True if self.model_path else False
+
+        return dbc.Container([dcc.Interval(id='model-selection-loading-refresh', interval=500, disabled=not loading,
+                                           max_intervals=10),
+                              html.Div(id='model-selection-loading', hidden=not loading),
+                              html.Div(id='model-selection-wrap', hidden=loading,
                                        children=[html.H1([font_awesome.icon('binoculars'),
                                                           html.Span('Deep Neural Network Viewer',
                                                                     style={'marginLeft': '15px'}),
@@ -44,36 +56,60 @@ class MainModelSelection(AbstractDashboard):
 
     def callbacks(self):
         """ Setup callbacks """
-
-        @self.app.callback(Output('url-path', 'pathname'),
-                           [Input('model-selection-submit', 'n_clicks'),
-                            Input('model-selection-preselect', 'n_intervals')],
+        @self.app.callback([Output('model-selection-loading-refresh', 'disabled'),
+                            Output('model-selection-loading', 'hidden'),
+                            Output('model-selection-wrap', 'hidden')],
+                           [Input('model-selection-submit', 'n_clicks')],
                            [State('model-selection-dropdown', 'value'),
                             State('test-data-selection-dropdown', 'value')])
-        def url_redirect(n_clicks, n_intervals, model_path, test_dataset_id):
-            if n_clicks is None and n_intervals is None:
-                _logger.warning('Prevent URL path to /network_view since n_clicks=%s', n_clicks)
+        def load_model(n_clicks, model_path, test_dataset_id):
+            if n_clicks is None:
+                _logger.warning('Prevent loading since n_clicks=%s', n_clicks)
                 raise PreventUpdate
 
-            if '{epoch}' in model_path:
-                self.model_sequence.load_sequence(model_path)
-            else:
-                self.model_sequence.load_single(model_path)
+            self.model_path = model_path
+            self._load_model(model_path, test_dataset_id)
 
-            # Force loading first model of sequence
-            self.model_sequence.first_epoch(self.grapher)
+            return False, False, True
 
-            if self.model_sequence.number_epochs == 0:
-                _logger.error('No model loaded in sequence from path: %s', model_path)
+        @self.app.callback(Output('url-path', 'pathname'),
+                           [Input('model-selection-loading-refresh', 'n_intervals')])
+        def loading_completed(n_intervals):
+            if n_intervals is None:
+                _logger.warning('Prevent URL redirect as refresh counter undefined')
                 raise PreventUpdate
 
-            self.test_data.reset()
-            if test_dataset_id is not None:
-                tf_ds_bridge.keras_load_test_data(test_dataset_id, self.test_data)
-                if not self.test_data.has_test_sample:
-                    _logger.error('Unable to load dataset %s', test_dataset_id)
+            if self.progress.num_steps is None:
+                _logger.warning('Prevent URL redirect as progress setup incomplete')
+                raise PreventUpdate
+
+            status = self.progress.get_status()
+            if status[0] < self.progress.num_steps:
+                # Loading incomplete
+                raise PreventUpdate
+
+            if status[2] == Progress.ERROR:
+                _logger.warning('Prevent URL redirect as loading completed with error')
+                raise PreventUpdate
 
             return '/network-view'
+
+        @self.app.callback(Output('model-selection-loading', 'children'),
+                           [Input('model-selection-loading-refresh', 'n_intervals')])
+        def model_loading_progress(n_intervals):
+            if n_intervals is None:
+                _logger.warning('Prevent loading status update')
+                raise PreventUpdate
+
+            if self.progress.num_steps is None:
+                _logger.warning('Prevent loading status update as progress setup incomplete')
+                raise PreventUpdate
+
+            progress_message = '%d/%d - %s' % \
+                               (self.progress.current_step, self.progress.num_steps, self.progress.get_status()[2])
+
+            return [html.H1('Loading model "%s"' % self.model_path),
+                    html.H2(progress_message)]
 
         @self.app.callback(Output('model-selection-submit', 'disabled'),
                            [Input('model-selection-dropdown', 'value')])
@@ -117,3 +153,51 @@ class MainModelSelection(AbstractDashboard):
             dbc.Row([dbc.Col(dbc.Button("OK", id='model-selection-submit', color='primary', block=True), xs=2),
                      dbc.Col(dbc.Button(id='model-selection-refresh', children=font_awesome.icon('sync')))])
         ])
+
+    def _load_model(self, model_path, test_dataset_id):
+        thread = Thread(target=load_model_and_data, args=(self, model_path, test_dataset_id))
+        thread.daemon = True
+        thread.start()
+
+
+def load_model_and_data(self, model_path, test_dataset_id):
+    """ Perform model and test data loading within thread """
+
+    _logger.info("Start loading model '%s'", model_path)
+
+    num_steps = 3 if test_dataset_id is not None else 2
+    self.progress.reset(num_steps)
+    self.test_data.reset()
+
+    if '{epoch}' in model_path:
+        self.model_sequence.load_sequence(model_path)
+    else:
+        self.model_sequence.load_single(model_path)
+
+    if self.model_sequence.number_epochs == 0:
+        _logger.error('No model loaded in sequence from path: %s', model_path)
+        self.progress.forward(1, Progress.ERROR, "Model sequence is empty")
+        return
+
+    self.progress.forward(1, Progress.INFO, "Model sequence initialized")
+
+    if test_dataset_id is not None:
+        self.progress.set_next("Loading test data (may take some time if download is necessary")
+        tf_ds_bridge.keras_load_test_data(test_dataset_id, self.test_data)
+        if not self.test_data.has_test_sample:
+            _logger.error('Unable to load dataset %s', test_dataset_id)
+            self.progress.forward(0, Progress.ERROR, 'Unable to load dataset %s' % test_dataset_id)
+            return
+        self.progress.forward(1, Progress.INFO, "Test dataset loaded")
+
+    self.progress.set_next("Load model")
+
+    try:
+        # Force loading first model of sequence
+        self.model_sequence.first_epoch(self.grapher)
+    except ModelError as e:
+        self.progress.forward(0, Progress.ERROR, "Error while loading model: %s" % e.message)
+        return
+
+    _logger.info("Model loaded '%s'", model_path)
+    self.progress.forward(1, Progress.INFO, "Model loaded")

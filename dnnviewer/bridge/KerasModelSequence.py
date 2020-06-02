@@ -107,7 +107,7 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         model_path = Path(self.model_paths[model_index])
 
         if not model_path.exists():
-            raise ModelError('Model path not found %s' % str(model_path))
+            raise ModelError("Model path not found '%s'" % str(model_path))
 
         self.current_model = keras.models.load_model(str(model_path))
 

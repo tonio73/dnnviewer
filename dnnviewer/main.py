@@ -15,6 +15,7 @@ import dash_bootstrap_components as dbc
 
 import argparse
 import logging
+import asyncio
 
 
 def parse_arguments():
@@ -38,7 +39,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def run_app(args):
+async def run_app(args):
     """ Run the app """
 
     logger = logging.getLogger('dnnviewer')
@@ -104,7 +105,8 @@ def run_app(args):
 
     app.serve_routes()
 
+
 def main():
     """ Application main entry point """
     args = parse_arguments()
-    run_app(args)
+    asyncio.run(run_app(args))
