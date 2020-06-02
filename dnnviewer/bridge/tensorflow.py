@@ -123,6 +123,18 @@ class NetworkExtractor:
                 else:
                     _logger.error('Unsupported pooling layer: %s', layer_class)
 
+            # Activation standelone layer => add to previous layer
+            elif layer_class == 'Activation':
+                if previous_layer is not None:
+                    # Note: if previous layer already has an activation that is not "linear",
+                    #   this property is overridden
+                    activation = NetworkExtractor._get_keras_layer_attribute(keras_layer, 'activation',
+                                                                             look_in_config=True)
+                    previous_layer.structure_props['activation'] = _get_caption(activation, _activation_captions)
+                else:
+                    # Unusual case in which first layer is activation => report ignored
+                    _logger.error('Unsupported activation layer as first layer')
+
             # Dropout layers
             elif layer_class in _dropout_layers:
                 if layer_class in _dropout_captions:
@@ -337,8 +349,7 @@ _pooling_layers = {
 _dropout_layers = ['Dropout',
                    'SpatialDropout1D', 'SpatialDropout2D', 'SpatialDropout3D']
 
-_keras_ignored_layers = ['ActivityRegularization',
-                         'Activation']
+_keras_ignored_layers = ['ActivityRegularization']
 
 # Captions
 _pooling_captions = {
