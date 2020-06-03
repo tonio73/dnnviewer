@@ -22,6 +22,10 @@ _logger = logging.getLogger(__name__)
 class MainModelSelection(AbstractDashboard):
     """ Select model (sequence) and test data """
 
+    supported_tasks = {'classification': "Classification (generic)",
+                       'classification_image': "Image classification",
+                       'misc': 'Other'}
+
     def __init__(self, app, model_selection, model_sequence: AbstractModelSequence, test_data: TestData,
                  grapher: Grapher):
         self.app = app
@@ -122,9 +126,11 @@ class MainModelSelection(AbstractDashboard):
                     html.H3('On going: %s' % self.progress.next if self.progress.next else '')]
 
         @self.app.callback(Output('model-selection-submit', 'disabled'),
-                           [Input('model-selection-dropdown', 'value')])
-        def model_validate(model_path):
-            return model_path is None or len(model_path) == 0
+                           [Input('task-selection-dropdown', 'value'),
+                            Input('model-selection-dropdown', 'value')])
+        def model_validate(task, model_path):
+            return task is None or len(task) == 0 \
+                    or model_path is None or len(model_path) == 0
 
         @self.app.callback(Output('model-selection-dropdown', 'options'),
                            [Input('model-selection-refresh', 'n_clicks')])
@@ -143,6 +149,14 @@ class MainModelSelection(AbstractDashboard):
         test_datasets = tf_ds_bridge.keras_test_data_listing()
 
         return dbc.Form([
+            # Model selection
+            dbc.FormGroup([
+                dbc.Label("What is the task?"),
+                dcc.Dropdown(id='task-selection-dropdown',
+                             value=None,
+                             options=[{'label': item[1], 'value': item[0]} for item in self.supported_tasks.items()]
+                             )
+            ]),
             # Model selection
             dbc.FormGroup([
                 dbc.Label("Select a DNN model"),
@@ -208,6 +222,9 @@ def load_model_and_data(self, model_path, test_dataset_id):
         self.model_sequence.first_epoch(self.grapher)
     except ModelError as e:
         self.progress.forward(1, Progress.ERROR, "Error while loading model: %s" % e.message)
+        return
+    except Exception as e:
+        self.progress.forward(1, Progress.ERROR, "Error while loading model: %s" % str(e))
         return
 
     _logger.info("Model loaded '%s'", model_path)

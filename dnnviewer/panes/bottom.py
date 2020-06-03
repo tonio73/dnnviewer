@@ -110,8 +110,12 @@ class BottomPane(AbstractPane):
                 layer = AbstractLayer('dummy')
             layer_title = layer.get_layer_title()
             layer_tabs = layer.get_layer_tabs(active_layer_tab)
-            unit_title = layer.get_unit_title(selected_unit['unit_idx'])
-            unit_tabs = layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
+            if selected_unit:
+                unit_title = layer.get_unit_title(selected_unit['unit_idx'])
+                unit_tabs = layer.get_unit_tabs(selected_unit['unit_idx'], active_unit_tab)
+            else:
+                unit_title = ''
+                unit_tabs = AbstractLayer.get_unit_tabs(layer, 0)
             return layer_title, layer_tabs, unit_title, unit_tabs
 
         @app.callback(Output('center-main-view', 'clickData'),
