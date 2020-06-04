@@ -43,19 +43,19 @@ $ dnnviewer --model-directories dnnviewer-data/models,dnnviewer-data/models/Fash
 
 Then select the network model and the corresponding test data (optional) on the user interface
 
-![Model selection UI](assets/screenshots/select_model1.png)
+<img src="assets/screenshots/select_model2.png" alt="Model selection UI" style="zoom:40%;" />
 
 Models containing the '{epoch}' tag are sequences over epochs. They are detected based on the pattern set by 
-command line option `--sequence-pattern` whose default is `{model}_{epoch}
+command line option `--sequence-pattern` whose default is `{model}_{epoch}`
 
 ### Loading a single model
 
-Keras models are loaded from Checkpoint or HDF5 format with option `--model-keras <file>`
+Keras models are loaded from *Tensorflow Checkpoint* or *HDF5* format with option `--model-keras <file>`
 
-#### CIFAR-10 Convolutional neural network
+#### CIFAR-10 Convolutional neural network (at the beginning of training)
 
 ```shell
-$ dnnviewer --model-keras dnnviewer-data/models/CIFAR-10_CNN5.h5 --test-dataset cifar-10
+$ dnnviewer --model-keras dnnviewer-data/models/CIFAR-10_CNN5-Reg.tf --test-dataset cifar-10
 ```
 
 #### MNIST Convolutional neural network based on LeNet5
@@ -66,7 +66,7 @@ $ dnnviewer --model-keras dnnviewer-data/models/MNIST_LeNet60.h5 --test-dataset 
 
 ### Loading several epochs of a model
 
-Series of models along training epochs are loaded using the argument `--sequence-keras <path>` and the pattern `{epoch}` within the provided path. See below on how to generate these checkpoints.
+Series of models along training epochs are loaded using the argument `--sequence-keras <path>` and the pattern `{model}_{epoch}` within the provided path. See below on how to generate these checkpoints.
 
 #### Fashion MNIST convolutionnal network
 
@@ -122,12 +122,14 @@ hist1 = model1.fit(train_images, train_labels,
   - Convolution 2D
   - Flatten
   - Input
-- Ignored layers (no impact on the representation)
+- Following layers are added as attributes to the previous or next layer
   - Dropout, ActivityRegularization, SpatialDropout1D/2D/3D
   - All pooling layers
   - BatchNormalization
   - Activation
 - Unsupported layers
+  - Convolution 1D and 3D
+  - Transpose convolution 2D and 3D
   - Reshape, Permute, RepeatVector, Lambda, Masking
   - Recurrent layers (LSTM, GRU...)
   - Embedding layers
