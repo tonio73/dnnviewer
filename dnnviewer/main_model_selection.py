@@ -231,4 +231,3 @@ def load_model_and_data(self, model_path, test_dataset_id):
     self.progress.forward(1, Progress.INFO, "Model loaded")
 
     self.progress.set_next('Opening the main dashboard')
-

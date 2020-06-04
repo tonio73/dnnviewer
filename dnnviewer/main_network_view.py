@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 import dash_html_components as html
 import dash_core_components as dcc
 
+
 class MainNetworkView(AbstractDashboard):
 
     """ Main dashboard with three panes:
@@ -38,8 +39,9 @@ class MainNetworkView(AbstractDashboard):
             # Layout
             if self.model_sequence.number_epochs == 0:
                 if self.enable_navigation:
+                    style = {'margin-left': '15px'}
                     return_selection = dcc.Link(html.H3([font_awesome.icon('arrow-left'),
-                                                         html.Span('Back to model selection', style={'margin-left': '15px'})]), href='/')
+                                                         html.Span('Back to model selection', style=style)]), href='/')
                 else:
                     return_selection = html.P()
 
