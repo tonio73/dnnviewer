@@ -29,15 +29,19 @@ class BottomPane(AbstractPane):
         dummy_layer = AbstractLayer('dummy')
 
         if test_data.has_test_sample:
+            if test_data.output_classes is not None:
+                test_data_captions = [{'label': "%d (%s)" % (i, test_data.output_classes[c]),
+                                       'value': i}
+                                      for i, c in enumerate(test_data.y[:self.max_test_samples])]
+            else:
+                test_data_captions = [{'label': "%d (%s)" % (i, c), 'value': i}
+                                      for i, c in enumerate(test_data.y[:self.max_test_samples])]
             test_data_selector = [html.H5('Test sample', key='bottom-test-data-title-text'),
                                   dcc.Dropdown(
                                       id='bottom-select-test-sample',
                                       style={'marginTop': '12px'},
                                       value=self.test_sample_init,
-                                      options=[{'label': "%d (%s)" % (i, test_data.output_classes[c]),
-                                                'value': i}
-                                               for i, c in
-                                               enumerate(test_data.y[:self.max_test_samples])]
+                                      options=test_data_captions
                                   ),
                                   html.P(key='bottom-test-data-img-wrap',
                                          children=[

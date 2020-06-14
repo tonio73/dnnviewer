@@ -35,6 +35,37 @@ Top level class it the dnnviewer.Grapher. It holds a collection of layers based 
 
 Within `dnnviewer.bridge` is the code to load a DNN model in Keras and extract the DNN topology, weights, compute the gradients and activations
 
+# Launching the application while developping
+
+## Preselect model and data
+
+#### CIFAR-10 Convolutional neural network (at the beginning of training, single model)
+
+```shell
+$ dnnviewer --model-keras dnnviewer-data/models/CIFAR-10_CNN5-Reg.tf --test-dataset cifar10
+```
+
+#### MNIST Convolutional neural network based on LeNet5 (single model)
+
+```shell
+$ dnnviewer --model-keras dnnviewer-data/models/MNIST_LeNet60.h5 --test-dataset mnist
+```
+
+#### Fashion MNIST convolutionnal network (sequence of models)
+
+```shell
+$ dnnviewer --sequence-keras "dnnviewer-data/models/FashionMNIST_checkpoints/model1_{epoch}" --test-dataset fashion-mnist
+```
+
+## Debug options
+
+`--debug` is launching the Dash application in debug mode:
+
+- The application is automatically reloaded when the code is saved
+- The Dash debug tools are shown on screen (errors, callback dep graph)
+
+`--log-level DEBUG`  to get the debug messages displayed in the console log 
+
 # Tooling
 
 ### Code quality
@@ -65,7 +96,7 @@ Exceptions within the _bridge_ package are based on the exception class `bridge.
 ##### Exceptions within Dash callbacks
 
  Dash callbacks are safeguarded, no need to add the `try-except` around the callback code.
- 
+
  To prevent update, the exception to raise is `dash.exceptions.PreventUpdate`
 
 ### Run unit test

@@ -1,8 +1,12 @@
 # Deep Neural Network viewer
 
-A **dashboard to inspect deep neural network models**, providing interactive view on the layer and unit weights and gradients, as well as activation maps.
+## A dashboard to inspect deep neural network models
 
-Current version is targeted at the **image classification**. However, coming version will target more diverse tasks.
+**DNN Viewer** is providing interactive view on the layer and unit weights and gradients, as well as activation maps.
+
+**DNN Viewer** is distinctive to existing tools since it is linking architecture, parameters and performance.
+
+Current version is targeted at the **classification** task. However, coming version will target more diverse tasks.
 
 This project is for learning and teaching purpose, do not try to display a network with hundreds of layers.
 
@@ -47,32 +51,6 @@ Then select the network model and the corresponding test data (optional) on the 
 
 Models containing the '{epoch}' tag are sequences over epochs. They are detected based on the pattern set by 
 command line option `--sequence-pattern` whose default is `{model}_{epoch}`
-
-### Loading a single model
-
-Keras models are loaded from *Tensorflow Checkpoint* or *HDF5* format with option `--model-keras <file>`
-
-#### CIFAR-10 Convolutional neural network (at the beginning of training)
-
-```shell
-$ dnnviewer --model-keras dnnviewer-data/models/CIFAR-10_CNN5-Reg.tf --test-dataset cifar-10
-```
-
-#### MNIST Convolutional neural network based on LeNet5
-
-```shell
-$ dnnviewer --model-keras dnnviewer-data/models/MNIST_LeNet60.h5 --test-dataset mnist
-```
-
-### Loading several epochs of a model
-
-Series of models along training epochs are loaded using the argument `--sequence-keras <path>` and the pattern `{model}_{epoch}` within the provided path. See below on how to generate these checkpoints.
-
-#### Fashion MNIST convolutionnal network
-
-```shell
-$ dnnviewer --sequence-keras "dnnviewer-data/models/FashionMNIST_checkpoints/model1_{epoch}" --test-dataset fashion-mnist
-```
 
 # Generating the models
 

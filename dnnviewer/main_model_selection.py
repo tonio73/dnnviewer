@@ -2,7 +2,8 @@ from . import AbstractDashboard
 from .TestData import TestData
 from .Grapher import Grapher
 from .Progress import Progress
-from .bridge import AbstractModelSequence, tensorflow_datasets as tf_ds_bridge
+from .bridge import DatasetError, tensorflow_datasets as tf_ds_bridge
+from .bridge.AbstractModelSequence import AbstractModelSequence
 from .bridge import ModelError
 from .widgets import font_awesome
 
@@ -126,11 +127,9 @@ class MainModelSelection(AbstractDashboard):
                     html.H3('On going: %s' % self.progress.next if self.progress.next else '')]
 
         @self.app.callback(Output('model-selection-submit', 'disabled'),
-                           [Input('task-selection-dropdown', 'value'),
-                            Input('model-selection-dropdown', 'value')])
-        def model_validate(task, model_path):
-            return task is None or len(task) == 0 \
-                    or model_path is None or len(model_path) == 0
+                           [Input('model-selection-dropdown', 'value')])
+        def model_validate(model_path):
+            return model_path is None or len(model_path) == 0
 
         @self.app.callback(Output('model-selection-dropdown', 'options'),
                            [Input('model-selection-refresh', 'n_clicks')])
@@ -146,18 +145,9 @@ class MainModelSelection(AbstractDashboard):
 
         model_paths = self.model_sequence.list_models(self.model_selection['directories'],
                                                       self.model_selection['pattern'])
-        test_datasets = tf_ds_bridge.keras_test_data_listing()
+        test_datasets = tf_ds_bridge.list_test_data()
 
         return dbc.Form([
-            # Model selection
-            dbc.FormGroup([
-                dbc.Label("What is the task?"),
-                dcc.Dropdown(id='task-selection-dropdown',
-                             value=None,
-                             options=[{'label': item[1], 'value': item[0]} for item in self.supported_tasks.items()]
-                             )
-            ]),
-            # Model selection
             dbc.FormGroup([
                 dbc.Label("Select a DNN model"),
                 dcc.Dropdown(id='model-selection-dropdown',
@@ -170,7 +160,7 @@ class MainModelSelection(AbstractDashboard):
                 dbc.Label("Test data (optional)"),
                 dcc.Dropdown(id='test-data-selection-dropdown',
                              value=self.model_selection['test_dataset'],
-                             options=[{'label': test_datasets[i], 'value': i} for i in test_datasets]
+                             options=[{'label': ds, 'value': ds} for ds in test_datasets]
                              )
             ]),
             # Submit
@@ -210,8 +200,14 @@ def load_model_and_data(self, model_path, test_dataset_id):
     # Initialize test dataset if any
     if test_dataset_id is not None:
         # Load test dataset
-        self.progress.set_next("Loading test data (may take some time if download is necessary")
-        tf_ds_bridge.keras_load_test_data(test_dataset_id, self.test_data)
+        self.progress.set_next("Loading test data (it takes up to few minutes at first attempt as download is necessary)")
+        try:
+            tf_ds_bridge.load_test_data(test_dataset_id, self.test_data)
+        except DatasetError as e:
+            _logger.error('Unable to load dataset %s', test_dataset_id)
+            self.progress.forward(1, Progress.ERROR, 'Unable to load dataset %s: %s' % (test_dataset_id, e.message))
+            return
+
         if not self.test_data.has_test_sample:
             _logger.error('Unable to load dataset %s', test_dataset_id)
             self.progress.forward(1, Progress.ERROR, 'Unable to load dataset %s' % test_dataset_id)

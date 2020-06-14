@@ -10,6 +10,9 @@ _logger = logging.getLogger(__name__)
 def array_to_img_src(array):
     """ Convert image in a ndarray to inline png string to embed into an HTML IMG src"""
 
+    # Remove extra dimension if any in RGB
+    array = np.squeeze(array)
+
     mem_file = BytesIO()
 
     try:
