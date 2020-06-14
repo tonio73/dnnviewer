@@ -89,6 +89,14 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         return models
 
     # @override
+    def format_test_data(self):
+        try:
+            in_type, in_shape = self.get_input_geometry()
+            self.test_data.x_format = tf_bridge.keras_prepare_input(in_type, in_shape, self.test_data.x)
+        except Exception as e:
+            raise ModelError("Error while formatting test data: %s" % str(e))
+
+    # @override
     def get_input_geometry(self):
         """ Return the type and shape of the model input """
         if self.number_epochs == 0:

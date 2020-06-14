@@ -2,7 +2,7 @@ from . import AbstractDashboard
 from .TestData import TestData
 from .Grapher import Grapher
 from .Progress import Progress
-from .bridge import AbstractModelSequence, tensorflow_datasets as tf_ds_bridge, tensorflow as tf_bridge
+from .bridge import AbstractModelSequence, tensorflow_datasets as tf_ds_bridge
 from .bridge import ModelError
 from .widgets import font_awesome
 
@@ -221,10 +221,9 @@ def load_model_and_data(self, model_path, test_dataset_id):
         # Prepare data
         self.progress.set_next('Format test data')
         try:
-            in_type, in_shape = self.model_sequence.get_input_geometry()
-            self.test_data.x_format = tf_bridge.keras_prepare_input(in_type, in_shape, self.test_data.x)
-        except Exception as e:
-            self.progress.forward(1, Progress.ERROR, "Error while formatting test data: %s" % str(e))
+            self.model_sequence.format_test_data()
+        except ModelError as e:
+            self.progress.forward(1, Progress.ERROR, e.message)
             return
 
         self.progress.forward(1, Progress.INFO, "Test data formatted")

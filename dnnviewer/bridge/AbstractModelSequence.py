@@ -18,6 +18,11 @@ class AbstractModelSequence:
         return []
 
     # @abstract
+    def format_test_data(self):
+        """ Prepare the test data to fit in the model (or raise ModelError) """
+        return
+
+    # @abstract
     def get_input_geometry(self):
         """ Return the type (as numpy dtype) and shape of the model input """
         return None, None
