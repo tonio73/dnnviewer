@@ -182,7 +182,7 @@ class BottomPane(AbstractPane):
                 if active_tab == 'activation':
                     if test_data.has_test_sample:
                         layer = grapher.layers[selected_unit['layer_idx']]
-                        content, figure = layer.get_activation_map(model_sequence, test_data.x[index],
+                        content, figure = layer.get_activation_map(model_sequence, test_data.x_format[index],
                                                                    selected_unit['unit_idx'])
                         return content, go.Figure() if figure is None else figure, figure is None
                     else:

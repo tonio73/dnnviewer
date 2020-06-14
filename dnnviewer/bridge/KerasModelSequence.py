@@ -1,6 +1,8 @@
 from . import tensorflow as tf_bridge
-from .AbstractModelSequence import AbstractModelSequence, ModelError
+from . import ModelError
+from .AbstractModelSequence import AbstractModelSequence
 from .AbstractActivationMapper import AbstractActivationMapper
+from .KerasNetworkExtractor import KerasNetworkExtractor
 from ..Grapher import Grapher
 from ..layers.AbstractLayer import AbstractLayer
 
@@ -87,9 +89,19 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         return models
 
     # @override
+    def get_input_geometry(self):
+        """ Return the type and shape of the model input """
+        if self.number_epochs == 0:
+            raise ModelError("No model available")
+
+        # Take as reference the first model of the sequence
+        model = self._load_keras_model(0)
+        return model.input.dtype.as_numpy_dtype, model.input.shape
+
+    # @override
     def get_activation(self, img, layer: AbstractLayer, unit=None):
 
-        batch = tf_bridge.keras_prepare_input(self.current_model, np.expand_dims(img, 0))
+        batch = np.expand_dims(img, 0)
 
         # Create partial model
         intermediate_model = keras.models.Model(inputs=self.current_model.input,
@@ -102,20 +114,24 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         else:
             return maps[:, :, unit]
 
-    def _load_model(self, grapher: Grapher, model_index: int):
-
+    def _load_keras_model(self, model_index):
+        """ Return requested Keras model from sequence """
         model_path = Path(self.model_paths[model_index])
 
         if not model_path.exists():
             raise ModelError("Model path not found '%s'" % str(model_path))
 
-        self.current_model = keras.models.load_model(str(model_path))
+        return keras.models.load_model(str(model_path))
+
+    def _load_model(self, grapher: Grapher, model_index: int):
+
+        self.current_model = self._load_keras_model(model_index)
 
         # Top level properties of the DNN model
         tf_bridge.keras_set_model_properties(grapher, self.current_model)
 
         # Create all other layers from the Keras Sequential model
-        extractor = tf_bridge.NetworkExtractor(grapher, self.current_model, self.test_data)
+        extractor = KerasNetworkExtractor(grapher, self.current_model, self.test_data)
         extractor.process()
 
         self.current_epoch_index = model_index

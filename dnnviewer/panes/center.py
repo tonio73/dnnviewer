@@ -81,9 +81,6 @@ class CenterPane(AbstractPane):
             if topn is None:  # The slide might be hidden => 'center-topn-criteria' store is not initialized
                 topn = grapher.topn_init
 
-            if epoch_index is None:  # In case of single model sequence, the epoch index might be uninitialized
-                epoch_index = 0
-
             if selected_unit is None:
                 logger.warning('update_figure prevent update since selected unit is %s', selected_unit)
                 raise PreventUpdate

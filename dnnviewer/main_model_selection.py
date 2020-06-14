@@ -2,8 +2,8 @@ from . import AbstractDashboard
 from .TestData import TestData
 from .Grapher import Grapher
 from .Progress import Progress
-from .bridge import AbstractModelSequence, tensorflow_datasets as tf_ds_bridge
-from .bridge.AbstractModelSequence import ModelError
+from .bridge import AbstractModelSequence, tensorflow_datasets as tf_ds_bridge, tensorflow as tf_bridge
+from .bridge import ModelError
 from .widgets import font_awesome
 
 import dash_core_components as dcc
@@ -190,10 +190,11 @@ def load_model_and_data(self, model_path, test_dataset_id):
     _logger.info("Start loading model '%s'", model_path)
 
     # Load sequence, test dataset, model #0
-    num_steps = 3 if test_dataset_id is not None else 2
+    num_steps = 4 if test_dataset_id is not None else 2
     self.progress.reset(num_steps)
     self.test_data.reset()
 
+    # Initialize model sequence (even if single model in sequence)
     if '{epoch}' in model_path:
         self.model_sequence.load_sequence(model_path)
     else:
@@ -206,7 +207,9 @@ def load_model_and_data(self, model_path, test_dataset_id):
 
     self.progress.forward(1, Progress.INFO, "Model sequence initialized")
 
+    # Initialize test dataset if any
     if test_dataset_id is not None:
+        # Load test dataset
         self.progress.set_next("Loading test data (may take some time if download is necessary")
         tf_ds_bridge.keras_load_test_data(test_dataset_id, self.test_data)
         if not self.test_data.has_test_sample:
@@ -215,10 +218,20 @@ def load_model_and_data(self, model_path, test_dataset_id):
             return
         self.progress.forward(1, Progress.INFO, "Test dataset loaded")
 
-    self.progress.set_next("Load model")
+        # Prepare data
+        self.progress.set_next('Format test data')
+        try:
+            in_type, in_shape = self.model_sequence.get_input_geometry()
+            self.test_data.x_format = tf_bridge.keras_prepare_input(in_type, in_shape, self.test_data.x)
+        except Exception as e:
+            self.progress.forward(1, Progress.ERROR, "Error while formatting test data: %s" % str(e))
+            return
 
+        self.progress.forward(1, Progress.INFO, "Test data formatted")
+
+    # Force loading first model of sequence
+    self.progress.set_next("Load model")
     try:
-        # Force loading first model of sequence
         self.model_sequence.first_epoch(self.grapher)
     except ModelError as e:
         self.progress.forward(1, Progress.ERROR, "Error while loading model: %s" % e.message)

@@ -2,6 +2,9 @@ from io import BytesIO
 from PIL import Image
 import base64
 import numpy as np
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 def array_to_img_src(array):
@@ -9,14 +12,22 @@ def array_to_img_src(array):
 
     mem_file = BytesIO()
 
-    pil_img = Image.fromarray(array)
-    if array.ndim == 2:
-        # Grayscale handling
-        pil_img = pil_img.convert("L")
+    try:
+        if array.dtype == np.float32:
+            pil_img = Image.fromarray(array, 'F')
+        else:
+            pil_img = Image.fromarray(array)  # Let Pillow decide
+        if array.ndim == 2:
+            # Grayscale handling
+            pil_img = pil_img.convert("L")
 
-    pil_img.save(mem_file, 'png')
-    mem_file.seek(0)
-    encoded_image = base64.b64encode(mem_file.getbuffer())
+        pil_img.save(mem_file, 'png')
+        mem_file.seek(0)
+        encoded_image = base64.b64encode(mem_file.getbuffer())
+    except Exception as e:
+        _logger.error("Unable to reformat image: %s", str(e))
+        return
+
     return 'data:image/png;base64,{}'.format(encoded_image.decode())
 
 
