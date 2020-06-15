@@ -4,7 +4,7 @@
 
 **DNN Viewer** is providing interactive view on the layer and unit weights and gradients, as well as activation maps.
 
-**DNN Viewer** is distinctive to existing tools since it is linking architecture, parameters and performance.
+**DNN Viewer** is distinctive to existing tools since it is linking architecture, parameters, test data and performance.
 
 Current version is targeted at the **classification** task. However, coming version will target more diverse tasks.
 
