@@ -63,8 +63,14 @@ def keras_prepare_labels(model, labels):
     """ Preformat labels to be processed by the Keras model
       - mainly handle the case of categorical_crossentropy
     """
-    loss = model.loss_functions[0]
-    if (isinstance(loss, str) and loss == 'categorical_crossentropy') \
+    if hasattr(model, 'loss_functions') and model.loss_functions is not None and len(model.loss_functions) > 0:
+        # As in test model "LeNetLarge"
+        loss = model.loss_functions[0]
+    elif hasattr(model, 'loss') and model.loss is not None:
+        # At least from Tensorflow 2.2
+        loss = model.loss
+
+    if loss is not None and (isinstance(loss, str) and loss == 'categorical_crossentropy') \
             or type(loss).__name__ == 'CategoricalCrossentropy':
         labels = keras.utils.to_categorical(labels)
     return labels
