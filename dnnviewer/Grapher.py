@@ -38,7 +38,7 @@ class Grapher:
 
     def add_layer(self, layer: AbstractLayer):
         """ Add layer to graph """
-        layer.set_xoffset(self.x_offset)
+        layer.set_coordinates(self.x_offset, 0)
         self.layers.append(layer)
         self.x_offset += self.x_spacing
         if isinstance(layer, Dense.Dense):
@@ -108,7 +108,7 @@ class Grapher:
 
         # Annotation on the selected layer (trace)
         sel_layer: AbstractLayer = self.layers[ref_layer_idx]
-        sel_pos = sel_layer.get_unit_position(ref_unit, True)
+        sel_pos = sel_layer.get_unit_position(ref_unit, False)
         annotations = [dict(x=sel_pos[0], y=sel_pos[1],
                             xref="x", yref="y",
                             text="%s #%d" % (sel_layer.name, ref_unit),

@@ -78,6 +78,7 @@ class KerasNetworkExtractor:
                 strides = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'strides')
                 if strides and keras_layer.strides != (1, 1):
                     layer.structure_props['strides'] = str(keras_layer.strides)
+                    layer.append_sampling_factor([strides[0], strides[1], 1, 1])
                 padding = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'padding')
                 if padding:
                     layer.structure_props['padding'] = padding
@@ -105,12 +106,13 @@ class KerasNetworkExtractor:
                         size = np.array(keras_layer.input_shape[1:-1]) / np.array(keras_layer.output_shape[1:-1])
                         pool_size = tuple(size)
                     previous_layer.output_props['pooling'] = str(pool_size)
+                    previous_layer.append_sampling_factor(1 / np.array(pool_size))
                     # Update output shape on previous layer to take into account for the pooling
                     previous_layer.output_props['shape'] = keras_layer.output_shape[1:]
                 else:
                     _logger.error('Unsupported pooling layer: %s', layer_class)
 
-            # Activation standelone layer => add to previous layer
+            # Activation standalone layer => add to previous layer
             elif layer_class == 'Activation':
                 if previous_layer is not None:
                     # Note: if previous layer already has an activation that is not "linear",

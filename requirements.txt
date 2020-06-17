@@ -1,7 +1,7 @@
 python>=3.7
 numpy
 tensorflow>=2.0
-tensorflow-datasets
+tensorflow-datasets>=1.2
 plotly>=4.0
 dash
 dash-core-components

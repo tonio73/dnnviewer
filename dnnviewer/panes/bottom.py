@@ -87,7 +87,7 @@ class BottomPane(AbstractPane):
                                                          children=BottomPane._get_maps_tabs(None))]))
         ])
 
-    def callbacks(self, app, model_sequence, grapher, test_data):
+    def callbacks(self, app, model_sequence, grapher, test_data: TestData):
         """ Local callbacks """
 
         @app.callback(Output('bottom-test-sample-img', 'src'),

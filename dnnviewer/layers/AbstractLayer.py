@@ -24,20 +24,33 @@ class AbstractLayer:
         self.output_props = {}
         self.theme = theme
         self.spacing_y = 1.
-        self.xoffset = 0
+        self.x = 0
+        self.y = 0
+        # Sampling factor at output: > 1 is upsampling, < 1 is downsampling
+        self.sampling_factor = np.ones(len(weights.shape)) if weights is not None else None
         return
 
-    def set_xoffset(self, xoffset: float):
-        self.xoffset = xoffset
+    def set_coordinates(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+    def append_sampling_factor(self, sampling_factor):
+        """ Append a sampling factor to the layer output """
+        if len(sampling_factor) < len(self.weights.shape):
+            sampling_factor = np.concatenate([sampling_factor, np.ones(len(self.weights.shape) - len(sampling_factor))])
+        if self.sampling_factor is None:
+            self.sampling_factor = sampling_factor
+        else:
+            self.sampling_factor *= sampling_factor
 
     def get_unit_position(self, unit_idx, at_output=False):
         """ Get single or vector of unit positions """
         if isinstance(unit_idx, int):
-            x = self.xoffset
+            x = self.x
         else:
-            x = self.xoffset * np.ones(len(unit_idx))
+            x = self.x * np.ones(len(unit_idx))
 
-        return x, self._get_y_offset() + self.spacing_y * unit_idx
+        return x, self.y + self._get_y_offset() + self.spacing_y * unit_idx
 
     def get_positions(self):
         """ Get all unit positions """

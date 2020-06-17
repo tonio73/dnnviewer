@@ -10,9 +10,9 @@ class TestDense:
 
         grads = weights = np.array([[1, 2, 3, 4], [2, 6, 8, 2], [5, 4, 4, 6]])
         layer = Dense('test_1', 4, weights, grads)
-        layer.set_xoffset(10)
+        layer.set_coordinates(10, 0)
         prev_layer = Dense('test_prev', 3, np.ones((2, 3)), np.ones((2, 3)))  # weight/grads of other do no matter
-        prev_layer.set_xoffset(0)
+        prev_layer.set_coordinates(0, 0)
 
         strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [2, 3], True)
 
@@ -27,9 +27,9 @@ class TestDense:
 
         grads = weights = np.array([[1, 2, 3, 4], [2, 6, 8, 2], [5, 4, 4, 6]])
         layer = Dense('test_1', 4, weights, grads)
-        layer.set_xoffset(10)
+        layer.set_coordinates(10, 0)
         prev_layer = Dense('test_prev', 3, np.ones((2, 3)), np.ones((2, 3)))  # weight/grads of other do no matter
-        prev_layer.set_xoffset(0)
+        prev_layer.set_coordinates(0, 0)
 
         strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [1, 2], False)
 

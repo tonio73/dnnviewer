@@ -30,15 +30,20 @@ class Convo2D(AbstractLayer):
     def get_unit_position(self, unit_idx, at_output=False):
         """ Get single or vector of unit positions """
         if isinstance(unit_idx, int):
-            x = self.xoffset
+            x = self.x
         else:
-            x = self.xoffset * np.ones(len(unit_idx))
+            x = self.x * np.ones(len(unit_idx))
 
         # If output is flattened, actual output dimension is larger than number of filters => wrap with modulo
         if at_output and self.flatten_output:
-            return x, self._get_y_offset() + self.spacing_y * (unit_idx % self.num_unit)
+            if self.sampling_factor is not None:
+                sampling_factor = (self.sampling_factor[0] * self.sampling_factor[1])
+            else:
+                sampling_factor = 1
+            output_index = np.floor((unit_idx / sampling_factor) % self.num_unit)
         else:
-            return x, self._get_y_offset() + self.spacing_y * unit_idx
+            output_index = unit_idx
+        return x, self.y + self._get_y_offset() + self.spacing_y * output_index
 
     # @override
     def plot(self, fig):
@@ -63,7 +68,11 @@ class Convo2D(AbstractLayer):
 
             # Active units need to wrapped if the output is flattened
             if self.flatten_output:
-                active_units = np.mod(active_units, self.num_unit)
+                if self.sampling_factor is not None:
+                    sampling_factor = (self.sampling_factor[0] * self.sampling_factor[1])
+                else:
+                    sampling_factor = 1
+                active_units = np.floor(np.mod(active_units / sampling_factor, self.num_unit)).astype(np.int)
 
             # Max on the 2D convolution filters
             weights1 = self.weights.reshape(-1, backward_layer.num_unit, self.num_unit)

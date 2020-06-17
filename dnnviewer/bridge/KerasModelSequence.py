@@ -4,6 +4,7 @@ from .AbstractModelSequence import AbstractModelSequence
 from .AbstractActivationMapper import AbstractActivationMapper
 from .KerasNetworkExtractor import KerasNetworkExtractor
 from ..Grapher import Grapher
+from ..TestData import TestData
 from ..layers.AbstractLayer import AbstractLayer
 
 import tensorflow.keras as keras
@@ -18,7 +19,7 @@ import traceback
 class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
     """ Handling a sequence of Keras models, saved as checkpoints or HDF5 """
 
-    def __init__(self, test_data):
+    def __init__(self, test_data: TestData):
         AbstractModelSequence.__init__(self)
         self.model_paths = []
         self.current_model = None
