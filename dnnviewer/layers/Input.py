@@ -42,9 +42,8 @@ class Input(AbstractLayer):
     # @override
     def get_unit_tab_content(self, unit_idx, active_tab):
         """ Get the content of the selected tab """
-        w = self.weights[:, unit_idx]
 
         if active_tab == 'info':
-            return self._get_unit_info(unit_idx, len(w)), None
+            return self._get_unit_info(unit_idx, 0), None
 
         return AbstractLayer.get_layer_tab_content(self, active_tab)
