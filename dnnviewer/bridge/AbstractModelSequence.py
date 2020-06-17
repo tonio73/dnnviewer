@@ -7,10 +7,12 @@ class AbstractModelSequence:
     def __init__(self):
         self.number_epochs = 0
         self.current_epoch_index = -1
+        self.title = ''
 
     def reset(self):
         self.number_epochs = 0
         self.current_epoch_index = -1
+        self.title = ''
 
     # @abstract
     def list_models(self, directories, model_sequence_pattern='{model}_{epoch}'):

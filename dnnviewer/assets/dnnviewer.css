@@ -6,6 +6,25 @@ body {
     height: 40vh;
 }
 
+h1 {
+    font-weight: 400;
+}
+
+.title h1 {
+    font-size: 1.7em;
+    letter-spacing: .2rem;
+    margin-bottom: 0.3rem;
+}
+
+.title h2 {
+    font-size: 0.8em;
+    font-weight: 400;
+}
+
+.title-icon {
+    margin-right: 15px;
+}
+
 .thumbnail {
     margin-top: 1rem;
     text-align: center;
@@ -25,5 +44,5 @@ body {
 }
 
 .detail-tab .dash-graph {
-    height: 40vh;
+    height: 38vh;
 }

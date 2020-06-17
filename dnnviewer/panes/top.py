@@ -22,9 +22,10 @@ class TopPane(AbstractPane):
             dcc.Store('top-epoch-index', data=model_sequence.current_epoch_index, storage_type='session'),
             dbc.Col([html.H1([html.Span(dcc.Link(font_awesome.icon('arrow-left'), href='/'),
                                         hidden=not self.enable_navigation,
-                                        style={'marginRight': '15px'}),
-                              html.Span('Deep Neural Network Viewer')])
-                     ], md=9),
+                                        className='title-icon'),
+                              html.Span('Deep Neural Network Viewer')]),
+                     html.H2(model_sequence.title)
+                     ], md=9, className='title'),
             dbc.Col(html.Div([dbc.Button(font_awesome.icon('fast-backward'), className="mr-1",
                                          id='top-fast-backward'),
                               dbc.Button(font_awesome.icon('step-backward'), className="ml-1 mr-1",

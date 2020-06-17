@@ -22,7 +22,7 @@ class TestGrapher:
         assert grapher.structure_props['num_dense'] == 1
         assert grapher.structure_props['num_convo2d'] == 0
 
-        grapher.clear_layers()
+        grapher.reset()
 
         assert len(grapher.layers) == 0
         assert grapher.structure_props['num_dense'] == 0

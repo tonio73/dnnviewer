@@ -38,7 +38,7 @@ class KerasNetworkExtractor:
 
         previous_layer = None
         layer_training_props, layer_input_props = {}, {}
-        self.grapher.clear_layers()
+        self.grapher.reset()
 
         # Get Gradients if test data is available
         grads = self.compute_gradients()

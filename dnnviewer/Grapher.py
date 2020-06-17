@@ -29,7 +29,7 @@ class Grapher:
         self.training_props = {'loss': '', 'optimizer': ''}
         self.theme = theme
 
-    def clear_layers(self):
+    def reset(self):
         """ Reset layers """
         self.layers = []
         self.structure_props['num_dense'] = 0

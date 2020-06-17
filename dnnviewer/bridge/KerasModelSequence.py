@@ -35,6 +35,7 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         """" Load a single Keras model from file_path"""
 
         self.reset()
+        self.title = file_path
         self.number_epochs = 1
         self.model_paths = [file_path]
 
@@ -42,6 +43,7 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         """ Load a sequence of models over epochs from dir_path with pattern on {epoch} tag """
 
         self.reset()
+        self.title = dir_path
         checkpoint_glob = dir_path.replace('{epoch}', '[0-9]*')
 
         checkpoint_path_list = glob.glob(checkpoint_glob)
