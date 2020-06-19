@@ -39,7 +39,11 @@ def keras_prepare_input(in_type, in_shape, data):
     # Dimension expansion
     if len(data.shape) != len(in_shape):
         if len(data.shape) == len(in_shape) - 1 and in_shape[-1] == 1:
+            # Expand data to add a dimension of width 1
             data = np.expand_dims(data, len(data.shape))
+        elif len(data.shape) == len(in_shape) + 1 and data.shape[-1] == 1:
+            # Remove the last dimension of width 1
+            data = np.squeeze(data, len(data.shape) - 1)
         else:
             raise ModelError(f"Incompatible test data sample shape, expected {in_shape}, test data shape {data.shape}")
 
