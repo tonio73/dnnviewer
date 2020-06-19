@@ -58,9 +58,9 @@ class MainModelSelection(AbstractDashboard):
 
         return dbc.Container([dcc.Interval(id='model-selection-loading-refresh', interval=500, disabled=not loading,
                                            max_intervals=100),
-                              html.H1([font_awesome.icon('binoculars'),
-                                       html.Span('Deep Neural Network Viewer',
-                                                 style={'marginLeft': '15px'})]),
+                              html.H1([html.Span(font_awesome.icon('binoculars'), className='title-icon'),
+                                       html.Span('Deep Neural Network Viewer')],
+                                      className='title'),
                               html.Div(id='model-selection-loading', hidden=not loading),
                               html.Div(id='model-selection-wrap', hidden=loading,
                                        children=self._model_selection_form())
