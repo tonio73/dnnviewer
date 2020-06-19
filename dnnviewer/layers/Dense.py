@@ -27,38 +27,47 @@ class Dense(AbstractLayer):
         fig.add_trace(go.Scatter(x=x, y=y, hovertext=hover_text, mode='markers', hoverinfo='text', name=self.name))
 
     # @override
-    def plot_topn_connections(self, backward_layer, topn, active_units, backward):
+    def plot_topn_connections_backward(self, backward_layer, topn, active_units):
         if self.weights is None:
             return np.empty(0), []
 
-        # KO if flatten output on backward_layer
-        # assert backward_layer.num_unit == self.weights.shape[0]
+        strongest_idx, strongest = Statistics.get_strongest(self.weights[:, active_units],
+                                                            min(topn, backward_layer.num_unit))
+        # For each of the top n, create a vector of connectors and plot it
+        to_indexes = np.tile(active_units, strongest.shape[0])
 
-        if backward:
-            strongest_idx, strongest = Statistics.get_strongest(self.weights[:, active_units],
-                                                                min(topn, backward_layer.num_unit))
-            # For each of the top n, create a vector of connectors and plot it
-            to_indexes = np.tile(active_units, strongest.shape[0])
+        strongest_idx = strongest_idx.ravel()
+        strongest = strongest.ravel()
 
-            strongest_idx = strongest_idx.ravel()
-            strongest = strongest.ravel()
+        # Get actual unit indexes on previous layer
+        strongest_idx = backward_layer.get_unit_index(strongest_idx, AbstractLayer.FROM_OUTPUT)
 
-            connectors = Connector(backward_layer, self,
-                                   strongest_idx, to_indexes, strongest,
-                                   self.theme.weight_color_scale)
-        else:
-            strongest_idx, strongest = Statistics.get_strongest(self.weights.T[:, active_units],  # <--
-                                                                min(topn, backward_layer.num_unit))
+        connectors = Connector(backward_layer, self,
+                               strongest_idx, to_indexes, strongest,
+                               self.theme.weight_color_scale)
 
-            # For each of the top n, create a vector of connectors and plot it
-            from_indexes = np.tile(active_units, strongest.shape[0])
+        return np.unique(strongest_idx), connectors.get_shapes()
 
-            strongest_idx = strongest_idx.ravel()
-            strongest = strongest.ravel()
+    # @override
+    def plot_topn_connections_forward(self, backward_layer, topn, active_units):
+        if self.weights is None:
+            return np.empty(0), []
 
-            connectors = Connector(backward_layer, self,
-                                   from_indexes, strongest_idx, strongest,
-                                   self.theme.weight_color_scale)
+        # Map in my input domain take into account for output flatten and sampling in previous layer
+        sel_units = backward_layer.get_unit_index(active_units, AbstractLayer.AT_OUTPUT)
+
+        strongest_idx, strongest = Statistics.get_strongest(self.weights.T[:, sel_units],  # <-- Transpose
+                                                            min(topn, self.num_unit))
+
+        # For each of the top n, create a vector of connectors and plot it
+        from_indexes = np.tile(active_units, strongest.shape[0])
+
+        strongest_idx = strongest_idx.ravel()
+        strongest = strongest.ravel()
+
+        connectors = Connector(backward_layer, self,
+                               from_indexes, strongest_idx, strongest,
+                               self.theme.weight_color_scale)
 
         return np.unique(strongest_idx), connectors.get_shapes()
 

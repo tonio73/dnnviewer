@@ -3,6 +3,9 @@
 #
 
 from . import AbstractPane
+from ..Grapher import Grapher
+from ..TestData import TestData
+from ..bridge.AbstractModelSequence import AbstractModelSequence
 
 import plotly.graph_objects as go
 import dash_core_components as dcc
@@ -28,8 +31,8 @@ class CenterPane(AbstractPane):
         """ Get pane layout """
 
         # Initialize the selected unit to the output corresponding to the selected test data
-        if test_data.has_test_sample and len(grapher.layers) > 0:
-            selected_unit = dict(layer_idx=len(grapher.layers)-1, unit_idx=test_data.y[0])
+        if test_data.has_test_sample:
+            selected_unit = grapher.pre_select_unit(test_data.y[0])
         else:
             selected_unit = None
 
@@ -51,7 +54,7 @@ class CenterPane(AbstractPane):
                              ]), md=3)
         ])
 
-    def callbacks(self, app, model_sequence, grapher, test_data):
+    def callbacks(self, app, model_sequence: AbstractModelSequence, grapher: Grapher, test_data: TestData):
         """ Dash callbacks """
 
         logger = logging.getLogger(__name__)

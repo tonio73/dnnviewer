@@ -27,23 +27,24 @@ class Convo2D(AbstractLayer):
         self.flatten_output = flatten_output
 
     # @override
-    def get_unit_position(self, unit_idx, at_output=False):
-        """ Get single or vector of unit positions """
-        if isinstance(unit_idx, int):
-            x = self.x
-        else:
-            x = self.x * np.ones(len(unit_idx))
+    def get_unit_index(self, unit_idx: int, mode='at_input'):
+        """ Take into account for flatten (unwrap) and sampling at output """
 
-        # If output is flattened, actual output dimension is larger than number of filters => wrap with modulo
-        if at_output and self.flatten_output:
+        if self.flatten_output:
+            if isinstance(unit_idx, list):
+                unit_idx = np.array(unit_idx)
+
             if self.sampling_factor is not None:
                 sampling_factor = (self.sampling_factor[0] * self.sampling_factor[1])
             else:
                 sampling_factor = 1
-            output_index = np.floor((unit_idx / sampling_factor) % self.num_unit)
-        else:
-            output_index = unit_idx
-        return x, self.y + self._get_y_offset() + self.spacing_y * output_index
+
+            if mode == AbstractLayer.FROM_OUTPUT:
+                return np.floor((unit_idx / sampling_factor) % self.num_unit).astype(int)
+            elif mode == AbstractLayer.AT_OUTPUT:
+                return np.floor(unit_idx * sampling_factor).astype(int)
+
+        return unit_idx
 
     # @override
     def plot(self, fig):
@@ -52,8 +53,7 @@ class Convo2D(AbstractLayer):
         fig.add_trace(go.Scatter(x=x, y=y, hovertext=hover_text, mode='markers', hoverinfo='text', name=self.name))
 
     # @override
-    def plot_topn_connections(self, backward_layer, topn, active_units, backward):
-
+    def plot_topn_connections_backward(self, backward_layer, topn, active_units):
         """ On convolution layers, the maximum over 2D convolution filters is first extracted,
             then take the top n across the (input, output) filter pairs
         """
@@ -61,56 +61,59 @@ class Convo2D(AbstractLayer):
         if self.weights is None:
             return np.zeros(0), []
 
-        # Issues with flatten_output
-        # assert backward_layer.num_unit == self.weights.shape[2]
+        # Max on the 2D convolution filters
+        weights1 = self.weights.reshape(-1, backward_layer.num_unit, self.num_unit)
+        convo_max_weights1 = weights1.take(np.argmax(np.abs(weights1[:, :, active_units]), axis=0))
 
-        if backward:
+        # Top N on the (input, output) pair
+        strongest_idx, strongest = Statistics.get_strongest(convo_max_weights1,
+                                                            min(topn, backward_layer.num_unit))
+        # For each of the top n, create a vector of connectors and plot it
+        to_indexes = np.tile(active_units, strongest.shape[0])
 
-            # Active units need to wrapped if the output is flattened
-            if self.flatten_output:
-                if self.sampling_factor is not None:
-                    sampling_factor = (self.sampling_factor[0] * self.sampling_factor[1])
-                else:
-                    sampling_factor = 1
-                active_units = np.floor(np.mod(active_units / sampling_factor, self.num_unit)).astype(np.int)
+        strongest_idx = strongest_idx.ravel()
+        strongest = strongest.ravel()
 
-            # Max on the 2D convolution filters
-            weights1 = self.weights.reshape(-1, backward_layer.num_unit, self.num_unit)
-            convo_max_weights1 = weights1.take(np.argmax(np.abs(weights1[:, :, active_units]), axis=0))
+        # Get actual unit indexes on previous layer
+        strongest_idx = backward_layer.get_unit_index(strongest_idx, AbstractLayer.FROM_OUTPUT)
 
-            # Top N on the (input, output) pair
-            strongest_idx, strongest = Statistics.get_strongest(convo_max_weights1,
-                                                                min(topn, backward_layer.num_unit))
-            # For each of the top n, create a vector of connectors and plot it
-            to_indexes = np.tile(active_units, strongest.shape[0])
+        connectors = Connector(backward_layer, self,
+                               strongest_idx, to_indexes, strongest,
+                               self.theme.weight_color_scale)
 
-            strongest_idx = strongest_idx.ravel()
-            strongest = strongest.ravel()
+        return np.unique(strongest_idx), connectors.get_shapes()
 
-            connectors = Connector(backward_layer, self,
-                                   strongest_idx, to_indexes, strongest,
-                                   self.theme.weight_color_scale)
+    # @override
+    def plot_topn_connections_forward(self, backward_layer, topn, active_units):
+        """ On convolution layers, the maximum over 2D convolution filters is first extracted,
+            then take the top n across the (input, output) filter pairs
+        """
 
-        else:
-            # Max on the 2D convolution filters
-            # Transpose here
-            weights1 = np.swapaxes(self.weights, 2, 3).reshape((-1, self.num_unit, backward_layer.num_unit))
-            convo_max_weights1 = weights1.take(np.argmax(np.abs(weights1[:, :, active_units]), axis=0))  # <--
+        if self.weights is None:
+            return np.zeros(0), []
 
-            # No need to handle the flatten as active_units is already wrapped
+        # Map in my input domain take into account for output flatten and sampling in previous layer
+        sel_units = backward_layer.get_unit_index(active_units, AbstractLayer.AT_OUTPUT)
 
-            strongest_idx, strongest = Statistics.get_strongest(convo_max_weights1,
-                                                                min(topn, backward_layer.num_unit))
+        # Max on the 2D convolution filters
+        # Transpose here
+        weights1 = np.swapaxes(self.weights, 2, 3).reshape((-1, self.num_unit, backward_layer.num_unit))
+        convo_max_weights1 = weights1.take(np.argmax(np.abs(weights1[:, :, sel_units]), axis=0))  # <--
 
-            # For each of the top n, create a vector of connectors and plot it
-            from_indexes = np.tile(active_units, strongest.shape[0])
+        # No need to handle the flatten as active_units is already wrapped
 
-            strongest_idx = strongest_idx.ravel()
-            strongest = strongest.ravel()
+        strongest_idx, strongest = Statistics.get_strongest(convo_max_weights1,
+                                                            min(topn, self.num_unit))
 
-            connectors = Connector(backward_layer, self,
-                                   from_indexes, strongest_idx, strongest,
-                                   self.theme.weight_color_scale)
+        # For each of the top n, create a vector of connectors and plot it
+        from_indexes = np.tile(active_units, strongest.shape[0])
+
+        strongest_idx = strongest_idx.ravel()
+        strongest = strongest.ravel()
+
+        connectors = Connector(backward_layer, self,
+                               from_indexes, strongest_idx, strongest,
+                               self.theme.weight_color_scale)
 
         return np.unique(strongest_idx), connectors.get_shapes()
 

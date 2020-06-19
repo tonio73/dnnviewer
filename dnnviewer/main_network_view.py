@@ -53,11 +53,11 @@ class MainNetworkView(AbstractDashboard):
                                       ])
             else:
                 return dbc.Container([
-                    *[pane.get_layout(self.model_sequence, self.grapher, self.test_data) for pane in self.panes]
+                    pane.get_layout(self.model_sequence, self.grapher, self.test_data) for pane in self.panes
                 ], fluid=True)
         else:
             return dbc.Container([
-                *[pane.get_layout(self.model_sequence, self.grapher, self.test_data) for pane in self.panes]
+                pane.get_layout(self.model_sequence, self.grapher, self.test_data) for pane in self.panes
             ], fluid=True)
 
     def callbacks(self):

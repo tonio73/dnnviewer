@@ -47,6 +47,17 @@ class Grapher:
             self.structure_props['num_convo2d'] += 1
         return len(self.layers) - 1
 
+    def pre_select_unit(self, class_label_idx):
+        """ Pre-select the corresponding class if label is compatible with network topology """
+        if len(self.layers) > 0:
+            layer_idx = len(self.layers)-1
+            layer = self.layers[layer_idx]
+            if class_label_idx < layer.num_unit:
+                return dict(layer_idx=layer_idx, unit_idx=class_label_idx)
+            elif layer.num_unit > 0:
+                return dict(layer_idx=layer_idx, unit_idx=0)  # First unit by default
+        return None
+
     def get_layer_unit_from_click_data(self, click_data):
         point = click_data['points'][0]
         layer = self.layers[int(point['curveNumber'])]
@@ -89,18 +100,20 @@ class Grapher:
         for i in range(ref_layer_idx, 0, -1):
             cur_layer = self.layers[i]
             prev_layer = self.layers[i - 1]
-            sel_units, new_shapes = cur_layer.plot_topn_connections(prev_layer, topn, sel_units, True)
+            sel_units, new_shapes = cur_layer.plot_topn_connections_backward(prev_layer, topn, sel_units)
             shapes[0:0] = new_shapes
             # Clip topn to 1 if number of active units is large
             if len(sel_units) > 32:
                 topn = 1
 
-        # Forward from ref_layer
+        # Forward from next to ref_layer
         sel_units = [ref_unit]
         for i in range(ref_layer_idx + 1, len(self.layers), +1):
+
             cur_layer = self.layers[i]
             prev_layer = self.layers[i - 1]
-            sel_units, new_shapes = cur_layer.plot_topn_connections(prev_layer, topn, sel_units, False)
+            sel_units, new_shapes = cur_layer.plot_topn_connections_forward(prev_layer, topn, sel_units)
+
             shapes[0:0] = new_shapes
             # Clip topn to 1 if number of active units is large
             if len(sel_units) > 32:
@@ -108,7 +121,7 @@ class Grapher:
 
         # Annotation on the selected layer (trace)
         sel_layer: AbstractLayer = self.layers[ref_layer_idx]
-        sel_pos = sel_layer.get_unit_position(ref_unit, False)
+        sel_pos = sel_layer.get_unit_position(ref_unit)
         annotations = [dict(x=sel_pos[0], y=sel_pos[1],
                             xref="x", yref="y",
                             text="%s #%d" % (sel_layer.name, ref_unit),

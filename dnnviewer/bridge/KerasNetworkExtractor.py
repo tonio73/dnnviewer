@@ -78,7 +78,7 @@ class KerasNetworkExtractor:
                 strides = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'strides')
                 if strides and keras_layer.strides != (1, 1):
                     layer.structure_props['strides'] = str(keras_layer.strides)
-                    layer.append_sampling_factor([strides[0], strides[1], 1, 1])
+                    layer.append_sampling_factor([1 / strides[0], 1 / strides[1], 1, 1])
                 padding = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'padding')
                 if padding:
                     layer.structure_props['padding'] = padding

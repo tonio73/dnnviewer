@@ -8,19 +8,16 @@ class TestConvo2D:
 
     def test_plot_topn_connections_backward(self):
         """ Backward top 2 connections """
-        # def plot_topn_connections(self, backward_layer, topn, active_units, True)
 
         # 3 x 3 shape filters x 2 with 3 inputs => weights array of shape (3, 3, 2, 3)
         weights = self.weights_convo_3_3_4_3
-        # Max on convolution filters
-        # [[9, 2, 6], [5, 6, 8]]
         layer = Convo2D('test_1', 3, weights, weights)
         layer.set_coordinates(10, 0)
 
         prev_layer = Dense('test_prev', 4, np.ones((6, 4)), np.ones((6, 4)))  # weights/grads of other do no matter
         prev_layer.set_coordinates(0, 0)
 
-        strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [1, 2], True)
+        strongest_idx, shapes = layer.plot_topn_connections_backward(prev_layer, 2, [1, 2])
 
         assert strongest_idx.shape == (3,)
         assert (strongest_idx == np.array([0, 2, 3])).all()
@@ -30,7 +27,6 @@ class TestConvo2D:
 
     def test_plot_topn_connections_backward_flatten(self):
         """ Backward top 2 connections with flatten """
-        # def plot_topn_connections(self, backward_layer, topn, active_units, True)
 
         # 3 x 3 shape filters x 4 with 3 inputs => weights array of shape (3, 3, 2, 3)
         weights = self.weights_convo_3_3_4_3
@@ -42,17 +38,16 @@ class TestConvo2D:
         prev_layer.set_coordinates(0, 0)
         prev_layer.set_coordinates(0, 0)
 
-        strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [62, 98], True)
+        strongest_idx, shapes = layer.plot_topn_connections_backward(prev_layer, 2, [1, 2])
 
-        assert strongest_idx.shape == (2,)
-        assert (strongest_idx == np.array([0, 2])).all()
+        assert strongest_idx.shape == (3,)
+        assert (strongest_idx == np.array([0, 2, 3])).all()
         assert len(shapes) == 4  # Each Convolution to the top Dense
         assert isinstance(shapes[0], dict)
         assert shapes[0]['type'] == 'path'
 
     def test_plot_topn_connections_backward_flatten_stride(self):
         """ Backward top 2 connections with stride and flatten """
-        # def plot_topn_connections(self, backward_layer, topn, active_units, True)
 
         # 3 x 3 shape filters x 4 with 3 inputs => weights array of shape (3, 3, 4, 3)
         weights = self.weights_convo_3_3_4_3
@@ -65,17 +60,16 @@ class TestConvo2D:
         prev_layer = Dense('test_prev', 4, np.ones((6, 4)), np.ones((6, 4)))  # weights/grads of other do no matter
         prev_layer.set_coordinates(0, 0)
 
-        strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [62, 98], True)
+        strongest_idx, shapes = layer.plot_topn_connections_backward(prev_layer, 2, [1, 2])
 
-        assert strongest_idx.shape == (2,)
-        assert (strongest_idx == np.array([2, 3])).all()   # <--
+        assert strongest_idx.shape == (3,)
+        assert (strongest_idx == np.array([0, 2, 3])).all()   # <--
         assert len(shapes) == 4  # Each Convolution to the top Dense
         assert isinstance(shapes[0], dict)
         assert shapes[0]['type'] == 'path'
 
     def test_plot_topn_connections_backward_flatten_stride2d(self):
         """ Backward top 2 connections with stride on 2D and flatten """
-        # def plot_topn_connections(self, backward_layer, topn, active_units, True)
 
         # 3 x 3 shape filters x 4 with 3 inputs => weights array of shape (3, 3, 4, 3)
         weights = self.weights_convo_3_3_4_3
@@ -88,17 +82,16 @@ class TestConvo2D:
         prev_layer = Dense('test_prev', 4, np.ones((6, 4)), np.ones((6, 4)))  # weights/grads of other do no matter
         prev_layer.set_coordinates(0, 0)
 
-        strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [62, 98], True)
+        strongest_idx, shapes = layer.plot_topn_connections_backward(prev_layer, 2, [1, 2])
 
-        assert strongest_idx.shape == (2,)
-        assert (strongest_idx == np.array([0, 2])).all()   # <--
+        assert strongest_idx.shape == (3,)
+        assert (strongest_idx == np.array([0, 2, 3])).all()   # <--
         assert len(shapes) == 4  # Each Convolution to the top Dense
         assert isinstance(shapes[0], dict)
         assert shapes[0]['type'] == 'path'
 
     def test_plot_topn_connections_forward(self):
         """ Forward top 2 connections """
-        # def plot_topn_connections(self, backward_layer, topn, active_units, False)
 
         weights = np.array([[[[-1, 0, 1], [+0, 0, 1]], [[1, 1, 2], [2, 3, 3]], [[7, 1, 2], [2, 3, 4]]],
                             [[[+1, 1, 2], [-1, 1, 2]], [[1, 0, 6], [4, 1, 8]], [[6, 1, 2], [2, 0, 2]]],
@@ -109,7 +102,7 @@ class TestConvo2D:
         prev_layer = Dense('test_prev', 2, np.ones((3, 2)), np.ones((3, 2)))  # weights/grads of other do no matter
         prev_layer.set_coordinates(0, 0)
 
-        strongest_idx, shapes = layer.plot_topn_connections(prev_layer, 2, [1], False)
+        strongest_idx, shapes = layer.plot_topn_connections_forward(prev_layer, 2, [1])
 
         assert strongest_idx.shape == (2,)
         assert (strongest_idx == np.array([0, 2])).all()

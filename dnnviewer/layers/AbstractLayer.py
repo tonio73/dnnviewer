@@ -9,6 +9,11 @@ import dash_html_components as html
 class AbstractLayer:
     """ Abstract layer representation in Viewer """
 
+    FROM_INPUT = 0
+    AT_INPUT = 1
+    FROM_OUTPUT = 2
+    AT_OUTPUT = 3
+
     def __init__(self, name, layer_type='unknown', num_unit=0, weights=None, grads=None,
                  theme: Theme = Theme(),
                  unit_names=None):
@@ -43,7 +48,11 @@ class AbstractLayer:
         else:
             self.sampling_factor *= sampling_factor
 
-    def get_unit_position(self, unit_idx, at_output=False):
+    def get_unit_index(self, unit_idx: int, mode=FROM_INPUT):
+        """ Get unit position as seen by the previous or following layer """
+        return unit_idx  # default
+
+    def get_unit_position(self, unit_idx):
         """ Get single or vector of unit positions """
         if isinstance(unit_idx, int):
             x = self.x
@@ -61,8 +70,14 @@ class AbstractLayer:
         # to override
         return
 
-    def plot_topn_connections(self, previous_layer, topn, active_units, backward):
-        """ Plot layers' top n connections"""
+    def plot_topn_connections_backward(self, previous_layer, topn: int, active_units):
+        """ Plot layers' top n connections, backward push """
+        # to override
+        # return the list of strongest and the list of shapes of connectors
+        return [], []
+
+    def plot_topn_connections_forward(self, previous_layer, topn: int, active_units):
+        """ Plot layers' top n connections, forward push """
         # to override
         # return the list of strongest and the list of shapes of connectors
         return [], []

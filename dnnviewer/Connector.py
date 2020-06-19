@@ -14,8 +14,8 @@ class Connector:
         self.control_delta = 0.2
 
     def get_shapes(self):
-        x_from, y_from = self.layer_from.get_unit_position(self.unit_from, True)
-        x_to, y_to = self.layer_to.get_unit_position(self.unit_to, False)
+        x_from, y_from = self.layer_from.get_unit_position(self.unit_from)
+        x_to, y_to = self.layer_to.get_unit_position(self.unit_to)
 
         # Bezier support through SVG in plotly : https://plot.ly/python/shapes/#svg-paths
         # SVG Bezier path : https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths

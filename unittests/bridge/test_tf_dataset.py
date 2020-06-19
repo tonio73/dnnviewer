@@ -45,7 +45,7 @@ def test_tf_dataset_load_prepare_fashion_mnist_incompatible_shape():
     load_test_data('fashion_mnist', test_data, 128)
 
     with pytest.raises(ModelError):
-        test_data.x_format = keras_prepare_input(np.float, np.array([None, 32, 1]), test_data.x)
+        test_data.x_format = keras_prepare_input(np.float, np.array([None, 32]), test_data.x)
 
 
 def test_tf_keras_prepare_labels():
