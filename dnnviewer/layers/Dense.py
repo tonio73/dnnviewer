@@ -144,7 +144,7 @@ class Dense(AbstractLayer):
         fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text',
                                      marker=self.theme.activation_color_scale.as_dict(activation))])
 
-        if unit_idx and unit_idx < self.num_unit:
+        if unit_idx is not None and unit_idx < self.num_unit:
             if self.unit_names:
                 annotation_title = ("#%d (%s): %.3g" % (unit_idx, self.unit_names[unit_idx], activation[unit_idx]))
             else:

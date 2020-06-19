@@ -62,8 +62,8 @@ class Convo2D(AbstractLayer):
             return np.zeros(0), []
 
         # Max on the 2D convolution filters
-        weights1 = self.weights.reshape(-1, backward_layer.num_unit, self.num_unit)
-        convo_max_weights1 = weights1.take(np.argmax(np.abs(weights1[:, :, active_units]), axis=0))
+        weights1 = self.weights.reshape(-1, backward_layer.num_unit, self.num_unit)[:, :, active_units]
+        convo_max_weights1 = np.max(np.abs(weights1), axis=0)
 
         # Top N on the (input, output) pair
         strongest_idx, strongest = Statistics.get_strongest(convo_max_weights1,
@@ -97,8 +97,8 @@ class Convo2D(AbstractLayer):
 
         # Max on the 2D convolution filters
         # Transpose here
-        weights1 = np.swapaxes(self.weights, 2, 3).reshape((-1, self.num_unit, backward_layer.num_unit))
-        convo_max_weights1 = weights1.take(np.argmax(np.abs(weights1[:, :, sel_units]), axis=0))  # <--
+        weights1 = np.swapaxes(self.weights, 2, 3).reshape((-1, self.num_unit, backward_layer.num_unit))[:, :, sel_units]
+        convo_max_weights1 = np.max(np.abs(weights1), axis=0)
 
         # No need to handle the flatten as active_units is already wrapped
 
