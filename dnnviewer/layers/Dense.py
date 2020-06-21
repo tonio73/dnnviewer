@@ -112,7 +112,7 @@ class Dense(AbstractLayer):
             return self._get_unit_info(unit_idx, len(w)), None
 
         elif active_tab == 'weights':
-            fig = go.Figure(data=[go.Histogram(x=w, marker=self.theme.gradient_color_scale.as_dict(w))])
+            fig = go.Figure(data=[go.Histogram(x=w, marker=self.theme.weight_color_scale.as_dict(w))])
             fig.update_layout(margin=self.theme.bottom_figure_margins,
                               title=dict(text='Weight histogram', font=dict(size=14)),
                               xaxis_title_text='Amplitude',
