@@ -1,5 +1,6 @@
 from . import AbstractDashboard
-from .TestData import TestData
+from dnnviewer.dataset.DataSet import DataSet
+from dnnviewer.dataset import generators
 from .Grapher import Grapher
 from .Progress import Progress
 from .bridge import DatasetError, tensorflow_datasets as tf_ds_bridge
@@ -23,16 +24,20 @@ _logger = logging.getLogger(__name__)
 class MainModelSelection(AbstractDashboard):
     """ Select model (sequence) and test data """
 
+    test_dataset_modes = {DataSet.MODE_UNKNOWN: "None",
+                          DataSet.MODE_FILESET: "Tensorflow dataset",
+                          DataSet.MODE_GENERATOR: "Generator"}
+
     supported_tasks = {'classification': "Classification (generic)",
                        'classification_image': "Image classification",
                        'misc': 'Other'}
 
-    def __init__(self, app, model_selection, model_sequence: AbstractModelSequence, test_data: TestData,
+    def __init__(self, app, model_config, model_sequence: AbstractModelSequence, test_data: DataSet,
                  grapher: Grapher):
         self.app = app
-        self.model_selection = model_selection
+        self.model_config = model_config
         self.model_sequence = model_sequence
-        self.test_data = test_data
+        self.test_data: DataSet = test_data
         self.grapher = grapher
         self.progress = Progress()
         self.model_path = None
@@ -42,10 +47,10 @@ class MainModelSelection(AbstractDashboard):
         self.progress.reset()
 
         # Preselected model path if any
-        self.model_path = (self.model_selection['model'] or self.model_selection['sequence'])
+        self.model_path = (self.model_config['model'] or self.model_config['sequence'])
 
         if self.model_path is not None:
-            self._load_model(self.model_path, self.model_selection['test_dataset'])
+            self._load_model(self.model_path, self.model_config['test_mode'], self.model_config['test_dataset'])
 
     def layout(self, has_request: bool):
         """ @return layout """
@@ -68,19 +73,21 @@ class MainModelSelection(AbstractDashboard):
 
     def callbacks(self):
         """ Setup callbacks """
+
         @self.app.callback([Output('model-selection-loading-refresh', 'disabled'),
                             Output('model-selection-loading', 'hidden'),
                             Output('model-selection-wrap', 'hidden')],
                            [Input('model-selection-submit', 'n_clicks')],
-                           [State('model-selection-dropdown', 'value'),
+                           [State('test-data-mode', 'value'),
+                            State('model-selection-dropdown', 'value'),
                             State('test-data-selection-dropdown', 'value')])
-        def load_model(n_clicks, model_path, test_dataset_id):
+        def load_model(n_clicks, test_mode, model_path, test_dataset_id):
             if n_clicks is None:
                 _logger.warning('Prevent loading since n_clicks=%s', n_clicks)
                 raise PreventUpdate
 
             self.model_path = model_path
-            self._load_model(model_path, test_dataset_id)
+            self._load_model(test_mode, model_path, test_dataset_id)
 
             return False, False, True
 
@@ -118,7 +125,10 @@ class MainModelSelection(AbstractDashboard):
                 raise PreventUpdate
 
             status = self.progress.get_status()
-            progress_color = "danger" if status[1] == Progress.ERROR else "info"
+            if status[1] == Progress.ERROR:
+                progress_color = "danger"
+            else:
+                progress_color = "info"
             progress_message = 'Step %d - %s' % (self.progress.current_step, status[2])
             progress_percent = int(self.progress.current_step / self.progress.num_steps * 100)
             return [html.H2('Loading model "%s"' % self.model_path),
@@ -137,50 +147,85 @@ class MainModelSelection(AbstractDashboard):
             if n_clicks is None:
                 raise PreventUpdate
 
-            model_paths = self.model_sequence.list_models(self.model_selection['directories'],
-                                                          self.model_selection['pattern'])
+            model_paths = self.model_sequence.list_models(self.model_config['directories'],
+                                                          self.model_config['pattern'])
             return [{'label': path, 'value': path} for path in model_paths]
+
+        @self.app.callback([Output('test-data-generator', 'hidden'),
+                            Output('test-data-tensorflow-dataset', 'hidden')],
+                           [Input('test-data-mode', 'value')])
+        def test_data_mode(mode):
+            return mode is not DataSet.MODE_GENERATOR, mode is not DataSet.MODE_FILESET
+
+        return  # Set callbacks
 
     def _model_selection_form(self):
 
-        model_paths = self.model_sequence.list_models(self.model_selection['directories'],
-                                                      self.model_selection['pattern'])
+        model_paths = self.model_sequence.list_models(self.model_config['directories'],
+                                                      self.model_config['pattern'])
         test_datasets = tf_ds_bridge.list_test_data()
 
         return dbc.Form([
+            # Model
+            dbc.FormGroup(html.H3("Model")),
             dbc.FormGroup([
                 dbc.Label("Select a DNN model"),
                 dcc.Dropdown(id='model-selection-dropdown',
-                             value=self.model_selection['model'] or self.model_selection['sequence'],
+                             value=self.model_config['model'] or self.model_config['sequence'],
                              options=[{'label': path, 'value': path} for path in model_paths]
                              )
             ]),
             # Test data
+            dbc.FormGroup(html.H3("Test data (optional)")),
             dbc.FormGroup([
-                dbc.Label("Test data (optional)"),
-                dcc.Dropdown(id='test-data-selection-dropdown',
-                             value=self.model_selection['test_dataset'],
-                             options=[{'label': ds, 'value': ds} for ds in test_datasets]
-                             )
+                dbc.Label("Select data type"),
+                dbc.RadioItems(id='test-data-mode',
+                               value=self.model_config['test_mode'],
+                               options=[{'label': label, 'value': key} \
+                                        for (key, label) in self.test_dataset_modes.items()],
+                               # className='form-check',  # 'custom-radio custom-control',
+                               # labelClassName='form-check-label',  # 'custom-control-label',
+                               # inputClassName='form-check-input',  # 'custom-control-input')
+                               inline=True
+                               )
             ]),
+            # Generator as dataset
+            html.Div(id='test-data-generator',
+                     children=dbc.FormGroup([
+                         dbc.Label("Input generator"),
+                         html.P("Random normal (Gauss with mean 0 and variance 1.0)")
+                     ])),
+            # Tensorflow dataset
+            html.Div(id='test-data-tensorflow-dataset',
+                     children=dbc.FormGroup([
+                         dbc.Label("Tensorflow Dataset"),
+                         dcc.Dropdown(id='test-data-selection-dropdown',
+                                      value=self.model_config['test_dataset'],
+                                      options=[{'label': ds, 'value': ds} for ds in test_datasets]
+                                      )
+                     ], inline=True)),
             # Submit
-            dbc.Row([dbc.Col(dbc.Button("OK", id='model-selection-submit', color='primary', block=True), xs=2),
+            dbc.Row([dbc.Col(dbc.Button("OK", id='model-selection-submit', color='primary', block=True),
+                             xs=2, className=''),
                      dbc.Col(dbc.Button(id='model-selection-refresh', children=font_awesome.icon('sync')))])
         ])
 
-    def _load_model(self, model_path, test_dataset_id):
-        thread = Thread(target=load_model_and_data, args=(self, model_path, test_dataset_id))
+    def _load_model(self, test_mode, model_path, test_dataset_id):
+        thread = Thread(target=load_model_and_data, args=(self, test_mode, model_path, test_dataset_id))
         thread.daemon = True
         thread.start()
 
 
-def load_model_and_data(self, model_path, test_dataset_id):
+def load_model_and_data(self, test_mode, model_path, test_dataset_id):
     """ Perform model and test data loading within thread """
 
     _logger.info("Start loading model '%s'", model_path)
 
     # Load sequence, test dataset, model #0
-    num_steps = 4 if test_dataset_id is not None else 2
+    if self.model_config['test_mode'] is DataSet.MODE_FILESET and test_dataset_id is not None:
+        num_steps = 4
+    else:
+        num_steps = 2
     self.progress.reset(num_steps)
     self.test_data.reset()
 
@@ -198,9 +243,9 @@ def load_model_and_data(self, model_path, test_dataset_id):
     self.progress.forward(1, Progress.INFO, "Model sequence initialized")
 
     # Initialize test dataset if any
-    if test_dataset_id is not None:
+    if test_mode is DataSet.MODE_FILESET and test_dataset_id is not None:
         # Load test dataset
-        self.progress.set_next("Loading test data (it takes up to few minutes at first attempt as download is necessary)")
+        self.progress.set_next("Loading test data (it takes up to few minutes at first attempt while downloading data)")
         try:
             tf_ds_bridge.load_test_data(test_dataset_id, self.test_data)
         except DatasetError as e:
@@ -208,7 +253,7 @@ def load_model_and_data(self, model_path, test_dataset_id):
             self.progress.forward(1, Progress.ERROR, 'Unable to load dataset %s: %s' % (test_dataset_id, e.message))
             return
 
-        if not self.test_data.has_test_sample:
+        if self.test_data.mode is not DataSet.MODE_FILESET:
             _logger.error('Unable to load dataset %s', test_dataset_id)
             self.progress.forward(1, Progress.ERROR, 'Unable to load dataset %s' % test_dataset_id)
             return
@@ -223,6 +268,11 @@ def load_model_and_data(self, model_path, test_dataset_id):
             return
 
         self.progress.forward(1, Progress.INFO, "Test data formatted")
+
+    if test_mode is DataSet.MODE_GENERATOR:
+        # For the time being, only supported generator is random normal
+        self.test_data.mode = DataSet.MODE_GENERATOR
+        self.test_data.generator = generators.RandomNormalGenerator()
 
     # Force loading first model of sequence
     self.progress.set_next("Load model")

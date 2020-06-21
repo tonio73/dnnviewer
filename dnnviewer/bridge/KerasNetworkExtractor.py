@@ -4,7 +4,7 @@ from ..Grapher import Grapher
 from ..layers.Input import Input
 from ..layers.Dense import Dense
 from ..layers.Convo2D import Convo2D
-from ..TestData import TestData
+from dnnviewer.dataset.DataSet import DataSet
 from ..theming.Theme import float_fmt
 
 from tensorflow import keras
@@ -17,7 +17,7 @@ _logger = logging.getLogger(__name__)
 
 class KerasNetworkExtractor:
 
-    def __init__(self, grapher: Grapher, model: keras.models.Model, test_data: TestData):
+    def __init__(self, grapher: Grapher, model: keras.models.Model, test_data: DataSet):
         self.grapher = grapher
         self.model = model
         self.test_data = test_data
@@ -193,14 +193,28 @@ class KerasNetworkExtractor:
 
         self.grapher.add_layer(layer)
 
-    def compute_gradients(self):
+    def compute_gradients(self, n_grad_samples=128):
         """ Compute gradients applying a mini-batch of test data """
         try:
-            if self.test_data.has_test_sample:
-                with tf.GradientTape() as tape:
-                    n_grad_samples = 128
-                    y_est = self.model(self.test_data.x_format[:n_grad_samples])
+            if self.test_data.mode is not DataSet.MODE_UNKNOWN:
+
+                if self.test_data.mode is DataSet.MODE_FILESET:
+                    x_input = self.test_data.x_format[:n_grad_samples]
                     labels = keras_prepare_labels(self.model, self.test_data.y[:n_grad_samples])
+                elif self.test_data.mode is DataSet.MODE_GENERATOR:
+                    in_shape = self.model.input.shape.as_list()
+                    in_shape[0] = n_grad_samples
+                    x_input = self.test_data.generator.batch(in_shape)
+                    out_shape = self.model.output.shape.as_list()
+                    out_shape[0] = n_grad_samples
+                    labels = np.zeros(out_shape)  # Dummy labels, TODO work out generative networks
+                else:
+                    _logger("Not supported dataset mode: %d", self.test_data.mode)
+                    return None
+
+                with tf.GradientTape() as tape:
+                    y_est = self.model(x_input)
+
                     objective = self.model.loss_functions[0](labels, y_est)
                     return tape.gradient(objective, self.model.trainable_variables)
             else:

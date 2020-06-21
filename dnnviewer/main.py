@@ -4,7 +4,7 @@
 
 from .main_model_selection import MainModelSelection
 from .main_network_view import MainNetworkView
-from .TestData import TestData
+from dnnviewer.dataset.DataSet import DataSet
 from .Grapher import Grapher
 from .bridge.KerasModelSequence import KerasModelSequence
 from .widgets.Router import Router
@@ -65,8 +65,9 @@ async def run_app(args):
     model_selection = {}
 
     # Test data
-    test_data = TestData()
+    test_data = DataSet()
     model_selection['test_dataset'] = args.test_dataset
+    model_selection['test_mode'] = DataSet.MODE_FILESET  # Default in any case
 
     # Model sequence : currently only supporting from Keras
     model_sequence = KerasModelSequence(test_data)

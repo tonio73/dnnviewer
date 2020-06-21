@@ -4,7 +4,7 @@
 
 from . import AbstractPane
 from ..Grapher import Grapher
-from ..TestData import TestData
+from dnnviewer.dataset.DataSet import DataSet
 from ..bridge.AbstractModelSequence import AbstractModelSequence
 
 import plotly.graph_objects as go
@@ -31,7 +31,7 @@ class CenterPane(AbstractPane):
         """ Get pane layout """
 
         # Initialize the selected unit to the output corresponding to the selected test data
-        if test_data.has_test_sample:
+        if len(test_data.y) > 0:
             selected_unit = grapher.pre_select_unit(test_data.y[0])
         else:
             selected_unit = None
@@ -54,7 +54,7 @@ class CenterPane(AbstractPane):
                              ]), md=3)
         ])
 
-    def callbacks(self, app, model_sequence: AbstractModelSequence, grapher: Grapher, test_data: TestData):
+    def callbacks(self, app, model_sequence: AbstractModelSequence, grapher: Grapher, test_data: DataSet):
         """ Dash callbacks """
 
         logger = logging.getLogger(__name__)

@@ -1,10 +1,10 @@
 from dnnviewer.bridge.KerasModelSequence import KerasModelSequence
-from dnnviewer.TestData import TestData
+from dnnviewer.dataset.DataSet import DataSet
 
 
 def test_keras_list_models():
 
-    model_sequence = KerasModelSequence(TestData())
+    model_sequence = KerasModelSequence(DataSet())
 
     model_paths = model_sequence.list_models(['./dnnviewer-data/models'])
 
@@ -13,7 +13,7 @@ def test_keras_list_models():
 
 def test_keras_list_model_sequences():
 
-    model_sequence = KerasModelSequence(TestData())
+    model_sequence = KerasModelSequence(DataSet())
 
     model_paths = model_sequence.list_models(['./dnnviewer-data/models/FashionMNIST_checkpoints'], '{model}_{epoch}')
 

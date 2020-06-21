@@ -4,7 +4,7 @@ from dnnviewer.Grapher import Grapher
 from dnnviewer.layers.Dense import Dense
 from dnnviewer.layers.Convo2D import Convo2D
 from dnnviewer.layers.Input import Input
-from dnnviewer.TestData import TestData
+from dnnviewer.dataset.DataSet import DataSet
 
 from tensorflow import keras
 
@@ -19,7 +19,7 @@ def test_model_not_sequential():
     model = keras.models.Model()
 
     with pytest.raises(ModelError):
-        extractor = KerasNetworkExtractor(grapher, model, TestData())
+        extractor = KerasNetworkExtractor(grapher, model, DataSet())
         extractor.process()
 
 
@@ -29,7 +29,7 @@ def test_model_empty():
     grapher = Grapher()
     model = keras.models.Sequential()
 
-    extractor = KerasNetworkExtractor(grapher, model, TestData())
+    extractor = KerasNetworkExtractor(grapher, model, DataSet())
     extractor.process()
     # Should raise en error in the logger
 
@@ -44,7 +44,7 @@ def test_model_1_dense():
     model.compile(loss='categorical_crossentropy')
     model.set_weights([np.ones((10, 32)), np.zeros(32)])
 
-    extractor = KerasNetworkExtractor(grapher, model, TestData())
+    extractor = KerasNetworkExtractor(grapher, model, DataSet())
     extractor.process()
 
     # 1 layer added for input
@@ -69,7 +69,7 @@ def test_model_1_convo2d():
     model.compile(loss='categorical_crossentropy')
     model.set_weights([np.ones((3, 3, 3, 128)), np.zeros(128)])
 
-    extractor = KerasNetworkExtractor(grapher, model, TestData())
+    extractor = KerasNetworkExtractor(grapher, model, DataSet())
     extractor.process()
 
     # 1 layer added for input

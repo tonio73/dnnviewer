@@ -1,4 +1,5 @@
-from . import AbstractDashboard, TestData
+from . import AbstractDashboard
+from .dataset import DataSet
 from .bridge import AbstractModelSequence
 from .Grapher import Grapher
 from .panes import top, center, bottom
@@ -17,7 +18,7 @@ class MainNetworkView(AbstractDashboard):
         - bottom sample data, layer and unit details, activation maps
     """
 
-    def __init__(self, app, model_sequence: AbstractModelSequence, test_data: TestData.TestData, grapher: Grapher,
+    def __init__(self, app, model_sequence: AbstractModelSequence, test_data: DataSet.DataSet, grapher: Grapher,
                  enable_navigation):
         # Dash app
         self.app = app

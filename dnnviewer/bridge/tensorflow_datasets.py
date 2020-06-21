@@ -1,5 +1,5 @@
 from . import DatasetError
-from ..TestData import TestData
+from dnnviewer.dataset.DataSet import DataSet
 
 import tensorflow_datasets as tf_ds
 
@@ -8,7 +8,7 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-def load_test_data(dataset_name, test_data: TestData, max_samples=128):
+def load_test_data(dataset_name, test_data: DataSet, max_samples=128):
     """ Download and prepare a Tensorflow dataset to be used as test data """
     try:
         ds, info = tf_ds.load(dataset_name,

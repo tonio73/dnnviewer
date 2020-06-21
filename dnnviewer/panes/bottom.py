@@ -6,7 +6,7 @@ from . import AbstractPane
 from ..layers.AbstractLayer import AbstractLayer
 from ..widgets import tabs
 from ..imageutils import array_to_img_src
-from ..TestData import TestData
+from dnnviewer.dataset.DataSet import DataSet
 
 import plotly.graph_objects as go
 from dash import callback_context
@@ -23,12 +23,12 @@ class BottomPane(AbstractPane):
     # maximum number of test sample to display in selectors
     max_test_samples = 40
 
-    def get_layout(self, model_sequence, grapher, test_data: TestData):
+    def get_layout(self, model_sequence, grapher, test_data: DataSet):
         """ Get pane layout """
 
         dummy_layer = AbstractLayer('dummy')
 
-        if test_data.has_test_sample:
+        if test_data.mode is DataSet.MODE_FILESET:
             if test_data.output_classes is not None:
                 test_data_captions = [{'label': "%d (%s)" % (i, test_data.output_classes[c]),
                                        'value': i}
@@ -47,13 +47,27 @@ class BottomPane(AbstractPane):
                                          children=[
                                              html.Img(id='bottom-test-sample-img', key='bottom-test-data-img',
                                                       alt='Sample input')],
-                                         className='thumbnail', hidden=not test_data.has_test_sample)
-                                  ]
+                                         className='thumbnail'),
+                                  # Hidden in order to check callbacks
+                                  html.Div([dbc.Button("Generate", id='bottom-generate-test-sample')],
+                                           hidden=True)]
+        elif test_data.mode is DataSet.MODE_GENERATOR:
+            test_data_selector = [html.H5('Test sample', key='bottom-test-data-title-text'),
+                                  dbc.Button("Generate",
+                                             id='bottom-generate-test-sample',
+                                             style={'marginTop': '12px'}
+                                             ),
+                                  # Hidden in order to check callbacks
+                                  html.Div([dcc.Dropdown(id='bottom-select-test-sample'),
+                                            html.Img(id='bottom-test-sample-img', key='bottom-test-data-img')],
+                                           hidden=True)]
         else:
             test_data_selector = [html.H5('Test sample', key='bottom-test-data-title-text'),
                                   html.P('No test data selected', key='bottom-test-data-default'),
+                                  # Hidden in order to check callbacks
                                   html.Div([dcc.Dropdown(id='bottom-select-test-sample'),
-                                            html.Img(id='bottom-test-sample-img', key='bottom-test-data-img')],
+                                            html.Img(id='bottom-test-sample-img', key='bottom-test-data-img'),
+                                            dbc.Button("Generate", id='bottom-generate-test-sample')],
                                            hidden=True)]
 
         return dbc.Row(style={'marginTop': '10px', 'marginBottom': '20px'}, children=[
@@ -87,7 +101,7 @@ class BottomPane(AbstractPane):
                                                          children=BottomPane._get_maps_tabs(None))]))
         ])
 
-    def callbacks(self, app, model_sequence, grapher, test_data: TestData):
+    def callbacks(self, app, model_sequence, grapher, test_data: DataSet):
         """ Local callbacks """
 
         @app.callback(Output('bottom-test-sample-img', 'src'),
@@ -99,6 +113,7 @@ class BottomPane(AbstractPane):
             if index is not None and test_data.x is not None:
                 img = test_data.x[index]
                 return array_to_img_src(img)
+
             return ''
 
         @app.callback([Output('bottom-layer-title', 'children'), Output('bottom-layer-tabs', 'children'),
@@ -177,20 +192,26 @@ class BottomPane(AbstractPane):
                        Output('bottom-maps-tab-figure', 'hidden')],
                       [Input('bottom-maps-tab-bar', 'active_tab'),
                        Input('bottom-select-test-sample', 'value'),
+                       Input('bottom-generate-test-sample', 'n_clicks'),
                        Input('center-selected-unit', 'data'),
                        Input('top-epoch-index', 'data')])
-        def update_activation_map(active_tab, index, selected_unit, _):
+        def update_activation_map(active_tab, sample_index, generate_n_clicks, selected_unit, _):
             if active_tab is not None \
-                    and index is not None and test_data.x is not None \
-                    and selected_unit and selected_unit['layer_idx'] is not None:
+               and selected_unit and selected_unit['layer_idx'] is not None:
                 if active_tab == 'activation':
-                    if test_data.has_test_sample:
-                        layer = grapher.layers[selected_unit['layer_idx']]
-                        content, figure = layer.get_activation_map(model_sequence, test_data.x_format[index],
-                                                                   selected_unit['unit_idx'])
-                        return content, go.Figure() if figure is None else figure, figure is None
-                    else:
+                    if test_data.mode is DataSet.MODE_UNKNOWN:
                         return html.H5('Activation maps require test data'), go.Figure, False
+                    if test_data.mode is DataSet.MODE_FILESET and sample_index is not None:
+                        sample = test_data.x_format[sample_index]
+                    elif test_data.mode is DataSet.MODE_GENERATOR:
+                        sample = test_data.generator.current_sample[0]
+                    else:
+                        return html.H5('Activation maps failed'), go.Figure, False
+                    layer = grapher.layers[selected_unit['layer_idx']]
+                    content, figure = layer.get_activation_map(model_sequence, sample,
+                                                               selected_unit['unit_idx'])
+                    return content, go.Figure() if figure is None else figure, figure is None
+
             return [], go.Figure(), True
 
         return
