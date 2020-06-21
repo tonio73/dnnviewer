@@ -1,5 +1,5 @@
 from . import ModelError
-from .tensorflow import get_caption, keras_prepare_labels
+from .tensorflow import get_caption, keras_prepare_labels, keras_get_layer_attribute
 from ..Grapher import Grapher
 from ..layers.Input import Input
 from ..layers.Dense import Dense
@@ -75,11 +75,11 @@ class KerasNetworkExtractor:
                 self._process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
 
                 # Extra properties
-                strides = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'strides')
+                strides = keras_get_layer_attribute(keras_layer, 'strides')
                 if strides and keras_layer.strides != (1, 1):
                     layer.structure_props['strides'] = str(keras_layer.strides)
                     layer.append_sampling_factor([1 / strides[0], 1 / strides[1], 1, 1])
-                padding = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'padding')
+                padding = keras_get_layer_attribute(keras_layer, 'padding')
                 if padding:
                     layer.structure_props['padding'] = padding
 
@@ -101,7 +101,7 @@ class KerasNetworkExtractor:
             # Pooling layers
             elif layer_class in _pooling_layers:
                 if layer_class in _pooling_captions:
-                    pool_size = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'pool_size')
+                    pool_size = keras_get_layer_attribute(keras_layer, 'pool_size')
                     if pool_size is None:
                         size = np.array(keras_layer.input_shape[1:-1]) / np.array(keras_layer.output_shape[1:-1])
                         pool_size = tuple(size)
@@ -117,8 +117,8 @@ class KerasNetworkExtractor:
                 if previous_layer is not None:
                     # Note: if previous layer already has an activation that is not "linear",
                     #   this property is overridden
-                    activation = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'activation',
-                                                                                  look_in_config=True)
+                    activation = keras_get_layer_attribute(keras_layer, 'activation',
+                                                                                 look_in_config=True)
                     previous_layer.structure_props['activation'] = get_caption(activation, _activation_captions)
                 else:
                     # Unusual case in which first layer is activation => report ignored
@@ -127,7 +127,7 @@ class KerasNetworkExtractor:
             # Dropout layers
             elif layer_class in _dropout_layers:
                 if layer_class in _dropout_captions:
-                    rate = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'rate', look_in_config=True)
+                    rate = keras_get_layer_attribute(keras_layer, 'rate', look_in_config=True)
                     if rate is None:
                         rate = '-'
                     next_layer_training_props['dropout'] = "%s (%s)" % \
@@ -168,7 +168,7 @@ class KerasNetworkExtractor:
         # Regularizers
         for reg_attr in ['activity_regularizer', 'bias_regularizer', 'kernel_regularizer']:
             attrs = ['l1', 'l2']
-            reg = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, reg_attr, attrs, look_in_config=True)
+            reg = keras_get_layer_attribute(keras_layer, reg_attr, attrs, look_in_config=True)
             value = None
             if reg is not None:
 
@@ -187,7 +187,7 @@ class KerasNetworkExtractor:
             layer.bias = keras_layer.bias.numpy()
 
         # Activation
-        activation = KerasNetworkExtractor._get_keras_layer_attribute(keras_layer, 'activation', look_in_config=True)
+        activation = keras_get_layer_attribute(keras_layer, 'activation', look_in_config=True)
         if activation is not None:
             layer.structure_props['activation'] = get_caption(activation, _activation_captions)
 
@@ -223,55 +223,6 @@ class KerasNetworkExtractor:
         except Exception as e:
             _logger.error('Unable to compute gradients for model %s: %s', self.model.name, str(e))
             return None
-
-    @staticmethod
-    def _get_keras_layer_attribute(keras_layer, attribute: str, sub_attr=None, look_in_config=False):
-        """
-        Safely get the value of an attribute from a Keras layer
-        - If sub_attr is set, will return a dictionary with the listed sub attributes
-        - If look_in_metadata is set, will also look in the layer metadata
-        """
-        value = None
-        ret_attr = {}
-        try:
-            value = getattr(keras_layer, attribute)
-        except AttributeError:
-            pass
-
-        if value is not None:
-            if sub_attr is not None:
-
-                # Return a dictionary with only the required sub-attributes
-                for sa in sub_attr:
-                    try:
-                        ret_attr[sa] = getattr(value, sa)
-                    except AttributeError:
-                        pass
-                return ret_attr
-
-        # Could not find the attribute
-        # For some reason, saved models sometimes are squeezing some attributes but keep them in the metadata
-        if look_in_config:
-            config = keras_layer.get_config()
-            if config is not None and attribute in config.keys():
-                if isinstance(config[attribute], dict) and 'config' in config[attribute].keys():
-                    value = config[attribute]['config']
-                elif isinstance(config[attribute], (str, int, float)):
-                    value = config[attribute]
-
-        if value is not None:
-            if sub_attr is not None:
-
-                # Return only requested sub-attributes as dictionary
-                # Return a dictionary with only the required sub-attributes
-                for sa in sub_attr:
-                    try:
-                        ret_attr[sa] = value[sa]
-                    except AttributeError:
-                        pass
-                return ret_attr
-
-        return value
 
 
 # Layer types

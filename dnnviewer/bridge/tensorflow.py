@@ -17,8 +17,12 @@ def keras_set_model_properties(grapher: Grapher, model0: keras.models.Model):
 
     grapher.name = model0.name
     # Training properties
-    grapher.training_props['loss'] = get_caption(model0.loss, _loss_captions)
-    grapher.training_props['optimizer'] = get_caption(model0.optimizer, _optimizer_captions)
+    loss = keras_get_layer_attribute(model0, 'loss')
+    if loss is not None:
+        grapher.training_props['loss'] = get_caption(loss, _loss_captions)
+    optimizer = keras_get_layer_attribute(model0, 'optimizer')
+    if optimizer is not None:
+        grapher.training_props['optimizer'] = get_caption(optimizer, _optimizer_captions)
     return
 
 
@@ -79,6 +83,54 @@ def keras_prepare_labels(model, labels):
         labels = keras.utils.to_categorical(labels)
     return labels
 
+
+def keras_get_layer_attribute(keras_layer, attribute: str, sub_attr=None, look_in_config=False):
+    """
+    Safely get the value of an attribute from a Keras layer
+    - If sub_attr is set, will return a dictionary with the listed sub attributes
+    - If look_in_metadata is set, will also look in the layer metadata
+    """
+    value = None
+    ret_attr = {}
+    try:
+        value = getattr(keras_layer, attribute)
+    except AttributeError:
+        pass
+
+    if value is not None:
+        if sub_attr is not None:
+
+            # Return a dictionary with only the required sub-attributes
+            for sa in sub_attr:
+                try:
+                    ret_attr[sa] = getattr(value, sa)
+                except AttributeError:
+                    pass
+            return ret_attr
+
+    # Could not find the attribute
+    # For some reason, saved models sometimes are squeezing some attributes but keep them in the metadata
+    if look_in_config:
+        config = keras_layer.get_config()
+        if config is not None and attribute in config.keys():
+            if isinstance(config[attribute], dict) and 'config' in config[attribute].keys():
+                value = config[attribute]['config']
+            elif isinstance(config[attribute], (str, int, float)):
+                value = config[attribute]
+
+    if value is not None:
+        if sub_attr is not None:
+
+            # Return only requested sub-attributes as dictionary
+            # Return a dictionary with only the required sub-attributes
+            for sa in sub_attr:
+                try:
+                    ret_attr[sa] = value[sa]
+                except AttributeError:
+                    pass
+            return ret_attr
+
+    return value
 
 def get_caption(prop, dic):
     """ Get a textual caption of a keras property that my be $
