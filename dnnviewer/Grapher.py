@@ -95,29 +95,33 @@ class Grapher:
         # Plot connections as shapes (SVG paths)
         shapes = []
 
+        # Effective topn to modulate as function of number of links
+        effective_topn = topn
+
         # Backward from ref_layer
         sel_units = [ref_unit]
         for i in range(ref_layer_idx, 0, -1):
             cur_layer = self.layers[i]
             prev_layer = self.layers[i - 1]
-            sel_units, new_shapes = cur_layer.plot_topn_connections_backward(prev_layer, topn, sel_units)
+            sel_units, new_shapes = cur_layer.plot_topn_connections_backward(prev_layer, effective_topn, sel_units)
             shapes[0:0] = new_shapes
             # Clip topn to 1 if number of active units is large
             if len(sel_units) > 32:
-                topn = 1
+                effective_topn = 1
 
         # Forward from next to ref_layer
+        effective_topn = topn
         sel_units = [ref_unit]
         for i in range(ref_layer_idx + 1, len(self.layers), +1):
 
             cur_layer = self.layers[i]
             prev_layer = self.layers[i - 1]
-            sel_units, new_shapes = cur_layer.plot_topn_connections_forward(prev_layer, topn, sel_units)
+            sel_units, new_shapes = cur_layer.plot_topn_connections_forward(prev_layer, effective_topn, sel_units)
 
             shapes[0:0] = new_shapes
             # Clip topn to 1 if number of active units is large
             if len(sel_units) > 32:
-                topn = 1
+                effective_topn = 1
 
         # Annotation on the selected layer (trace)
         sel_layer: AbstractLayer = self.layers[ref_layer_idx]

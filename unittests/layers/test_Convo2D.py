@@ -19,8 +19,8 @@ class TestConvo2D:
 
         strongest_idx, shapes = layer.plot_topn_connections_backward(prev_layer, 2, [1, 2])
 
-        assert strongest_idx.shape == (3,)
-        assert (strongest_idx == np.array([0, 2, 3])).all()
+        assert strongest_idx.shape == (2,)
+        assert (strongest_idx == np.array([1, 3])).all()
         assert len(shapes) == 4  # Each Convolution to the top Dense
         assert isinstance(shapes[0], dict)
         assert shapes[0]['type'] == 'path'
@@ -40,8 +40,8 @@ class TestConvo2D:
 
         strongest_idx, shapes = layer.plot_topn_connections_backward(prev_layer, 2, [1, 2])
 
-        assert strongest_idx.shape == (3,)
-        assert (strongest_idx == np.array([0, 2, 3])).all()
+        assert strongest_idx.shape == (2,)
+        assert (strongest_idx == np.array([1, 3])).all()
         assert len(shapes) == 4  # Each Convolution to the top Dense
         assert isinstance(shapes[0], dict)
         assert shapes[0]['type'] == 'path'
@@ -62,8 +62,8 @@ class TestConvo2D:
 
         strongest_idx, shapes = layer.plot_topn_connections_backward(prev_layer, 2, [1, 2])
 
-        assert strongest_idx.shape == (3,)
-        assert (strongest_idx == np.array([0, 2, 3])).all()   # <--
+        assert strongest_idx.shape == (2,)
+        assert (strongest_idx == np.array([1, 3])).all()   # <--
         assert len(shapes) == 4  # Each Convolution to the top Dense
         assert isinstance(shapes[0], dict)
         assert shapes[0]['type'] == 'path'
@@ -84,8 +84,8 @@ class TestConvo2D:
 
         strongest_idx, shapes = layer.plot_topn_connections_backward(prev_layer, 2, [1, 2])
 
-        assert strongest_idx.shape == (3,)
-        assert (strongest_idx == np.array([0, 2, 3])).all()   # <--
+        assert strongest_idx.shape == (2,)
+        assert (strongest_idx == np.array([1, 3])).all()   # <--
         assert len(shapes) == 4  # Each Convolution to the top Dense
         assert isinstance(shapes[0], dict)
         assert shapes[0]['type'] == 'path'
@@ -105,7 +105,7 @@ class TestConvo2D:
         strongest_idx, shapes = layer.plot_topn_connections_forward(prev_layer, 2, [1])
 
         assert strongest_idx.shape == (2,)
-        assert (strongest_idx == np.array([0, 2])).all()
+        assert (strongest_idx == np.array([1, 2])).all()
         assert len(shapes) == 2  # For each active Dense to each Convolution top 2
         assert isinstance(shapes[0], dict)
         assert shapes[0]['type'] == 'path'
