@@ -29,6 +29,11 @@ class AbstractModelSequence:
         """ Return the type (as numpy dtype) and shape of the model input """
         return None, None
 
+    # @abstract
+    def setup_generator(self, generator_builder):
+        """ Setup the test data generator for the model"""
+        return
+
     def first_epoch(self, grapher: Grapher):
         """ Go to first epoch in sequence and update graph """
         assert self.number_epochs > 0

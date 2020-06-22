@@ -204,7 +204,7 @@ class BottomPane(AbstractPane):
                     if test_data.mode is DataSet.MODE_FILESET and sample_index is not None:
                         sample = test_data.x_format[sample_index]
                     elif test_data.mode is DataSet.MODE_GENERATOR:
-                        sample = test_data.generator.current_sample[0]
+                        sample = test_data.generator.batch(1)[0]
                     else:
                         return html.H5('Activation maps failed'), go.Figure, False
                     layer = grapher.layers[selected_unit['layer_idx']]

@@ -9,12 +9,12 @@ import logging
 
 class Input(AbstractLayer):
     """ Simple placeholder layer to act as input to the network """
-    def __init__(self, name, num_unit, plotly_theme, unit_names=None):
+    def __init__(self, name: str, path: str, num_unit, plotly_theme, unit_names=None):
         if unit_names is not None and len(unit_names) != num_unit:
             logger = logging.getLogger(__name__)
             logger.error("Wrong length of input classes, got %d, expecting %d", len(unit_names), num_unit)
             unit_names = None
-        AbstractLayer.__init__(self, name, 'Input', num_unit, None, plotly_theme, unit_names=unit_names)
+        AbstractLayer.__init__(self, name, path, 'Input', num_unit, None, plotly_theme, unit_names=unit_names)
 
     # @override
     def plot(self, fig):

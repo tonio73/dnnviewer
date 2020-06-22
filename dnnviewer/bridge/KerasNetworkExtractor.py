@@ -37,7 +37,6 @@ class KerasNetworkExtractor:
         theme = self.grapher.theme
 
         previous_layer = None
-        layer_training_props, layer_input_props = {}, {}
         self.grapher.reset()
 
         # Get Gradients if test data is available
@@ -46,21 +45,32 @@ class KerasNetworkExtractor:
         # Input placeholder if first layer is a layer with weights
         if len(self.model.layers[0].get_weights()) > 0:
             input_dim = self.model.layers[0].get_weights()[0].shape[-2]
-            input_layer = Input('input', input_dim, theme, self.test_data.input_classes)
+            input_layer = Input('input', '', input_dim, theme, self.test_data.input_classes)
             input_layer.output_props['shape'] = self.model.layers[0].input_shape[1:]
             self.grapher.add_layer(input_layer)
             previous_layer = input_layer
 
         idx_grads = 0
-        for keras_layer in self.model.layers:
+        self._process_sequential_model_layers(theme, self.model, '', previous_layer, grads, idx_grads)
+
+        if self.test_data.output_classes is not None:
+            self.grapher.layers[-1].unit_names = self.test_data.output_classes
+
+    def _process_sequential_model_layers(self, theme, model, path: str, previous_layer, grads, idx_grads):
+        """ Process the layers of a sequential model from Keras """
+
+        layer_training_props, layer_input_props = {}, {}
+
+        for keras_layer in model.layers:
             next_layer_input_props = {}
             next_layer_training_props = {}
 
             layer_class = type(keras_layer).__name__
 
             if layer_class == 'Dense':
-                layer = Dense(keras_layer.name, keras_layer.output_shape[-1],
-                              keras_layer.weights[0].numpy(), grads[idx_grads].numpy() if grads else None,
+                my_grads = grads[idx_grads].numpy() if grads and keras_layer.trainable else None
+                layer = Dense(keras_layer.name, path, keras_layer.output_shape[-1],
+                              keras_layer.weights[0].numpy(), my_grads,
                               theme)
 
                 self._process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
@@ -68,8 +78,9 @@ class KerasNetworkExtractor:
                 previous_layer = layer
 
             elif layer_class == 'Conv2D':
-                layer = Convo2D(keras_layer.name, keras_layer.output_shape[-1],
-                                keras_layer.weights[0].numpy(), grads[idx_grads].numpy() if grads else None,
+                my_grads = grads[idx_grads].numpy() if grads and keras_layer.trainable else None
+                layer = Convo2D(keras_layer.name, path, keras_layer.output_shape[-1],
+                                keras_layer.weights[0].numpy(), my_grads,
                                 theme)
 
                 self._process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
@@ -93,7 +104,7 @@ class KerasNetworkExtractor:
                 elif previous_layer is None:
                     # Input layer
                     input_dim = keras_layer.get_output_shape_at(0)[-1]
-                    layer = Input('input', input_dim, theme, self.test_data.input_classes)
+                    layer = Input('input', path, input_dim, theme, self.test_data.input_classes)
                     layer.output_props['shape'] = keras_layer.output_shape[1:]
                     self.grapher.add_layer(layer)
                     previous_layer = layer
@@ -118,7 +129,7 @@ class KerasNetworkExtractor:
                     # Note: if previous layer already has an activation that is not "linear",
                     #   this property is overridden
                     activation = keras_get_layer_attribute(keras_layer, 'activation',
-                                                                                 look_in_config=True)
+                                                           look_in_config=True)
                     previous_layer.structure_props['activation'] = get_caption(activation, _activation_captions)
                 else:
                     # Unusual case in which first layer is activation => report ignored
@@ -139,6 +150,13 @@ class KerasNetworkExtractor:
             elif layer_class == 'BatchNormalization':
                 next_layer_input_props['batch_normalization'] = 'Enabled'
 
+            # Sequential within Sequential (e.g.: GAN generator within combined)
+            elif layer_class == 'Sequential':
+                new_path = path + '/' + keras_layer.name
+                previous_layer, idx_grads = self._process_sequential_model_layers(theme, keras_layer, new_path,
+                                                                                  previous_layer,
+                                                                                  grads, idx_grads)
+
             # Ignored
             elif layer_class in _keras_ignored_layers:
                 _logger.info('Ignored %s', keras_layer.name)
@@ -150,8 +168,7 @@ class KerasNetworkExtractor:
             layer_training_props = next_layer_training_props
             layer_input_props = next_layer_input_props
 
-        if self.test_data.output_classes is not None:
-            self.grapher.layers[-1].unit_names = self.test_data.output_classes
+        return previous_layer, idx_grads
 
     def _process_add_layer(self, layer, keras_layer, layer_training_props, layer_input_props):
         """ Add a layer to the model and set existing input and structure properties
@@ -202,20 +219,22 @@ class KerasNetworkExtractor:
                     x_input = self.test_data.x_format[:n_grad_samples]
                     labels = keras_prepare_labels(self.model, self.test_data.y[:n_grad_samples])
                 elif self.test_data.mode is DataSet.MODE_GENERATOR:
-                    in_shape = self.model.input.shape.as_list()
-                    in_shape[0] = n_grad_samples
-                    x_input = self.test_data.generator.batch(in_shape)
+                    x_input = self.test_data.generator.batch(n_grad_samples)
                     out_shape = self.model.output.shape.as_list()
                     out_shape[0] = n_grad_samples
                     labels = np.zeros(out_shape)  # Dummy labels, TODO work out generative networks
                 else:
-                    _logger("Not supported dataset mode: %d", self.test_data.mode)
+                    _logger.error("Not supported dataset mode: %d", self.test_data.mode)
                     return None
 
                 with tf.GradientTape() as tape:
                     y_est = self.model(x_input)
-
-                    objective = self.model.loss_functions[0](labels, y_est)
+                    if hasattr(self.model, 'loss_functions') and len(self.model.loss_functions) > 0:
+                        objective = self.model.loss_functions[0](labels, y_est)
+                    elif hasattr(self.model, 'loss') and self.model.loss is not None:
+                        objective = self.model.loss(labels, y_est)
+                    else:
+                        raise ModelError("No loss function is found")
                     return tape.gradient(objective, self.model.trainable_variables)
             else:
                 return None

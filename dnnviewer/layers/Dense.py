@@ -14,11 +14,11 @@ class Dense(AbstractLayer):
     """ Dense (aka fully connected) layer of n units """
     """ Assume 2D weight tensor with dimensions: previous layer unit, self unit """
 
-    def __init__(self, name, num_unit, weights, grads, theme=Theme(), unit_names=None):
+    def __init__(self, name: str, path: str, num_unit, weights, grads, theme=Theme(), unit_names=None):
         assert weights.ndim == 2
         assert num_unit == weights.shape[1]
 
-        AbstractLayer.__init__(self, name, 'Dense', num_unit, weights, grads, theme, unit_names)
+        AbstractLayer.__init__(self, name, path, 'Dense', num_unit, weights, grads, theme, unit_names)
 
     # @override
     def plot(self, fig):
@@ -140,6 +140,9 @@ class Dense(AbstractLayer):
         """ Get the activation map plot """
 
         activation = activation_mapper.get_activation(input_img, self)
+        if activation is None:
+            return [], None
+
         hover_text = self._get_unit_labels()
         fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text',
                                      marker=self.theme.activation_color_scale.as_dict(activation))])

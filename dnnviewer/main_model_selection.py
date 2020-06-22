@@ -271,8 +271,7 @@ def load_model_and_data(self, test_mode, model_path, test_dataset_id):
 
     if test_mode is DataSet.MODE_GENERATOR:
         # For the time being, only supported generator is random normal
-        self.test_data.mode = DataSet.MODE_GENERATOR
-        self.test_data.generator = generators.RandomNormalGenerator()
+        self.model_sequence.setup_generator(generators.RandomNormalGenerator)
 
     # Force loading first model of sequence
     self.progress.set_next("Load model")

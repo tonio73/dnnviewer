@@ -40,7 +40,7 @@ class MainNetworkView(AbstractDashboard):
             # Layout
             if self.model_sequence.number_epochs == 0:
                 if self.enable_navigation:
-                    style = {'margin-left': '15px'}
+                    style = {'marginLeft': '15px'}
                     return_selection = dcc.Link(html.H3([font_awesome.icon('arrow-left'),
                                                          html.Span('Back to model selection', style=style)]), href='/')
                 else:

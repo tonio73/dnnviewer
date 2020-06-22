@@ -15,6 +15,8 @@ import re
 import logging
 import traceback
 
+_logger = logging.getLogger(__name__)
+
 
 class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
     """ Handling a sequence of Keras models, saved as checkpoints or HDF5 """
@@ -61,8 +63,6 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         seq_pat2 = model_sequence_pattern.replace('{model}', r'(\w+)').replace('{epoch}', '([0-9]+)')
         models = []
 
-        logger = logging.getLogger(__name__)
-
         try:
             for path in directories:
 
@@ -86,8 +86,8 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
                                    for m in set(seq_model_path_list)]
                 models.extend(model_path_list)
         except Exception as e:
-            logger.warning('Failed to list directories')
-            logger.debug(traceback.format_exc(e))
+            _logger.warning('Failed to list directories')
+            _logger.debug(traceback.format_exc(e))
         models.sort()
         return models
 
@@ -100,6 +100,12 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
             raise ModelError("Error while formatting test data: %s" % str(e))
 
     # @override
+    def setup_generator(self, generator_builder):
+        in_type, in_shape = self.get_input_geometry()
+        self.test_data.mode = DataSet.MODE_GENERATOR
+        self.test_data.generator = generator_builder(in_type, in_shape)
+
+    # @override
     def get_input_geometry(self):
         """ Return the type and shape of the model input """
         if self.number_epochs == 0:
@@ -107,7 +113,7 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
 
         # Take as reference the first model of the sequence
         model = self._load_keras_model(0)
-        return model.input.dtype.as_numpy_dtype, model.input.shape
+        return model.input.dtype.as_numpy_dtype, model.input.shape.as_list()
 
     # @override
     def get_activation(self, img, layer: AbstractLayer, unit=None):
@@ -115,11 +121,20 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
         batch = np.expand_dims(img, 0)
 
         # Create partial model
-        intermediate_model = keras.models.Model(inputs=self.current_model.input,
-                                                outputs=self.current_model.get_layer(layer.name).output)
+        keras_layer = self._get_keras_layer(self.current_model, layer.name, layer.path)
+        if keras_layer is None:
+            return None
 
-        # Expand dimension to create a mini-batch of 1 element
-        maps = intermediate_model.predict(batch)[0]
+        try:
+            intermediate_model = keras.models.Model(inputs=self.current_model.input,
+                                                    outputs=keras_layer.output)
+
+            # Expand dimension to create a mini-batch of 1 element
+            maps = intermediate_model.predict(batch)[0]
+        except ValueError as e:
+            _logger.error('Fail to predict from input to partial output: %s', str(e))
+            return None
+
         if unit is None:
             return maps
         else:
@@ -147,3 +162,21 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
 
         self.current_epoch_index = model_index
         return self.current_epoch_index
+
+    def _get_keras_layer(self, model, name: str, path: str):
+        segments = path.split('/')
+        cur_layer = model
+        for segment in filter(lambda s: s, segments):
+            try:
+                cur_layer = cur_layer.get_layer(name=segment)
+            except ValueError:
+                _logger.error('Fail to find layer path segment %s within path %s', segment, path)
+                return None
+
+        try:
+            cur_layer = cur_layer.get_layer(name=name)
+        except ValueError:
+            _logger.error('Fail to find layer %s within path %s', name, path)
+            return None
+
+        return cur_layer

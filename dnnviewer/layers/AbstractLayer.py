@@ -14,10 +14,12 @@ class AbstractLayer:
     FROM_OUTPUT = 2
     AT_OUTPUT = 3
 
-    def __init__(self, name, layer_type='unknown', num_unit=0, weights=None, grads=None,
+    def __init__(self, name, path: str = '', layer_type: str = 'unknown',
+                 num_unit: int = 0, weights=None, grads=None,
                  theme: Theme = Theme(),
                  unit_names=None):
         self.name = name
+        self.path = path
         self.num_unit = num_unit
         self.weights = weights
         self.bias = None

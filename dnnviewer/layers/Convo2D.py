@@ -16,13 +16,13 @@ class Convo2D(AbstractLayer):
     """ Convolutional layer of n units """
     """ Assume 4D weight tensor with dimensions: filter_x, filter_y, input_filter, output_filter """
 
-    def __init__(self, name, num_unit, weights, grads, theme=Theme(),
+    def __init__(self, name: str, path: str, num_unit, weights, grads, theme=Theme(),
                  unit_names=None, flatten_output=False):
 
         assert weights.ndim == 4
         assert num_unit == weights.shape[3]
 
-        AbstractLayer.__init__(self, name, 'Convolutional 2D', num_unit, weights, grads, theme, unit_names)
+        AbstractLayer.__init__(self, name, path, 'Convolutional 2D', num_unit, weights, grads, theme, unit_names)
 
         self.flatten_output = flatten_output
 
@@ -176,6 +176,9 @@ class Convo2D(AbstractLayer):
         """ Get the activation map plot """
 
         maps = activation_mapper.get_activation(input_img, self, unit_idx)
+        if maps is None:
+            return [], None
+
         # Images are wrapped in Img HTML element => no Plotly GO figure
         if unit_idx is None:
             return [html.Div(html.Img(id='activation-map', alt='Activation map',
