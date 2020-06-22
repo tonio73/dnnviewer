@@ -118,19 +118,36 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
     # @override
     def get_activation(self, img, layer: AbstractLayer, unit=None):
 
+        # Expand dimension to create a mini-batch of 1 element
         batch = np.expand_dims(img, 0)
 
         # Create partial model
-        keras_layer = self._get_keras_layer(self.current_model, layer.name, layer.path)
-        if keras_layer is None:
+        keras_layer, access_layers = self._get_keras_layer(self.current_model, layer.name, layer.path)
+        if not keras_layer:
             return None
 
         try:
-            intermediate_model = keras.models.Model(inputs=self.current_model.input,
-                                                    outputs=keras_layer.output)
+            if len(access_layers) == 1:
+                # Input and layer are at the same level within the hierarchy
+                intermediate_model = keras.models.Model(inputs=self.current_model.input,
+                                                        outputs=keras_layer.output)
+                maps = intermediate_model.predict(batch)[0]
 
-            # Expand dimension to create a mini-batch of 1 element
-            maps = intermediate_model.predict(batch)[0]
+            else:
+                # Input and layer are not directly connected => need to compute several partial models
+                evaluation = batch
+                for parent_layer, sub_layer in zip(access_layers, access_layers[1:]):
+                    intermediate_model = keras.models.Model(inputs=parent_layer.layers[0].input,
+                                                            outputs=sub_layer.input)
+                    evaluation = intermediate_model.predict(evaluation)
+
+                # Final access
+                parent_layer = sub_layer
+                intermediate_model = keras.models.Model(inputs=parent_layer.layers[0].input,
+                                                        outputs=keras_layer.output)
+                evaluation = intermediate_model.predict(batch)
+                maps = evaluation[0]
+
         except ValueError as e:
             _logger.error('Fail to predict from input to partial output: %s', str(e))
             return None
@@ -166,9 +183,11 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
     def _get_keras_layer(self, model, name: str, path: str):
         segments = path.split('/')
         cur_layer = model
+        layers = [model]
         for segment in filter(lambda s: s, segments):
             try:
                 cur_layer = cur_layer.get_layer(name=segment)
+                layers.append(cur_layer)
             except ValueError:
                 _logger.error('Fail to find layer path segment %s within path %s', segment, path)
                 return None
@@ -179,4 +198,4 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
             _logger.error('Fail to find layer %s within path %s', name, path)
             return None
 
-        return cur_layer
+        return cur_layer, layers

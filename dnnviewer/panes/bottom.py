@@ -13,6 +13,7 @@ from dash import callback_context
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State
 
 
@@ -204,7 +205,13 @@ class BottomPane(AbstractPane):
                     if test_data.mode is DataSet.MODE_FILESET and sample_index is not None:
                         sample = test_data.x_format[sample_index]
                     elif test_data.mode is DataSet.MODE_GENERATOR:
-                        sample = test_data.generator.batch(1)[0]
+                        ctx = callback_context
+                        if ctx.triggered:
+                            trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+                            if trigger_id == 'bottom-generate-test-sample':
+                                sample = test_data.generator.batch(1)[0]
+                            else:
+                                sample = test_data.generator.current_sample[0]
                     else:
                         return html.H5('Activation maps failed'), go.Figure, False
                     layer = grapher.layers[selected_unit['layer_idx']]
