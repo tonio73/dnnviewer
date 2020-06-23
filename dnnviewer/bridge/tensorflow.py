@@ -71,6 +71,7 @@ def keras_prepare_labels(model, labels):
     """ Preformat labels to be processed by the Keras model
       - mainly handle the case of categorical_crossentropy
     """
+    loss = None
     if hasattr(model, 'loss_functions') and model.loss_functions is not None and len(model.loss_functions) > 0:
         # As in test model "LeNetLarge"
         loss = model.loss_functions[0]
@@ -131,6 +132,7 @@ def keras_get_layer_attribute(keras_layer, attribute: str, sub_attr=None, look_i
             return ret_attr
 
     return value
+
 
 def get_caption(prop, dic):
     """ Get a textual caption of a keras property that my be $

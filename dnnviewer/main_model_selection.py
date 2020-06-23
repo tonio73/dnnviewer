@@ -32,7 +32,7 @@ class MainModelSelection(AbstractDashboard):
                        'classification_image': "Image classification",
                        'misc': 'Other'}
 
-    available_generators = {'random_normal': 'Random normal (Gauss with mean 0 and variance 1.0)'}
+    available_generators = {generators.RANDOM_NORMAL: 'Random normal (Gauss with mean 0 and variance 1.0)'}
 
     def __init__(self, app, model_config, model_sequence: AbstractModelSequence, test_data: DataSet,
                  grapher: Grapher):
@@ -214,7 +214,7 @@ class MainModelSelection(AbstractDashboard):
                      dbc.Col(dbc.Button(id='model-selection-refresh', children=font_awesome.icon('sync')))])
         ])
 
-    def _load_model(self, test_mode, model_path, test_dataset_id, generator_id = None):
+    def _load_model(self, test_mode, model_path, test_dataset_id, generator_id=None):
         thread = Thread(target=load_model_and_data, args=(self, test_mode, model_path, test_dataset_id, generator_id))
         thread.daemon = True
         thread.start()
