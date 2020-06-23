@@ -32,6 +32,8 @@ class MainModelSelection(AbstractDashboard):
                        'classification_image': "Image classification",
                        'misc': 'Other'}
 
+    available_generators = {'random_normal': 'Random normal (Gauss with mean 0 and variance 1.0)'}
+
     def __init__(self, app, model_config, model_sequence: AbstractModelSequence, test_data: DataSet,
                  grapher: Grapher):
         self.app = app
@@ -80,14 +82,15 @@ class MainModelSelection(AbstractDashboard):
                            [Input('model-selection-submit', 'n_clicks')],
                            [State('test-data-mode', 'value'),
                             State('model-selection-dropdown', 'value'),
-                            State('test-data-selection-dropdown', 'value')])
-        def load_model(n_clicks, test_mode, model_path, test_dataset_id):
+                            State('test-data-selection-dropdown', 'value'),
+                            State('test-generator-selection-dropdown', 'value')])
+        def load_model(n_clicks, test_mode, model_path, test_dataset_id, generator_id):
             if n_clicks is None:
                 _logger.warning('Prevent loading since n_clicks=%s', n_clicks)
                 raise PreventUpdate
 
             self.model_path = model_path
-            self._load_model(test_mode, model_path, test_dataset_id)
+            self._load_model(test_mode, model_path, test_dataset_id, generator_id)
 
             return False, False, True
 
@@ -183,9 +186,6 @@ class MainModelSelection(AbstractDashboard):
                                value=self.model_config['test_mode'],
                                options=[{'label': label, 'value': key} \
                                         for (key, label) in self.test_dataset_modes.items()],
-                               # className='form-check',  # 'custom-radio custom-control',
-                               # labelClassName='form-check-label',  # 'custom-control-label',
-                               # inputClassName='form-check-input',  # 'custom-control-input')
                                inline=True
                                )
             ]),
@@ -193,7 +193,11 @@ class MainModelSelection(AbstractDashboard):
             html.Div(id='test-data-generator',
                      children=dbc.FormGroup([
                          dbc.Label("Input generator"),
-                         html.P("Random normal (Gauss with mean 0 and variance 1.0)")
+                         dcc.Dropdown(id='test-generator-selection-dropdown',
+                                      value=self.model_config['test_dataset'],
+                                      options=[{'label': caption, 'value': key}  \
+                                               for key, caption in self.available_generators.items()]
+                                      ),
                      ])),
             # Tensorflow dataset
             html.Div(id='test-data-tensorflow-dataset',
@@ -210,13 +214,13 @@ class MainModelSelection(AbstractDashboard):
                      dbc.Col(dbc.Button(id='model-selection-refresh', children=font_awesome.icon('sync')))])
         ])
 
-    def _load_model(self, test_mode, model_path, test_dataset_id):
-        thread = Thread(target=load_model_and_data, args=(self, test_mode, model_path, test_dataset_id))
+    def _load_model(self, test_mode, model_path, test_dataset_id, generator_id = None):
+        thread = Thread(target=load_model_and_data, args=(self, test_mode, model_path, test_dataset_id, generator_id))
         thread.daemon = True
         thread.start()
 
 
-def load_model_and_data(self, test_mode, model_path, test_dataset_id):
+def load_model_and_data(self, test_mode, model_path, test_dataset_id, generator_id):
     """ Perform model and test data loading within thread """
 
     _logger.info("Start loading model '%s'", model_path)
@@ -270,8 +274,9 @@ def load_model_and_data(self, test_mode, model_path, test_dataset_id):
         self.progress.forward(1, Progress.INFO, "Test data formatted")
 
     if test_mode is DataSet.MODE_GENERATOR:
-        # For the time being, only supported generator is random normal
-        self.model_sequence.setup_generator(generators.RandomNormalGenerator)
+        if generator_id is not None:
+            # For the time being, only supported generator is random normal
+            self.model_sequence.setup_generator(generators.get_generators(generator_id))
 
     # Force loading first model of sequence
     self.progress.set_next("Load model")

@@ -100,9 +100,10 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
 
     # @override
     def setup_generator(self, generator_builder):
-        in_type, in_shape = self.get_input_geometry()
-        self.test_data.mode = DataSet.MODE_GENERATOR
-        self.test_data.generator = generator_builder(in_type, in_shape)
+        if generator_builder:
+            in_type, in_shape = self.get_input_geometry()
+            self.test_data.mode = DataSet.MODE_GENERATOR
+            self.test_data.generator = generator_builder(in_type, in_shape)
 
     # @override
     def get_input_geometry(self):
