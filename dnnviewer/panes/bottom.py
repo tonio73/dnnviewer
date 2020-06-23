@@ -13,7 +13,6 @@ from dash import callback_context
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State
 
 
@@ -201,7 +200,7 @@ class BottomPane(AbstractPane):
                and selected_unit and selected_unit['layer_idx'] is not None:
                 if active_tab == 'activation':
                     if test_data.mode is DataSet.MODE_UNKNOWN:
-                        return html.H5('Activation maps require test data'), go.Figure, False
+                        return html.H5('Activation maps require test data'), go.Figure(), True
                     if test_data.mode is DataSet.MODE_FILESET and sample_index is not None:
                         sample = test_data.x_format[sample_index]
                     elif test_data.mode is DataSet.MODE_GENERATOR:
@@ -213,7 +212,7 @@ class BottomPane(AbstractPane):
                             else:
                                 sample = test_data.generator.current_sample[0]
                     else:
-                        return html.H5('Activation maps failed'), go.Figure, False
+                        return html.H5('Activation maps failed'), go.Figure(), True
                     layer = grapher.layers[selected_unit['layer_idx']]
                     content, figure = layer.get_activation_map(model_sequence, sample,
                                                                selected_unit['unit_idx'])
