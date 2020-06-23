@@ -65,7 +65,6 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
 
         try:
             for path in directories:
-
                 dir_path = Path(path)
 
                 # HDF5 & TF files
@@ -127,26 +126,9 @@ class KerasModelSequence(AbstractModelSequence, AbstractActivationMapper):
             return None
 
         try:
-            if len(access_layers) == 1:
-                # Input and layer are at the same level within the hierarchy
-                intermediate_model = keras.models.Model(inputs=self.current_model.input,
-                                                        outputs=keras_layer.output)
-                maps = intermediate_model.predict(batch)[0]
-
-            else:
-                # Input and layer are not directly connected => need to compute several partial models
-                evaluation = batch
-                for parent_layer, sub_layer in zip(access_layers, access_layers[1:]):
-                    intermediate_model = keras.models.Model(inputs=parent_layer.layers[0].input,
-                                                            outputs=sub_layer.input)
-                    evaluation = intermediate_model.predict(evaluation)
-
-                # Final access
-                parent_layer = sub_layer
-                intermediate_model = keras.models.Model(inputs=parent_layer.layers[0].input,
-                                                        outputs=keras_layer.output)
-                evaluation = intermediate_model.predict(batch)
-                maps = evaluation[0]
+            intermediate_model = keras.models.Model(inputs=self.current_model.get_input_at(0),
+                                                    outputs=keras_layer.get_output_at(len(access_layers) - 1))
+            maps = intermediate_model.predict(batch)[0]
 
         except ValueError as e:
             _logger.error('Fail to predict from input to partial output: %s', str(e))
