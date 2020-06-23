@@ -15,7 +15,7 @@ class TestGrapher:
         assert grapher.structure_props['num_convo2d'] == 0
 
         grads = weights = np.array([[1]])
-        layer = Dense('test_1', 1, weights, grads)
+        layer = Dense('test_1', '', 1, weights, grads)
         grapher.add_layer(layer)
 
         assert len(grapher.layers) == 1
