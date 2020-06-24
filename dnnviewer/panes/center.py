@@ -34,7 +34,7 @@ class CenterPane(AbstractPane):
         if len(test_data.y) > 0:
             selected_unit = grapher.pre_select_unit(test_data.y[0])
         else:
-            selected_unit = None
+            selected_unit = grapher.pre_select_unit(0)
 
         graph_config = dict(scrollZoom=True, displaylogo=False,
                             modeBarButtonsToRemove=['lasso2d', 'resetScale2d', 'toggleSpikelines',
