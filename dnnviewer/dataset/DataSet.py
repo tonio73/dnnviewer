@@ -1,4 +1,4 @@
-from . import AbstractGenerator
+from .generators import AbstractGenerator
 
 
 class DataSet:

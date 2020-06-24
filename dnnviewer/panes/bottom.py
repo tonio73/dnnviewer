@@ -53,6 +53,7 @@ class BottomPane(AbstractPane):
                                            hidden=True)]
         elif test_data.mode is DataSet.MODE_GENERATOR:
             test_data_selector = [html.H5('Test sample', key='bottom-test-data-title-text'),
+                                  html.H6(test_data.generator.label(), key='bottom-test-data-subtitle-text'),
                                   dbc.Button("Generate",
                                              id='bottom-generate-test-sample',
                                              style={'marginTop': '12px'}

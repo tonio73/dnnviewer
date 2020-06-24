@@ -32,8 +32,6 @@ class MainModelSelection(AbstractDashboard):
                        'classification_image': "Image classification",
                        'misc': 'Other'}
 
-    available_generators = {generators.RANDOM_NORMAL: 'Random normal (Gauss with mean 0 and variance 1.0)'}
-
     def __init__(self, app, model_config, model_sequence: AbstractModelSequence, test_data: DataSet,
                  grapher: Grapher):
         self.app = app
@@ -196,7 +194,7 @@ class MainModelSelection(AbstractDashboard):
                          dcc.Dropdown(id='test-generator-selection-dropdown',
                                       value=self.model_config['test_dataset'],
                                       options=[{'label': caption, 'value': key}  \
-                                               for key, caption in self.available_generators.items()]
+                                               for key, caption in generators.available_generators.items()]
                                       ),
                      ])),
             # Tensorflow dataset
