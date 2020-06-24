@@ -10,7 +10,7 @@ Current version is targeted at the **classification** task. However, coming vers
 
 This project is for learning and teaching purpose, do not try to display a network with hundreds of layers.
 
-![Screenshot](assets/screenshots/screen5.png)
+![Screenshot](assets/screenshots/screen6.png)
 
 # Install
 
