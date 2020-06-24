@@ -4,6 +4,7 @@ from ..Grapher import Grapher
 from ..layers.Input import Input
 from ..layers.Dense import Dense
 from ..layers.Convo2D import Convo2D
+from ..layers.Reshape import Reshape
 from dnnviewer.dataset.DataSet import DataSet
 from ..theming.Theme import float_fmt
 
@@ -162,6 +163,16 @@ class KerasNetworkExtractor:
             elif layer_class == 'BatchNormalization':
                 next_layer_input_props['batch_normalization'] = 'Enabled'
 
+            # Reshape layer
+            elif layer_class == 'Reshape':
+                layer = Reshape(keras_layer.name, path,
+                                keras_layer.input_shape[1:], keras_layer.output_shape[1:],
+                                theme)
+
+                self._process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
+
+                previous_layer = layer
+
             # Sequential within Sequential (e.g.: GAN generator within combined)
             elif layer_class == 'Sequential':
                 new_path = path + '/' + keras_layer.name
@@ -212,8 +223,9 @@ class KerasNetworkExtractor:
                 layer.training_props[reg_attr] = value
 
         # Bias
-        if (not hasattr(keras_layer, 'use_bias') or keras_layer.use_bias) and keras_layer.bias is not None:
-            layer.bias = keras_layer.bias.numpy()
+        bias = keras_get_layer_attribute(keras_layer, 'bias')
+        if (not hasattr(keras_layer, 'use_bias') or keras_layer.use_bias) and bias is not None:
+            layer.bias = bias.numpy()
 
         # Activation
         activation = keras_get_layer_attribute(keras_layer, 'activation', look_in_config=True)
