@@ -135,6 +135,18 @@ class KerasNetworkExtractor:
                     # Unusual case in which first layer is activation => report ignored
                     _logger.error('Unsupported activation layer as first layer')
 
+            # Activation standalone layer => add to previous layer
+            elif layer_class == 'LeakyReLU':
+                if previous_layer is not None:
+                    # Note: if previous layer already has an activation that is not "linear",
+                    #   this property is overridden
+                    alpha = keras_get_layer_attribute(keras_layer, 'alpha', look_in_config=True)
+                    previous_layer.structure_props['activation'] = get_caption('leakyrelu',
+                                                                               _activation_captions) % alpha
+                else:
+                    # Unusual case in which first layer is activation => report ignored
+                    _logger.error('Unsupported activation layer as first layer')
+
             # Dropout layers
             elif layer_class in _dropout_layers:
                 if layer_class in _dropout_captions:
@@ -288,7 +300,9 @@ _activation_captions = {'elu': 'Exponential linear unit',
                         'softplus': 'Soft-plus',
                         'softsign': 'Soft-sign',
                         'swish': 'Swish',
-                        'tanh': 'Hyperbolic tangent'}
+                        'tanh': 'Hyperbolic tangent',
+                        'leakyrelu': 'Leaky ReLU (%s)' % float_fmt
+                        }
 
 _regularizers_captions = {'l1': 'L1 - Lasso (%s)' % float_fmt,
                           'l2': 'L2 - Ridge (%s)' % float_fmt,
