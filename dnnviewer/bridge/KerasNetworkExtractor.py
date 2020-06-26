@@ -22,6 +22,7 @@ class KerasNetworkExtractor:
         self.grapher = grapher
         self.model = model
         self.test_data = test_data
+        self.theme = self.grapher.theme
 
     def process(self):
         """ Create a graphical representation of a Keras Sequential model's layers
@@ -35,29 +36,19 @@ class KerasNetworkExtractor:
             _logger.error("Empty model")
             return
 
-        theme = self.grapher.theme
-
         previous_layer = None
         self.grapher.reset()
 
         # Get Gradients if test data is available
-        grads = self.compute_gradients()
-
-        # Input placeholder if first layer is a layer with weights
-        if len(self.model.layers[0].get_weights()) > 0:
-            input_dim = self.model.layers[0].get_weights()[0].shape[-2]
-            input_layer = Input('input', '', input_dim, theme, self.test_data.input_classes)
-            input_layer.output_props['shape'] = self.model.layers[0].input_shape[1:]
-            self.grapher.add_layer(input_layer)
-            previous_layer = input_layer
+        grads = self._compute_gradients()
 
         idx_grads = 0
-        self._process_sequential_model_layers(theme, self.model, '', previous_layer, grads, idx_grads)
+        self._process_sequential_model_layers(self.model, '', previous_layer, grads, idx_grads)
 
         if self.test_data.output_classes is not None:
             self.grapher.layers[-1].unit_names = self.test_data.output_classes
 
-    def _process_sequential_model_layers(self, theme, model, path: str, previous_layer, grads, idx_grads):
+    def _process_sequential_model_layers(self, model, path: str, previous_layer, grads, idx_grads):
         """ Process the layers of a sequential model from Keras """
 
         layer_training_props, layer_input_props = {}, {}
@@ -69,20 +60,26 @@ class KerasNetworkExtractor:
             layer_class = type(keras_layer).__name__
 
             if layer_class == 'Dense':
+                if previous_layer is None:
+                    self._prepend_input_layer(keras_layer.get_input_shape_at(0)[-1])
+
                 my_grads = grads[idx_grads].numpy() if grads and keras_layer.trainable else None
                 layer = Dense(keras_layer.name, path, keras_layer.output_shape[-1],
                               keras_layer.weights[0].numpy(), my_grads,
-                              theme)
+                              self.theme)
 
                 self._process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
 
                 previous_layer = layer
 
             elif layer_class == 'Conv2D':
+                if previous_layer is None:
+                    self._prepend_input_layer(keras_layer.get_input_shape_at(0)[-1])
+
                 my_grads = grads[idx_grads].numpy() if grads and keras_layer.trainable else None
                 layer = Convo2D(keras_layer.name, path, keras_layer.output_shape[-1],
                                 keras_layer.weights[0].numpy(), my_grads,
-                                theme)
+                                self.theme)
 
                 self._process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
 
@@ -105,7 +102,7 @@ class KerasNetworkExtractor:
                 elif previous_layer is None:
                     # Input layer
                     input_dim = keras_layer.get_output_shape_at(0)[-1]
-                    layer = Input('input', path, input_dim, theme, self.test_data.input_classes)
+                    layer = Input('input', path, input_dim, self.theme, self.test_data.input_classes)
                     layer.output_props['shape'] = keras_layer.output_shape[1:]
                     self.grapher.add_layer(layer)
                     previous_layer = layer
@@ -167,7 +164,7 @@ class KerasNetworkExtractor:
             elif layer_class == 'Reshape':
                 layer = Reshape(keras_layer.name, path,
                                 keras_layer.input_shape[1:], keras_layer.output_shape[1:],
-                                theme)
+                                self.theme)
 
                 self._process_add_layer(layer, keras_layer, layer_training_props, layer_input_props)
 
@@ -176,7 +173,7 @@ class KerasNetworkExtractor:
             # Sequential within Sequential (e.g.: GAN generator within combined)
             elif layer_class == 'Sequential':
                 new_path = path + '/' + keras_layer.name
-                previous_layer, idx_grads = self._process_sequential_model_layers(theme, keras_layer, new_path,
+                previous_layer, idx_grads = self._process_sequential_model_layers(keras_layer, new_path,
                                                                                   previous_layer,
                                                                                   grads, idx_grads)
 
@@ -234,7 +231,7 @@ class KerasNetworkExtractor:
 
         self.grapher.add_layer(layer)
 
-    def compute_gradients(self, n_grad_samples=128):
+    def _compute_gradients(self, n_grad_samples=128):
         """ Compute gradients applying a mini-batch of test data """
         try:
             if self.test_data.mode is not DataSet.MODE_UNKNOWN:
@@ -266,6 +263,13 @@ class KerasNetworkExtractor:
         except Exception as e:
             _logger.error('Unable to compute gradients for model %s: %s', self.model.name, str(e))
             return None
+
+    def _prepend_input_layer(self, input_dim):
+        """ Input placeholder if first layer is a layer with weights """
+        input_layer = Input('input', '', input_dim, self.theme, self.test_data.input_classes)
+        input_layer.output_props['shape'] = self.model.layers[0].input_shape[1:]
+        self.grapher.add_layer(input_layer)
+        return input_layer
 
 
 # Layer types
