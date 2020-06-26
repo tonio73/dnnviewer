@@ -1,6 +1,6 @@
 from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
-from ..Statistics import Statistics
+from ..utils import statistics
 from ..theming.Theme import Theme
 from ..widgets import layer_minimax_graph, tabs
 from ..bridge.AbstractActivationMapper import AbstractActivationMapper
@@ -31,7 +31,7 @@ class Dense(AbstractLayer):
         if self.weights is None:
             return np.empty(0), []
 
-        strongest_idx, strongest = Statistics.get_strongest(self.weights[:, active_units],
+        strongest_idx, strongest = statistics.get_strongest(self.weights[:, active_units],
                                                             min(topn, backward_layer.num_unit))
         # For each of the top n, create a vector of connectors and plot it
         to_indexes = np.tile(active_units, strongest.shape[0])
@@ -56,7 +56,7 @@ class Dense(AbstractLayer):
         # Map in my input domain take into account for output flatten and sampling in previous layer
         sel_units = backward_layer.get_unit_index(active_units, AbstractLayer.AT_OUTPUT)
 
-        strongest_idx, strongest = Statistics.get_strongest(self.weights.T[:, sel_units],  # <-- Transpose
+        strongest_idx, strongest = statistics.get_strongest(self.weights.T[:, sel_units],  # <-- Transpose
                                                             min(topn, self.num_unit))
 
         # For each of the top n, create a vector of connectors and plot it

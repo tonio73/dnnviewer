@@ -1,6 +1,5 @@
 from ..theming.Theme import Theme
 from ..theming.SimpleColorScale import SimpleColorScale
-from ..Statistics import Statistics
 
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go

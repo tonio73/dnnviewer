@@ -1,6 +1,6 @@
 from .AbstractLayer import AbstractLayer
 from ..Connector import Connector
-from ..Statistics import Statistics
+from ..utils import statistics
 from ..bridge.AbstractActivationMapper import AbstractActivationMapper
 from ..theming.Theme import Theme
 from ..widgets import layer_minimax_graph, tabs, conv_filter_map
@@ -66,7 +66,7 @@ class Convo2D(AbstractLayer):
         convo_max_weights1 = np.max(np.abs(weights1), axis=0)
 
         # Top N on the (input, output) pair
-        strongest_idx, strongest = Statistics.get_strongest(convo_max_weights1,
+        strongest_idx, strongest = statistics.get_strongest(convo_max_weights1,
                                                             min(topn, backward_layer.num_unit))
         # For each of the top n, create a vector of connectors and plot it
         to_indexes = np.tile(active_units, strongest.shape[0])
@@ -103,7 +103,7 @@ class Convo2D(AbstractLayer):
 
         # No need to handle the flatten as active_units is already wrapped
 
-        strongest_idx, strongest = Statistics.get_strongest(convo_max_weights1,
+        strongest_idx, strongest = statistics.get_strongest(convo_max_weights1,
                                                             min(topn, self.num_unit))
 
         # For each of the top n, create a vector of connectors and plot it

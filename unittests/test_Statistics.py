@@ -1,5 +1,5 @@
 import numpy as np
-from dnnviewer.Statistics import Statistics
+from dnnviewer.utils import statistics
 
 
 class TestStatistics:
@@ -7,7 +7,7 @@ class TestStatistics:
     def test_get_dense_strongest_weights(self):
         weights = np.array([[1, 2], [2, 3], [3, 2]])
 
-        strongest_idx, strongest = Statistics.get_strongest(weights, 1)
+        strongest_idx, strongest = statistics.get_strongest(weights, 1)
 
         assert (strongest_idx.shape == (1, 2))
         assert ((strongest_idx == np.array([[2, 1]])).all())
@@ -17,7 +17,7 @@ class TestStatistics:
     def test_get_dense_strongest_weights2(self):
         weights = np.array([[1, 2, 1], [2, 3, 4], [3, 2, 5]])
 
-        strongest_idx, strongest = Statistics.get_strongest(weights, 2)
+        strongest_idx, strongest = statistics.get_strongest(weights, 2)
 
         assert (strongest_idx.shape == (2, 3))
         assert ((strongest_idx == np.array([[1, 2, 1], [2, 1, 2]])).all())
