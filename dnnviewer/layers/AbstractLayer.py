@@ -59,6 +59,8 @@ class AbstractLayer:
         if isinstance(unit_idx, int):
             x = self.x
         else:
+            if isinstance(unit_idx, list):
+                unit_idx = np.array(unit_idx)
             x = self.x * np.ones(len(unit_idx))
 
         return x, self.y + self._get_y_offset() + self.spacing_y * unit_idx

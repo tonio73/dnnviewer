@@ -2,6 +2,8 @@ from .AbstractLayer import AbstractLayer
 from ..bridge.AbstractActivationMapper import AbstractActivationMapper
 from ..widgets import tabs
 from ..imageutils import array_to_img_src, to_8bit_img
+from ..Connector import Connector
+from ..utils import array
 
 import plotly.graph_objects as go
 import dash_html_components as html
@@ -28,6 +30,38 @@ class Reshape(AbstractLayer):
         x, y = self.get_positions()
         hover_text = ['%d' % idx for idx in np.arange(self.num_unit)] if self.unit_names is None else self.unit_names
         fig.add_trace(go.Scatter(x=x, y=y, hovertext=hover_text, mode='markers', hoverinfo='text', name=self.name))
+
+    # @override
+    def plot_topn_connections_backward(self, backward_layer, topn, active_units):
+
+        out_active_units = np.zeros(len(active_units), dtype=int)
+        n_dim_out = len(self.output_shape)
+        for i, unit in enumerate(active_units):
+            index = np.zeros(n_dim_out)
+            index[-1] = unit
+            out_active_units[i] = array.multi_to_multi_dim(self.output_shape, self.input_shape, index)[-1]
+
+        connectors = Connector(backward_layer, self,
+                               out_active_units, active_units, np.ones(len(active_units)),
+                               self.theme.weight_color_scale)
+
+        return np.unique(out_active_units), connectors.get_shapes()
+
+    # @override
+    def plot_topn_connections_forward(self, backward_layer, topn, active_units):
+
+        out_active_units = np.zeros(len(active_units), dtype=int)
+        n_dim_out = len(self.output_shape)
+        for i, unit in enumerate(active_units):
+            index = np.zeros(n_dim_out)
+            index[-1] = unit
+            out_active_units[i] = array.multi_to_multi_dim(self.input_shape, self.output_shape, index)[-1]
+
+        connectors = Connector(backward_layer, self,
+                               active_units, out_active_units, np.ones(len(active_units)),
+                               self.theme.weight_color_scale)
+
+        return np.unique(out_active_units), connectors.get_shapes()
 
     # @override
     def get_layer_tabs(self, previous_active: str = None):
