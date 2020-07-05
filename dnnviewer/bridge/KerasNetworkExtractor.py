@@ -95,11 +95,11 @@ class KerasNetworkExtractor:
                 previous_layer = layer
 
             elif layer_class == 'Flatten':
-                if isinstance(previous_layer, Convo2D):
+                if previous_layer is not None:
                     previous_layer.flatten_output = True
                     # Update property on output shape
                     previous_layer.output_props['shape'] = "%s (flat)" % keras_layer.output_shape[1:]
-                elif previous_layer is None:
+                else:
                     # Input layer
                     input_dim = keras_layer.get_output_shape_at(0)[-1]
                     layer = Input('input', path, input_dim, self.theme, self.test_data.input_classes)

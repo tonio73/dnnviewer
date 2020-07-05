@@ -17,7 +17,8 @@ class AbstractLayer:
     def __init__(self, name, path: str = '', layer_type: str = 'unknown',
                  num_unit: int = 0, weights=None, grads=None,
                  theme: Theme = Theme(),
-                 unit_names=None):
+                 unit_names=None,
+                 flatten_output=False):
         self.name = name
         self.path = path
         self.num_unit = num_unit
@@ -25,6 +26,7 @@ class AbstractLayer:
         self.bias = None
         self.grads = grads
         self.unit_names = unit_names
+        self.flatten_output = flatten_output
         self.structure_props = {'type': layer_type, 'num_unit': num_unit}
         self.training_props = {}
         self.input_props = {}

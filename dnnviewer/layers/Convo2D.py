@@ -22,9 +22,8 @@ class Convo2D(AbstractLayer):
         assert weights.ndim == 4
         assert num_unit == weights.shape[3]
 
-        AbstractLayer.__init__(self, name, path, 'Convolutional 2D', num_unit, weights, grads, theme, unit_names)
-
-        self.flatten_output = flatten_output
+        AbstractLayer.__init__(self, name, path, 'Convolutional 2D', num_unit, weights, grads, theme, unit_names,
+                               flatten_output=flatten_output)
 
     # @override
     def get_unit_index(self, unit_idx: int, mode='at_input'):

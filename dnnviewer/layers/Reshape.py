@@ -26,6 +26,26 @@ class Reshape(AbstractLayer):
         AbstractLayer.__init__(self, name, path, 'Reshape', num_unit, None, plotly_theme, unit_names=unit_names)
 
     # @override
+    def get_unit_index(self, unit_idx: int, mode='at_input'):
+        """ Take into account for flatten (unwrap) and sampling at output """
+
+        if self.flatten_output:
+            if isinstance(unit_idx, list):
+                unit_idx = np.array(unit_idx)
+
+            if self.sampling_factor is not None:
+                sampling_factor = (self.sampling_factor[0] * self.sampling_factor[1])
+            else:
+                sampling_factor = 1
+
+            if mode == AbstractLayer.FROM_OUTPUT:
+                return np.floor((unit_idx / sampling_factor) % self.num_unit).astype(int)
+            elif mode == AbstractLayer.AT_OUTPUT:
+                return np.floor(unit_idx * sampling_factor).astype(int)
+
+        return unit_idx
+
+    # @override
     def plot(self, fig):
         x, y = self.get_positions()
         hover_text = ['%d' % idx for idx in np.arange(self.num_unit)] if self.unit_names is None else self.unit_names
