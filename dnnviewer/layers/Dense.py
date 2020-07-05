@@ -139,20 +139,24 @@ class Dense(AbstractLayer):
     def get_activation_map(self, activation_mapper: AbstractActivationMapper, input_img, unit_idx):
         """ Get the activation map plot """
 
-        activation = activation_mapper.get_activation(input_img, self)
-        if activation is None:
+        maps = activation_mapper.get_activation(input_img, self)
+        if maps is None:
             return [], None
 
-        hover_text = self._get_unit_labels()
-        fig = go.Figure(data=[go.Bar(x=activation, hovertext=hover_text, hoverinfo='text',
-                                     marker=self.theme.activation_color_scale.as_dict(activation))])
+        if self.num_unit < 64:
+            trace = go.Bar(x=maps, hovertext=self._get_unit_labels(), hoverinfo='text',
+                           marker=self.theme.activation_color_scale.as_dict(maps))
+        else:
+            trace = go.Scatter(x=maps, hovertext=self._get_unit_labels(), hoverinfo='text',
+                               mode='lines', marker=self.theme.activation_color_scale.as_dict(maps))
+        fig = go.Figure(data=[trace])
 
         if unit_idx is not None and unit_idx < self.num_unit:
             if self.unit_names:
-                annotation_title = ("#%d (%s): %.3g" % (unit_idx, self.unit_names[unit_idx], activation[unit_idx]))
+                annotation_title = ("#%d (%s): %.3g" % (unit_idx, self.unit_names[unit_idx], maps[unit_idx]))
             else:
-                annotation_title = "#%d: %.3g" % (unit_idx, activation[unit_idx])
-            annotations = [dict(x=activation[unit_idx], y=unit_idx,
+                annotation_title = "#%d: %.3g" % (unit_idx, maps[unit_idx])
+            annotations = [dict(x=maps[unit_idx], y=unit_idx,
                                 xref="x", yref="y",
                                 text=annotation_title,
                                 showarrow=True, arrowhead=3, arrowcolor="#aaa",

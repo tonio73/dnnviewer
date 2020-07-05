@@ -126,9 +126,13 @@ class Reshape(AbstractLayer):
         else:
             if len(self.output_shape) == 2:
                 # Display as a graph (similar to Dense)
-                hover_text = self._get_unit_labels()
-                fig = go.Figure(data=[go.Bar(x=maps, hovertext=hover_text, hoverinfo='text',
-                                             marker=self.theme.activation_color_scale.as_dict(maps))])
+                if self.num_unit < 64:
+                    trace = go.Bar(x=maps, hovertext=self._get_unit_labels(), hoverinfo='text',
+                                   marker=self.theme.activation_color_scale.as_dict(maps))
+                else:
+                    trace = go.Scatter(x=maps, hovertext=self._get_unit_labels(), hoverinfo='text',
+                                       mode='lines', marker=self.theme.activation_color_scale.as_dict(maps))
+                fig = go.Figure(data=[trace])
                 if self.unit_names:
                     annotation_title = ("#%d (%s): %.3g" % (unit_idx, self.unit_names[unit_idx], maps[unit_idx]))
                 else:
